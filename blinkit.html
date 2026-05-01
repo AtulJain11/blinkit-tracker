@@ -460,6 +460,19 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="fbtn" id="ads-type-listing" onclick="setAdsType('PRODUCT_LISTING',this)">Product Listing</button>
     <button class="fbtn" id="ads-type-reco" onclick="setAdsType('PRODUCT_RECOMMENDATION',this)">Recommendation</button>
     <div class="fsep"></div>
+    <span class="filter-label">Day</span>
+    <select class="fsel" id="ads-day-sel" onchange="setAdsTime('day')"><option value="">—</option></select>
+    <span class="filter-label">Month</span>
+    <select class="fsel" id="ads-month-sel" onchange="setAdsTime('month')"><option value="">—</option></select>
+    <span class="filter-label">Year</span>
+    <select class="fsel" id="ads-year-sel" onchange="setAdsTime('year')"><option value="">—</option></select>
+    <div class="fsep"></div>
+    <span class="filter-label">Custom</span>
+    <input type="date" class="fsel" id="ads-from-sel" onchange="setAdsTime('custom')" style="min-width:135px">
+    <span style="color:var(--text3);font-size:10px">→</span>
+    <input type="date" class="fsel" id="ads-to-sel" onchange="setAdsTime('custom')" style="min-width:135px">
+    <button class="fbtn" onclick="clearAdsTime()" style="font-size:10px;padding:4px 8px">Reset</button>
+    <div class="fsep"></div>
     <span id="ads-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
 
@@ -581,6 +594,38 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <tbody id="ads-slots-body"></tbody>
     </table>
   </div>
+
+  <!-- Products table (per-SKU ad spend, joined to PartnersBiz catalog) -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">📦 Products · Ad Spend by SKU</span>
+      <span class="card-sub" id="ads-products-count"></span>
+      <input class="fsearch" placeholder="Search product / brand..." id="ads-prod-search"
+             oninput="renderAds()" style="margin-left:auto;margin-right:8px;max-width:240px">
+      <button class="btn-sm" onclick="exportAdsProductsCsv()">⬇ CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th>Image</th>
+        <th onclick="sortAdsProducts('brand')">Brand</th>
+        <th style="min-width:240px" onclick="sortAdsProducts('clean_name')">Product</th>
+        <th onclick="sortAdsProducts('m_lifecycle')">Lifecycle</th>
+        <th style="text-align:right" onclick="sortAdsProducts('mrp')">MRP</th>
+        <th style="text-align:right" onclick="sortAdsProducts('budget')">Spend ▼</th>
+        <th style="text-align:right" onclick="sortAdsProducts('sales')">Sales</th>
+        <th style="text-align:right" onclick="sortAdsProducts('roas')">RoAS</th>
+        <th style="text-align:right" onclick="sortAdsProducts('atc')">ATC</th>
+        <th style="text-align:right" onclick="sortAdsProducts('qty')">Qty</th>
+        <th style="text-align:right" onclick="sortAdsProducts('impr')">Impr</th>
+        <th style="text-align:right" onclick="sortAdsProducts('cps')">CPS</th>
+        <th style="text-align:right" onclick="sortAdsProducts('campaign_count')">Camps</th>
+      </tr></thead>
+      <tbody id="ads-products-body"></tbody>
+    </table>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════ -->
@@ -613,10 +658,13 @@ var H = {           // per-tab filter state
   pos:   {brand:'ALL', state:'ALL', search:''},
   stock: {brand:'ALL', search:''},
   cities:{search:''},
-  ads:   {brand:'ALL', type:'ALL', metric:'budget', campSearch:'', kwSearch:'',
+  ads:   {brand:'ALL', type:'ALL', metric:'budget',
+          mode:'all', day:'', month:'', year:'', from:'', to:'',
+          campSearch:'', kwSearch:'', prodSearch:'',
           campSortBy:'budget', campSortDir:'desc',
           kwSortBy:'budget',   kwSortDir:'desc',
-          slotSortBy:'budget', slotSortDir:'desc'},
+          slotSortBy:'budget', slotSortDir:'desc',
+          prodSortBy:'budget', prodSortDir:'desc'},
 };
 var charts = {};    // chart instances (so we can destroy/recreate)
 
@@ -1669,6 +1717,8 @@ var ADS_BRAND_COLOR = {
 var ADS_TYPE_COLOR = {
   'PRODUCT_LISTING':'#4f8ef7', 'PRODUCT_RECOMMENDATION':'#a78bfa'
 };
+var ADS_METRIC_KEYS = ['impr','atc','qty','sales','budget','d_atc','i_atc',
+                       'd_qty','i_qty','d_sales','i_sales','new_users'];
 
 function setAdsBrand(brand, btn) {
   H.ads.brand = brand;
@@ -1688,12 +1738,37 @@ function setAdsType(type, btn) {
   if (btn) btn.classList.add('active');
   renderAds();
 }
+function setAdsTime(mode) {
+  var day   = document.getElementById('ads-day-sel').value;
+  var month = document.getElementById('ads-month-sel').value;
+  var year  = document.getElementById('ads-year-sel').value;
+  var from  = document.getElementById('ads-from-sel').value;
+  var to    = document.getElementById('ads-to-sel').value;
+  function clearOthers(keep) {
+    ['day','month','year','from','to'].forEach(function(k){
+      if (k === keep || (keep === 'custom' && (k === 'from' || k === 'to'))) return;
+      H.ads[k] = '';
+      var el = document.getElementById('ads-'+k+'-sel'); if (el) el.value = '';
+    });
+  }
+  if (mode === 'day' && day)             { H.ads.mode = 'day';   H.ads.day = day;   clearOthers('day'); }
+  else if (mode === 'month' && month)    { H.ads.mode = 'month'; H.ads.month = month; clearOthers('month'); }
+  else if (mode === 'year' && year)      { H.ads.mode = 'year';  H.ads.year = year;   clearOthers('year'); }
+  else if (mode === 'custom' && from && to) { H.ads.mode = 'custom'; H.ads.from = from; H.ads.to = to; clearOthers('custom'); }
+  renderAds();
+}
+function clearAdsTime() {
+  H.ads.day=''; H.ads.month=''; H.ads.year=''; H.ads.from=''; H.ads.to=''; H.ads.mode='all';
+  ['day','month','year','from','to'].forEach(function(k){
+    var el = document.getElementById('ads-'+k+'-sel'); if (el) el.value = '';
+  });
+  renderAds();
+}
 function sortAdsCampaigns(col) {
   if (H.ads.campSortBy === col) {
     H.ads.campSortDir = (H.ads.campSortDir === 'desc') ? 'asc' : 'desc';
   } else {
     H.ads.campSortBy = col;
-    // Sensible default direction by column type
     H.ads.campSortDir = (['name','brand','type'].indexOf(col) >= 0) ? 'asc' : 'desc';
   }
   renderAds();
@@ -1716,80 +1791,254 @@ function sortAdsSlots(col) {
   }
   renderAds();
 }
-
-// Helper: filter a metrics row (campaign / keyword / slot) by current Brand + Type
-function _adsRowAllowed(row, brandFilter, typeFilter) {
-  if (brandFilter !== 'ALL' && row.brand !== brandFilter) return false;
-  if (typeFilter !== 'ALL') {
-    // Campaigns have row.type. Keywords are PRODUCT_LISTING only.
-    // Slots are PRODUCT_RECOMMENDATION only. We filter the table to skip if mismatch.
-    if (row.type && row.type !== typeFilter) return false;
+function sortAdsProducts(col) {
+  if (H.ads.prodSortBy === col) {
+    H.ads.prodSortDir = (H.ads.prodSortDir === 'desc') ? 'asc' : 'desc';
+  } else {
+    H.ads.prodSortBy = col;
+    H.ads.prodSortDir = (['clean_name','brand','m_lifecycle','name'].indexOf(col) >= 0) ? 'asc' : 'desc';
   }
-  return true;
+  renderAds();
 }
 
-// Helper: aggregate daily series respecting the Brand + Type filter
-function _adsAggregateDaily() {
-  if (!D || !D.ads) return [];
-  var brand = H.ads.brand;
-  var type  = H.ads.type;
-
-  // Fast path: all-brands + all-types → use D.ads.daily directly
-  if (brand === 'ALL' && type === 'ALL') {
-    return D.ads.daily.slice();
+// Resolve current Day/Month/Year/Custom mode → {from, to, days, label}.
+// Returns null when mode='all' (no filter).
+function _adsResolveWindow() {
+  if (!D || !D.ads || !D.ads.daily || !D.ads.daily.length) return null;
+  var s = H.ads;
+  var allFrom = D.ads.daily[0].date;
+  var allTo   = D.ads.daily[D.ads.daily.length-1].date;
+  if (s.mode === 'day' && s.day) {
+    return {from:s.day, to:s.day, days:1, label:fmtDate(s.day)};
   }
-
-  // Brand-filtered, type=ALL → use D.ads.by_brand_daily[brand]
-  if (type === 'ALL' && brand !== 'ALL' && D.ads.by_brand_daily && D.ads.by_brand_daily[brand]) {
-    return D.ads.by_brand_daily[brand].slice();
+  if (s.mode === 'month' && s.month) {
+    // YYYY-MM
+    var year = parseInt(s.month.slice(0,4),10);
+    var mon  = parseInt(s.month.slice(5,7),10);
+    var lastDay = new Date(year, mon, 0).getDate();
+    var from = s.month + '-01';
+    var to   = s.month + '-' + (lastDay < 10 ? '0'+lastDay : lastDay);
+    // clip to all-history range
+    if (from < allFrom) from = allFrom;
+    if (to > allTo)     to = allTo;
+    var d = _adsDateDiffDays(from, to);
+    return {from:from, to:to, days:d, label:s.month};
   }
-
-  // Otherwise (any combination involving type filter) we don't have a pre-aggregated
-  // series → reconstruct from campaigns × daily would require per-campaign daily,
-  // which we didn't store. Fallback: use brand series if available, scaled by the
-  // type's share of brand spend. Approximate but fine for headline charts.
-  if (type !== 'ALL') {
-    // Compute the share of spend that 'type' represents within the brand subset
-    var camps = (D.ads.campaigns || []).filter(function(c){
-      return _adsRowAllowed(c, brand, 'ALL');
-    });
-    var totalSpend = camps.reduce(function(a,c){ return a + (c.budget||0); }, 0);
-    var typeSpend  = camps.filter(function(c){ return c.type === type; })
-                          .reduce(function(a,c){ return a + (c.budget||0); }, 0);
-    var ratio = totalSpend > 0 ? (typeSpend / totalSpend) : 0;
-    var src = (brand === 'ALL') ? D.ads.daily :
-              (D.ads.by_brand_daily && D.ads.by_brand_daily[brand] ? D.ads.by_brand_daily[brand] : []);
-    return src.map(function(d){
-      var out = {date:d.date};
-      ['impr','atc','qty','sales','budget','new_users'].forEach(function(k){
-        out[k] = (d[k]||0) * ratio;
-      });
-      out.roas = out.budget > 0 ? out.sales / out.budget : 0;
-      return out;
-    });
+  if (s.mode === 'year' && s.year) {
+    var from2 = s.year + '-01-01';
+    var to2   = s.year + '-12-31';
+    if (from2 < allFrom) from2 = allFrom;
+    if (to2 > allTo)     to2 = allTo;
+    return {from:from2, to:to2, days:_adsDateDiffDays(from2,to2), label:s.year};
   }
-  return [];
+  if (s.mode === 'custom' && s.from && s.to) {
+    var f = s.from, t = s.to;
+    if (f > t) { var tmp = f; f = t; t = tmp; }
+    return {from:f, to:t, days:_adsDateDiffDays(f,t), label:fmtDate(f)+' → '+fmtDate(t)};
+  }
+  // 'all'
+  return {from:allFrom, to:allTo, days:_adsDateDiffDays(allFrom,allTo), label:'All-history'};
+}
+function _adsDateDiffDays(from, to) {
+  var df = new Date(from);
+  var dt = new Date(to);
+  return Math.round((dt - df) / 86400000) + 1;
 }
 
-// Helper: aggregate totals respecting Brand + Type filter
-function _adsAggregateTotals() {
-  if (!D || !D.ads) return null;
-  var brand = H.ads.brand;
-  var type  = H.ads.type;
-
-  // Sum from campaigns list, since it's already sliced by brand+type
-  var camps = (D.ads.campaigns || []).filter(function(c){
-    return _adsRowAllowed(c, brand, type);
-  });
-  var t = {impr:0, atc:0, qty:0, sales:0, budget:0, new_users:0,
-           d_atc:0, i_atc:0, d_qty:0, i_qty:0, d_sales:0, i_sales:0};
-  camps.forEach(function(c){
-    Object.keys(t).forEach(function(k){ t[k] += (c[k]||0); });
-  });
-  t.roas = t.budget > 0 ? t.sales / t.budget : 0;
-  t.direct_roas = t.budget > 0 ? t.d_sales / t.budget : 0;
-  t.cpm = t.impr > 0 ? (t.budget * 1000 / t.impr) : 0;
+// Sum metrics from a daily series within [from, to].
+function _adsSumDaily(series, win) {
+  var t = {impr:0,atc:0,qty:0,sales:0,budget:0,new_users:0,
+           d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0};
+  if (!series) return t;
+  for (var i=0; i<series.length; i++) {
+    var d = series[i];
+    if (!d || !d.date) continue;
+    if (win && (d.date < win.from || d.date > win.to)) continue;
+    for (var j=0; j<ADS_METRIC_KEYS.length; j++) {
+      var k = ADS_METRIC_KEYS[j];
+      t[k] += (d[k]||0);
+    }
+  }
   return t;
+}
+
+// Slice a daily series to the date window.
+function _adsSliceDaily(series, win) {
+  if (!series) return [];
+  if (!win) return series.slice();
+  var out = [];
+  for (var i=0; i<series.length; i++) {
+    var d = series[i];
+    if (!d || !d.date) continue;
+    if (d.date < win.from || d.date > win.to) continue;
+    out.push(d);
+  }
+  return out;
+}
+
+// Compute per-campaign totals within the window.
+// Returns array of {cid, name, brand, type, status, ..., metrics}
+function _adsCampaignsInWindow(win, brandFilter, typeFilter) {
+  if (!D || !D.ads) return [];
+  var camps = D.ads.campaigns || [];
+  var daily = D.ads.campaigns_daily || {};
+  var out = [];
+  for (var i=0; i<camps.length; i++) {
+    var c = camps[i];
+    if (brandFilter !== 'ALL' && c.brand !== brandFilter) continue;
+    if (typeFilter !== 'ALL' && c.type !== typeFilter) continue;
+    var sub;
+    if (win) {
+      var s = daily[String(c.cid)];
+      sub = _adsSumDaily(s, win);
+    } else {
+      // No window — use the all-history numbers already on c
+      sub = {impr:c.impr||0,atc:c.atc||0,qty:c.qty||0,sales:c.sales||0,budget:c.budget||0,
+             new_users:c.new_users||0,d_atc:c.d_atc||0,i_atc:c.i_atc||0,
+             d_qty:c.d_qty||0,i_qty:c.i_qty||0,d_sales:c.d_sales||0,i_sales:c.i_sales||0};
+    }
+    sub.roas = sub.budget > 0 ? sub.sales / sub.budget : 0;
+    sub.cid    = c.cid;
+    sub.name   = c.name;
+    sub.brand  = c.brand;
+    sub.type   = c.type;
+    sub.status = c.status;
+    sub.pids   = c.pids || [];
+    sub.pid_count = c.pid_count || 0;
+    out.push(sub);
+  }
+  return out;
+}
+
+// Compute per-SKU totals within the window by attributing campaign daily
+// metrics through the catalog's PID list (equal share among pids).
+function _adsProductsInWindow(win, brandFilter, typeFilter) {
+  if (!D || !D.ads) return [];
+  var bySku = {};   // pid → {metrics + meta}
+  var skuLink = {}; // pid → [{cid, name, share, spend, sales, ...}]
+  var camps = D.ads.campaigns || [];
+  var daily = D.ads.campaigns_daily || {};
+
+  for (var i=0; i<camps.length; i++) {
+    var c = camps[i];
+    if (typeFilter !== 'ALL' && c.type !== typeFilter) continue;
+    var pids = c.pids || [];
+    if (!pids.length) continue;
+    var share = 1.0 / pids.length;
+    var sub;
+    if (win) {
+      var s = daily[String(c.cid)];
+      sub = _adsSumDaily(s, win);
+    } else {
+      sub = {impr:c.impr||0,atc:c.atc||0,qty:c.qty||0,sales:c.sales||0,budget:c.budget||0,
+             new_users:c.new_users||0,d_atc:c.d_atc||0,i_atc:c.i_atc||0,
+             d_qty:c.d_qty||0,i_qty:c.i_qty||0,d_sales:c.d_sales||0,i_sales:c.i_sales||0};
+    }
+    if (!sub.budget && !sub.sales && !sub.impr) continue; // skip empty
+    for (var p=0; p<pids.length; p++) {
+      var pid = pids[p];
+      // Skip multi-PID campaigns whose secondary brand doesn't match filter,
+      // but the campaign overall passed brandFilter at row level — for SKU-level
+      // we filter by THIS pid's brand, computed via lookup.
+      var sku = _adsSkuLookup(pid);
+      var skuBrand = (sku && sku.brand) || c.brand;
+      if (brandFilter !== 'ALL' && skuBrand !== brandFilter) continue;
+      if (!bySku[pid]) {
+        bySku[pid] = {pid:pid, brand:skuBrand,
+                      item_id:(sku && sku.item_id),
+                      name:(sku && sku.name),
+                      clean_name:(sku && (sku.clean_name||sku.name)),
+                      mrp:(sku && sku.mrp),
+                      m_lifecycle:(sku && sku.m_lifecycle),
+                      m_status:(sku && sku.m_status),
+                      m_category:(sku && sku.m_category),
+                      m_range:(sku && sku.m_range),
+                      image:(sku && sku.image),
+                      impr:0,atc:0,qty:0,sales:0,budget:0,
+                      d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0,
+                      new_users:0};
+        skuLink[pid] = [];
+      }
+      var b = bySku[pid];
+      for (var j=0; j<ADS_METRIC_KEYS.length; j++) {
+        var k = ADS_METRIC_KEYS[j];
+        b[k] += (sub[k]||0) * share;
+      }
+      skuLink[pid].push({cid:c.cid, name:c.name, type:c.type, share:share,
+                         spend:(sub.budget||0)*share, sales:(sub.sales||0)*share});
+    }
+  }
+  var out = [];
+  Object.keys(bySku).forEach(function(pid){
+    var r = bySku[pid];
+    r.roas = r.budget > 0 ? r.sales / r.budget : 0;
+    r.cps  = r.sales > 0 ? r.budget / r.sales : 0;
+    r.cpa  = r.atc > 0 ? r.budget / r.atc : 0;
+    r.cpm  = r.impr > 0 ? r.budget * 1000 / r.impr : 0;
+    r.campaigns = skuLink[pid] || [];
+    r.campaign_count = r.campaigns.length;
+    out.push(r);
+  });
+  return out;
+}
+
+// Lookup a PID in D.ads.by_sku (which has the joined SKU info), fallback to D.catalog
+function _adsSkuLookup(pid) {
+  if (!D || !pid) return null;
+  if (D.ads && D.ads.by_sku) {
+    for (var i=0; i<D.ads.by_sku.length; i++) {
+      if (D.ads.by_sku[i].pid === pid) return D.ads.by_sku[i];
+    }
+  }
+  if (D.catalog && D.catalog.list) {
+    for (var j=0; j<D.catalog.list.length; j++) {
+      if (D.catalog.list[j].product_id === pid) return D.catalog.list[j];
+    }
+  }
+  return null;
+}
+
+// Populate Day/Month/Year selectors from the daily series
+function populateAdsTimeSelectors() {
+  if (!D || !D.ads || !D.ads.daily) return;
+  var daySel = document.getElementById('ads-day-sel');
+  var monSel = document.getElementById('ads-month-sel');
+  var yrSel  = document.getElementById('ads-year-sel');
+  if (!daySel || !monSel || !yrSel) return;
+  // Already populated? Skip
+  if (daySel.options.length > 1) return;
+
+  var months = {}, years = {};
+  D.ads.daily.forEach(function(d){
+    if (!d.date) return;
+    months[d.date.slice(0,7)] = true;
+    years[d.date.slice(0,4)]  = true;
+  });
+  // Days: fill in reverse (newest first)
+  var dRev = D.ads.daily.slice().reverse();
+  dRev.forEach(function(d){
+    if (!d.date) return;
+    var op = document.createElement('option');
+    op.value = d.date; op.textContent = fmtDate(d.date);
+    daySel.appendChild(op);
+  });
+  Object.keys(months).sort().reverse().forEach(function(m){
+    var op = document.createElement('option');
+    op.value = m; op.textContent = m;
+    monSel.appendChild(op);
+  });
+  Object.keys(years).sort().reverse().forEach(function(y){
+    var op = document.createElement('option');
+    op.value = y; op.textContent = y;
+    yrSel.appendChild(op);
+  });
+  // Set custom range bounds
+  var from = D.ads.daily[0].date;
+  var to   = D.ads.daily[D.ads.daily.length-1].date;
+  document.getElementById('ads-from-sel').min = from;
+  document.getElementById('ads-from-sel').max = to;
+  document.getElementById('ads-to-sel').min   = from;
+  document.getElementById('ads-to-sel').max   = to;
 }
 
 function renderAds() {
@@ -1798,18 +2047,27 @@ function renderAds() {
     if (el) el.innerHTML = '<div class="stat-card" style="grid-column:1/-1"><div class="stat-label">No ads data</div><div class="stat-value" style="font-size:14px;color:var(--text2)">Run BK_Ads_Downloader.py + BK_Ads_Processor.py to populate this tab.</div></div>';
     return;
   }
+  populateAdsTimeSelectors();
 
-  var meta = D.ads.meta || {};
-  var winLbl = (meta.from_date && meta.to_date) ?
-    (fmtDate(meta.from_date)+' → '+fmtDate(meta.to_date)+' · '+(meta.days||30)+' days') :
-    '—';
-  var lblEl = document.getElementById('ads-window-lbl');
-  if (lblEl) lblEl.textContent = winLbl;
-
-  var t = _adsAggregateTotals();
-  if (!t) return;
+  var win = _adsResolveWindow();
   var brandFilter = H.ads.brand;
   var typeFilter  = H.ads.type;
+
+  // Window label
+  var lblEl = document.getElementById('ads-window-lbl');
+  if (lblEl) lblEl.textContent = win ? (win.label + ' · ' + win.days + 'd') : '—';
+
+  // ── Compute filtered campaign list (drives most aggregates) ──────
+  var campsInWin = _adsCampaignsInWindow(win, brandFilter, typeFilter);
+
+  // ── Totals ──────────────────────────────────────────────────────────
+  var t = {impr:0,atc:0,qty:0,sales:0,budget:0,new_users:0,
+           d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0};
+  campsInWin.forEach(function(c){
+    ADS_METRIC_KEYS.forEach(function(k){ t[k] += (c[k]||0); });
+  });
+  t.roas = t.budget > 0 ? t.sales / t.budget : 0;
+  t.cpm  = t.impr > 0 ? (t.budget * 1000 / t.impr) : 0;
 
   // ── KPI tiles ───────────────────────────────────────────────────────
   function tile(label, value, sub, color) {
@@ -1819,120 +2077,153 @@ function renderAds() {
       '<div class="stat-sub">'+sub+'</div></div>';
   }
   var kpi = '';
-  kpi += tile('Spend',       fmtINR(t.budget),  meta.days+'d window',  'var(--accent)');
-  kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',     'var(--green)');
+  var winSub = win ? (win.days + 'd window') : '—';
+  kpi += tile('Spend',       fmtINR(t.budget),  winSub,                 'var(--accent)');
+  kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',      'var(--green)');
   kpi += tile('RoAS',        (t.roas||0).toFixed(2)+'x', 'sales / spend','var(--purple)');
   kpi += tile('Impressions', fmtNum(t.impr),    'CPM ₹'+(t.cpm||0).toFixed(0),'var(--text)');
   kpi += tile('ATC',         fmtNum(t.atc),     'add-to-carts',         'var(--text)');
   kpi += tile('Qty Sold',    fmtNum(t.qty),     'units',                'var(--text)');
   kpi += tile('New Users',   fmtNum(t.new_users), 'acquired',           'var(--orange)');
-  // Active campaigns in current filter
-  var activeCamps = (D.ads.campaigns||[]).filter(function(c){
-    return _adsRowAllowed(c, brandFilter, typeFilter) && (c.budget||0) > 0;
-  }).length;
-  kpi += tile('Campaigns',   activeCamps,       'with spend',           'var(--text)');
+  var activeCamps = campsInWin.filter(function(c){ return (c.budget||0) > 0; }).length;
+  kpi += tile('Campaigns',   activeCamps,       'with spend in window', 'var(--text)');
   document.getElementById('ads-kpis').innerHTML = kpi;
 
   // ── Daily metric chart ─────────────────────────────────────────────
   var metric = H.ads.metric || 'budget';
   var metricLabels = {
-    budget: 'Budget Consumed (₹)',
-    impr:   'Impressions',
-    atc:    'ATC (D+I)',
-    qty:    'Qty Sold (D+I)',
-    sales:  'Sales (₹, D+I)',
-    roas:   'RoAS',
+    budget: 'Budget Consumed (₹)', impr: 'Impressions',
+    atc: 'ATC (D+I)',              qty: 'Qty Sold (D+I)',
+    sales:'Sales (₹, D+I)',        roas:'RoAS',
     new_users: 'New Users'
   };
   var lblMetricEl = document.getElementById('ads-metric-label');
   if (lblMetricEl) lblMetricEl.textContent = metricLabels[metric] || metric;
 
-  var daily = _adsAggregateDaily();
-  daily.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
-  var dLabels = daily.map(function(r){ return fmtDate(r.date); });
+  // For the daily chart we need to slice the right base series
+  var dailySrc;
+  if (brandFilter === 'ALL') {
+    dailySrc = D.ads.daily || [];
+  } else if (D.ads.by_brand_daily && D.ads.by_brand_daily[brandFilter]) {
+    dailySrc = D.ads.by_brand_daily[brandFilter];
+  } else {
+    dailySrc = [];
+  }
+  // Type-filter approximation: scale daily series by type's share of brand spend
+  if (typeFilter !== 'ALL') {
+    var allCamps = (D.ads.campaigns||[]).filter(function(c){
+      return brandFilter === 'ALL' || c.brand === brandFilter;
+    });
+    var totalSpend = allCamps.reduce(function(a,c){ return a + (c.budget||0); }, 0);
+    var typeSpend  = allCamps.filter(function(c){ return c.type === typeFilter; })
+                             .reduce(function(a,c){ return a + (c.budget||0); }, 0);
+    var ratio = totalSpend > 0 ? (typeSpend / totalSpend) : 0;
+    dailySrc = dailySrc.map(function(d){
+      var out = {date:d.date};
+      ADS_METRIC_KEYS.forEach(function(k){ out[k] = (d[k]||0) * ratio; });
+      out.roas = out.budget > 0 ? out.sales / out.budget : 0;
+      return out;
+    });
+  }
+  var dailyWin = _adsSliceDaily(dailySrc, win);
+  dailyWin.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  // For long ranges, keep the chart readable by sampling.
+  // 485 dots overlap badly — Chart.js handles it but the line gets noisy.
+  // We could add weekly aggregation for >180d, but Chart.js with pointRadius:0
+  // is already fine. Leave as-is for now.
+  var dLabels = dailyWin.map(function(r){ return fmtDate(r.date); });
   var scaleDiv = 1, ylabel = metricLabels[metric] || metric;
-  // Scale large values to Lakhs/K for readability
   if (metric === 'budget' || metric === 'sales') {
     scaleDiv = 1e5; ylabel = (metricLabels[metric] || metric).replace('₹','₹ Lakhs');
   } else if (metric === 'impr') {
     scaleDiv = 1e6; ylabel = 'Impressions (M)';
   }
-  var dValues = daily.map(function(r){ return (r[metric]||0) / scaleDiv; });
+  var dValues = dailyWin.map(function(r){
+    if (metric === 'roas') {
+      return r.budget > 0 ? r.sales / r.budget : 0;
+    }
+    return (r[metric]||0) / scaleDiv;
+  });
   var lineColor = (metric === 'budget' || metric === 'sales') ? '#3ecf8e' :
                   (metric === 'roas') ? '#a78bfa' : '#4f8ef7';
   drawLineChart('ch-ads-daily', dLabels, [
     {label:metricLabels[metric] || metric, data:dValues, color:lineColor},
   ], ylabel);
 
-  // ── Brand donut (spend share) ──────────────────────────────────────
-  var byBrand = (D.ads.by_brand || []).slice();
-  // Apply type filter to brand totals if needed
-  if (typeFilter !== 'ALL') {
-    // recompute by_brand from campaigns
-    var bbAccum = {};
-    (D.ads.campaigns || []).forEach(function(c){
-      if (c.type !== typeFilter) return;
-      bbAccum[c.brand] = (bbAccum[c.brand] || 0) + (c.budget||0);
+  // ── Brand donut (spend share, computed from filtered campaigns) ────
+  var brandAccum = {};
+  campsInWin.forEach(function(c){
+    if ((c.budget||0) <= 0) return;
+    if (!brandAccum[c.brand]) brandAccum[c.brand] = {budget:0, sales:0};
+    brandAccum[c.brand].budget += c.budget;
+    brandAccum[c.brand].sales  += c.sales;
+  });
+  // If brand filter active, also include other brands as comparison (or just
+  // show single-brand donut). Single-brand donut isn't very useful; show split
+  // by campaign type when only one brand is selected.
+  var bLabels = [], bData = [], bColors = [];
+  if (brandFilter !== 'ALL') {
+    // Show campaign-level split for the selected brand
+    campsInWin.forEach(function(c){
+      if ((c.budget||0) <= 0) return;
+      bLabels.push(c.name + ' (' + (c.type||'').replace('PRODUCT_','') + ')');
+      bData.push(c.budget);
+      bColors.push(ADS_TYPE_COLOR[c.type] || '#888');
     });
-    byBrand = Object.keys(bbAccum).map(function(b){
-      return {brand:b, budget:bbAccum[b]};
+    // Limit slices
+    if (bLabels.length > 8) {
+      var combined = [], total = bLabels.length;
+      for (var i=0; i<7; i++) combined.push({l:bLabels[i], d:bData[i], c:bColors[i]});
+      var rest = 0; for (var j=7; j<total; j++) rest += bData[j];
+      combined.push({l:'+ '+(total-7)+' more', d:rest, c:'#555'});
+      bLabels = combined.map(function(x){return x.l;});
+      bData   = combined.map(function(x){return x.d;});
+      bColors = combined.map(function(x){return x.c;});
+    }
+  } else {
+    Object.keys(brandAccum).sort(function(a,b){
+      return brandAccum[b].budget - brandAccum[a].budget;
+    }).forEach(function(brand){
+      bLabels.push(brand);
+      bData.push(brandAccum[brand].budget);
+      bColors.push(ADS_BRAND_COLOR[brand] || '#888');
     });
   }
-  var bLabels = [], bData = [], bColors = [];
-  byBrand.forEach(function(b){
-    if (!b.brand || (b.budget||0) <= 0) return;
-    bLabels.push(b.brand);
-    bData.push(b.budget);
-    bColors.push(ADS_BRAND_COLOR[b.brand] || '#888');
-  });
   drawDonutChart('ch-ads-brand', bLabels, bData, bColors);
 
-  // ── Campaign-type donut ─────────────────────────────────────────────
-  var byType = D.ads.by_campaign_type || {};
+  // ── Campaign-type donut (within window) ─────────────────────────────
+  var typeAccum = {};
+  campsInWin.forEach(function(c){
+    if ((c.budget||0) <= 0) return;
+    typeAccum[c.type] = (typeAccum[c.type] || 0) + c.budget;
+  });
   var tLabels = [], tData = [], tColors = [];
-  Object.keys(byType).forEach(function(k){
-    var v = byType[k].budget || 0;
-    if (v <= 0) return;
-    // If a brand filter is applied, recompute from campaigns
-    if (brandFilter !== 'ALL') {
-      v = (D.ads.campaigns||[]).filter(function(c){
-        return c.brand === brandFilter && c.type === k;
-      }).reduce(function(a,c){ return a + (c.budget||0); }, 0);
-    }
-    if (v <= 0) return;
+  Object.keys(typeAccum).forEach(function(k){
     tLabels.push(k.replace('_', ' ').toLowerCase().replace(/\b\w/g, function(s){return s.toUpperCase();}));
-    tData.push(v);
+    tData.push(typeAccum[k]);
     tColors.push(ADS_TYPE_COLOR[k] || '#888');
   });
   drawDonutChart('ch-ads-type', tLabels, tData, tColors);
 
-  // ── Sales-vs-spend bar (per brand) ─────────────────────────────────
+  // ── Sales-vs-spend bar (per brand, within window) ──────────────────
   var rLabels = [], rSpend = [], rSales = [];
-  byBrand.forEach(function(b){
-    if (!b.brand || (b.budget||0) <= 0) return;
-    var sales = b.sales;
-    if (sales == null || typeFilter !== 'ALL') {
-      // Recompute from campaigns when filtering by type
-      sales = (D.ads.campaigns||[]).filter(function(c){
-        return c.brand === b.brand && (typeFilter === 'ALL' || c.type === typeFilter);
-      }).reduce(function(a,c){ return a + (c.sales||0); }, 0);
-    }
-    rLabels.push(b.brand);
-    rSpend.push(b.budget / 1e5);
-    rSales.push(sales / 1e5);
+  Object.keys(brandAccum).sort(function(a,b){
+    return brandAccum[b].budget - brandAccum[a].budget;
+  }).forEach(function(brand){
+    rLabels.push(brand);
+    rSpend.push(brandAccum[brand].budget / 1e5);
+    rSales.push(brandAccum[brand].sales / 1e5);
   });
   drawAdsRoasChart('ch-ads-roas', rLabels, rSpend, rSales);
 
   // ── Campaigns table ────────────────────────────────────────────────
   var campSearch = (document.getElementById('ads-camp-search').value || '').toLowerCase();
   H.ads.campSearch = campSearch;
-  var camps = (D.ads.campaigns || []).filter(function(c){
-    if (!_adsRowAllowed(c, brandFilter, typeFilter)) return false;
+  var camps = campsInWin.filter(function(c){
     if (campSearch && (c.name||'').toLowerCase().indexOf(campSearch) < 0
                    && String(c.cid||'').indexOf(campSearch) < 0) return false;
     return true;
   });
-  // Sort
   var cBy = H.ads.campSortBy, cDir = H.ads.campSortDir;
   camps.sort(function(a,b){
     var av = a[cBy], bv = b[cBy];
@@ -1947,13 +2238,14 @@ function renderAds() {
     camps.length + ' campaign' + (camps.length === 1 ? '' : 's');
   var cBody = '';
   camps.forEach(function(c, i){
-    var brandClass = brandTagClass(c.brand);
     cBody += '<tr>' +
       '<td>'+(i+1)+'</td>' +
-      '<td><span class="tag '+brandClass+'">'+(c.brand||'—')+'</span></td>' +
+      '<td><span class="tag '+brandTagClass(c.brand)+'">'+(c.brand||'—')+'</span></td>' +
       '<td><div style="font-weight:500">'+escapeHtml(c.name||'')+'</div>' +
-        '<div style="color:var(--text3);font-size:10px">cid '+c.cid+'</div></td>' +
-      '<td><span style="color:var(--text2);font-size:10px">'+ (c.type||'').replace('PRODUCT_','') +'</span></td>' +
+        '<div style="color:var(--text3);font-size:10px">cid '+c.cid+
+        (c.status && c.status !== 'ACTIVE' ? ' · <span style="color:var(--orange)">'+c.status+'</span>' : '')+
+        '</div></td>' +
+      '<td><span style="color:var(--text2);font-size:10px">'+(c.type||'').replace('PRODUCT_','')+'</span></td>' +
       '<td style="text-align:right">'+fmtINR(c.budget)+'</td>' +
       '<td style="text-align:right">'+fmtINR(c.sales)+'</td>' +
       '<td style="text-align:right;color:'+( (c.roas||0) >= 2 ? 'var(--green)' : (c.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(c.roas||0).toFixed(2)+'x</td>' +
@@ -1968,12 +2260,13 @@ function renderAds() {
   }
   document.getElementById('ads-campaigns-body').innerHTML = cBody;
 
-  // ── Keywords table (PRODUCT_LISTING only) ─────────────────────────
+  // ── Keywords table (PRODUCT_LISTING only; uses all-history numbers) ──
+  // Note: we don't have keywords_daily, so keyword totals are all-history
+  // when a date filter is active. We surface this with a sub-note.
   var kwSearch = (document.getElementById('ads-kw-search').value || '').toLowerCase();
   H.ads.kwSearch = kwSearch;
   var kws = (D.ads.keywords || []).filter(function(k){
     if (brandFilter !== 'ALL' && k.brand !== brandFilter) return false;
-    // Keywords are PRODUCT_LISTING only — hide if user filters to RECOMMENDATION
     if (typeFilter === 'PRODUCT_RECOMMENDATION') return false;
     if (kwSearch) {
       var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')).toLowerCase();
@@ -1992,9 +2285,9 @@ function renderAds() {
     return kDir === 'asc' ? av - bv : bv - av;
   });
   document.getElementById('ads-keywords-count').textContent =
-    kws.length + ' keyword' + (kws.length === 1 ? '' : 's');
+    kws.length + ' keyword' + (kws.length === 1 ? '' : 's') +
+    (H.ads.mode !== 'all' ? '  · all-history (no daily series)' : '');
   var kBody = '';
-  // Limit display to top 200 to keep DOM responsive — search to drill deeper
   var displayKws = kws.slice(0, 200);
   displayKws.forEach(function(k, i){
     kBody += '<tr>' +
@@ -2024,7 +2317,7 @@ function renderAds() {
   }
   document.getElementById('ads-keywords-body').innerHTML = kBody;
 
-  // ── Reco slots table (PRODUCT_RECOMMENDATION only) ────────────────
+  // ── Reco slots table (PRODUCT_RECOMMENDATION only; all-history) ───
   var slots = (D.ads.reco_slots || []).filter(function(s){
     if (brandFilter !== 'ALL' && s.brand !== brandFilter) return false;
     if (typeFilter === 'PRODUCT_LISTING') return false;
@@ -2041,7 +2334,8 @@ function renderAds() {
     return sDir === 'asc' ? av - bv : bv - av;
   });
   document.getElementById('ads-slots-count').textContent =
-    slots.length + ' slot' + (slots.length === 1 ? '' : 's');
+    slots.length + ' slot' + (slots.length === 1 ? '' : 's') +
+    (H.ads.mode !== 'all' ? '  · all-history (no daily series)' : '');
   var sBody = '';
   slots.forEach(function(s, i){
     sBody += '<tr>' +
@@ -2061,6 +2355,59 @@ function renderAds() {
     sBody = '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:20px">No reco slots match the current filter.</td></tr>';
   }
   document.getElementById('ads-slots-body').innerHTML = sBody;
+
+  // ── Products table (per-SKU within window) ────────────────────────
+  var prodSearch = (document.getElementById('ads-prod-search').value || '').toLowerCase();
+  H.ads.prodSearch = prodSearch;
+  var prods = _adsProductsInWindow(win, brandFilter, typeFilter);
+  prods = prods.filter(function(p){
+    if (!prodSearch) return true;
+    var hay = ((p.clean_name||'')+' '+(p.name||'')+' '+(p.brand||'')+' '+(p.item_id||'')+' '+(p.pid||'')).toLowerCase();
+    return hay.indexOf(prodSearch) >= 0;
+  });
+  var pBy = H.ads.prodSortBy, pDir = H.ads.prodSortDir;
+  prods.sort(function(a,b){
+    var av = a[pBy], bv = b[pBy];
+    if (typeof av === 'string' || typeof bv === 'string') {
+      av = (av||'').toString(); bv = (bv||'').toString();
+      return pDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    av = av || 0; bv = bv || 0;
+    return pDir === 'asc' ? av - bv : bv - av;
+  });
+  document.getElementById('ads-products-count').textContent =
+    prods.length + ' product' + (prods.length === 1 ? '' : 's') + ' with ad spend';
+  var pBody = '';
+  prods.forEach(function(p, i){
+    var lifecycle = p.m_lifecycle || '';
+    var lcColor = lifecycle === 'EPD' ? 'var(--green)' :
+                  lifecycle === 'NPD' ? 'var(--accent)' :
+                  lifecycle === 'D'   ? 'var(--red)' : 'var(--text3)';
+    var img = p.image ?
+      '<img src="'+escapeHtml(p.image)+'" style="width:36px;height:36px;border-radius:4px;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">' :
+      '<div style="width:36px;height:36px;background:var(--surf2);border-radius:4px"></div>';
+    pBody += '<tr>' +
+      '<td>'+(i+1)+'</td>' +
+      '<td>'+img+'</td>' +
+      '<td><span class="tag '+brandTagClass(p.brand)+'">'+(p.brand||'—')+'</span></td>' +
+      '<td><div style="font-weight:500;font-size:11px">'+escapeHtml(p.clean_name||p.name||'?')+'</div>' +
+        '<div style="color:var(--text3);font-size:10px">pid '+p.pid+(p.item_id?' · item '+p.item_id:'')+'</div></td>' +
+      '<td><span style="font-size:10px;color:'+lcColor+'">'+escapeHtml(lifecycle||'—')+'</span></td>' +
+      '<td style="text-align:right">'+(p.mrp != null ? fmtINR(p.mrp) : '—')+'</td>' +
+      '<td style="text-align:right">'+fmtINR(p.budget)+'</td>' +
+      '<td style="text-align:right">'+fmtINR(p.sales)+'</td>' +
+      '<td style="text-align:right;color:'+( (p.roas||0) >= 2 ? 'var(--green)' : (p.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(p.roas||0).toFixed(2)+'x</td>' +
+      '<td style="text-align:right">'+fmtNum(p.atc)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(p.qty)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(p.impr)+'</td>' +
+      '<td style="text-align:right">'+fmtPct((p.cps||0)*100, 1)+'</td>' +
+      '<td style="text-align:right">'+(p.campaign_count||0)+'</td>' +
+    '</tr>';
+  });
+  if (prods.length === 0) {
+    pBody = '<tr><td colspan="14" style="text-align:center;color:var(--text3);padding:20px">No products match the current filter.</td></tr>';
+  }
+  document.getElementById('ads-products-body').innerHTML = pBody;
 }
 
 // Sales-vs-spend grouped bar chart for the Ads tab
@@ -2096,7 +2443,7 @@ function escapeHtml(s) {
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-// CSV exports for the 3 ads tables
+// CSV exports for the 4 ads tables
 function _csvEscape(v) {
   if (v == null) return '';
   v = String(v);
@@ -2116,16 +2463,22 @@ function _downloadCsv(filename, headers, rows) {
   a.click();
   document.body.removeChild(a);
 }
+function _adsCsvSuffix() {
+  var win = _adsResolveWindow();
+  if (!win) return 'all';
+  return win.from + '_' + win.to;
+}
 function exportAdsCampaignsCsv() {
   if (!D || !D.ads) return;
-  var brandFilter = H.ads.brand, typeFilter = H.ads.type;
-  var camps = (D.ads.campaigns||[]).filter(function(c){ return _adsRowAllowed(c, brandFilter, typeFilter); });
-  var headers = ['Brand','Campaign','Campaign ID','Type','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','New Users','D Sales','I Sales'];
+  var win = _adsResolveWindow();
+  var camps = _adsCampaignsInWindow(win, H.ads.brand, H.ads.type);
+  var headers = ['Brand','Campaign','Campaign ID','Type','Status','Spend','Sales','RoAS','ATC','Qty','Impressions','New Users','D Sales','I Sales'];
   var rows = camps.map(function(c){
-    return [c.brand, c.name, c.cid, c.type, c.budget, c.sales, c.roas, c.direct_roas,
-            c.atc, c.qty, c.impr, c.new_users, c.d_sales, c.i_sales];
+    return [c.brand, c.name, c.cid, c.type, c.status||'',
+            c.budget, c.sales, c.roas, c.atc, c.qty, c.impr,
+            c.new_users, c.d_sales, c.i_sales];
   });
-  _downloadCsv('ads_campaigns_'+(D.ads.meta && D.ads.meta.from_date ? D.ads.meta.from_date+'_'+D.ads.meta.to_date : 'all')+'.csv', headers, rows);
+  _downloadCsv('ads_campaigns_'+_adsCsvSuffix()+'.csv', headers, rows);
 }
 function exportAdsKeywordsCsv() {
   if (!D || !D.ads) return;
@@ -2136,7 +2489,7 @@ function exportAdsKeywordsCsv() {
     return [k.brand, k.campaign_name, k.cid, k.keyword, k.match_type,
             k.budget, k.sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr];
   });
-  _downloadCsv('ads_keywords_'+(D.ads.meta && D.ads.meta.from_date ? D.ads.meta.from_date+'_'+D.ads.meta.to_date : 'all')+'.csv', headers, rows);
+  _downloadCsv('ads_keywords_all-history.csv', headers, rows);
 }
 function exportAdsSlotsCsv() {
   if (!D || !D.ads) return;
@@ -2147,7 +2500,19 @@ function exportAdsSlotsCsv() {
     return [s.brand, s.campaign_name, s.cid, s.slot,
             s.budget, s.sales, s.roas, s.direct_roas, s.atc, s.qty, s.impr];
   });
-  _downloadCsv('ads_recoslots_'+(D.ads.meta && D.ads.meta.from_date ? D.ads.meta.from_date+'_'+D.ads.meta.to_date : 'all')+'.csv', headers, rows);
+  _downloadCsv('ads_recoslots_all-history.csv', headers, rows);
+}
+function exportAdsProductsCsv() {
+  if (!D || !D.ads) return;
+  var win = _adsResolveWindow();
+  var prods = _adsProductsInWindow(win, H.ads.brand, H.ads.type);
+  var headers = ['Brand','PID','Item ID','Product','Clean Name','Lifecycle','MRP','Spend','Sales','RoAS','ATC','Qty','Impressions','CPS','CPA','CPM','Campaigns'];
+  var rows = prods.map(function(p){
+    return [p.brand, p.pid, p.item_id, p.name, p.clean_name, p.m_lifecycle, p.mrp,
+            p.budget, p.sales, p.roas, p.atc, p.qty, p.impr,
+            p.cps, p.cpa, p.cpm, p.campaign_count];
+  });
+  _downloadCsv('ads_products_'+_adsCsvSuffix()+'.csv', headers, rows);
 }
 
 </script>
