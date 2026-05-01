@@ -204,6 +204,17 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <input type="date" class="fsel" id="ov-to-sel" onchange="setOvTime('custom')" style="min-width:135px">
     <button class="fbtn" onclick="clearOvTime()" style="font-size:10px;padding:4px 8px">Reset</button>
     <div class="fsep"></div>
+    <span class="filter-label">Category</span>
+    <select class="fsel" id="ov-cat-sel" onchange="setOvCategory(this.value)" style="min-width:140px"><option value="">All</option></select>
+    <div class="fsep"></div>
+        <span class="filter-label">Compare</span>
+    <select class="fsel" id="ov-compare-sel" onchange="setCompareMode('ov', this.value)" style="min-width:130px">
+      <option value="none">None</option>
+      <option value="prev">vs Prev period</option>
+      <option value="prev_month">vs Same period prev month</option>
+      <option value="prev_year">vs Same period prev year</option>
+    </select>
+    <div class="fsep"></div>
     <span id="ov-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
 
@@ -285,7 +296,18 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <input type="date" class="fsel" id="sales-to-sel" onchange="setSalesTime('custom')" style="min-width:135px">
     <button class="fbtn" onclick="clearSalesTime()" style="font-size:10px;padding:4px 8px">Reset</button>
     <div class="fsep"></div>
+    <span class="filter-label">Category</span>
+    <select class="fsel" id="sales-cat-sel" onchange="setSalesCategory(this.value)" style="min-width:140px"><option value="">All</option></select>
+    <div class="fsep"></div>
     <input class="fsearch" placeholder="Search SKU / title / category..." id="sales-search" oninput="renderSales()">
+    <div class="fsep"></div>
+        <span class="filter-label">Compare</span>
+    <select class="fsel" id="sales-compare-sel" onchange="setCompareMode('sales', this.value)" style="min-width:130px">
+      <option value="none">None</option>
+      <option value="prev">vs Prev period</option>
+      <option value="prev_month">vs Same period prev month</option>
+      <option value="prev_year">vs Same period prev year</option>
+    </select>
     <div class="fsep"></div>
     <span id="sales-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
@@ -355,7 +377,29 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="fbtn" id="pos-state-fulf" onclick="setPosState('Fulfilled',this)">Fulfilled</button>
     <button class="fbtn" id="pos-state-exp" onclick="setPosState('Expired',this)">Expired</button>
     <div class="fsep"></div>
+    <span class="filter-label">Day</span>
+    <select class="fsel" id="pos-day-sel" onchange="setPosTime('day')"><option value="">—</option></select>
+    <span class="filter-label">Month</span>
+    <select class="fsel" id="pos-month-sel" onchange="setPosTime('month')"><option value="">—</option></select>
+    <span class="filter-label">Year</span>
+    <select class="fsel" id="pos-year-sel" onchange="setPosTime('year')"><option value="">—</option></select>
+    <span class="filter-label">Custom</span>
+    <input type="date" class="fsel" id="pos-from-sel" onchange="setPosTime('custom')" style="min-width:135px">
+    <span style="color:var(--text3);font-size:10px">→</span>
+    <input type="date" class="fsel" id="pos-to-sel" onchange="setPosTime('custom')" style="min-width:135px">
+    <button class="fbtn" onclick="clearPosTime()" style="font-size:10px;padding:4px 8px">Reset</button>
+    <div class="fsep"></div>
     <input class="fsearch" placeholder="Search PO / city / facility..." id="pos-search" oninput="renderPos()">
+    <div class="fsep"></div>
+        <span class="filter-label">Compare</span>
+    <select class="fsel" id="pos-compare-sel" onchange="setCompareMode('pos', this.value)" style="min-width:130px">
+      <option value="none">None</option>
+      <option value="prev">vs Prev period</option>
+      <option value="prev_month">vs Same period prev month</option>
+      <option value="prev_year">vs Same period prev year</option>
+    </select>
+    <div class="fsep"></div>
+    <span id="pos-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
 
   <!-- KPI -->
@@ -396,6 +440,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="fbtn ss"     onclick="setStockBrand('SunScoop',this)">SS</button>
     <button class="fbtn vinci"  onclick="setStockBrand('Vinci Botanicals',this)">Vinci</button>
     <div class="fsep"></div>
+    <span class="filter-label">Category</span>
+    <select class="fsel" id="stock-cat-sel" onchange="setStockCategory(this.value)" style="min-width:140px"><option value="">All</option></select>
+    <div class="fsep"></div>
     <input class="fsearch" placeholder="Search SKU / category / warehouse..." id="stock-search" oninput="renderStock()">
   </div>
 
@@ -428,7 +475,36 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- ═══ CITIES PAGE ══════════════════════════════════════════════════ -->
 <div class="page" id="page-cities">
   <div class="filters">
+    <span class="filter-label">Brand</span>
+    <button class="fbtn active" id="cities-brand-all" onclick="setCitiesBrand('ALL',this)">All</button>
+    <button class="fbtn ba"     onclick="setCitiesBrand('Bare Anatomy',this)">BA</button>
+    <button class="fbtn cap"    onclick="setCitiesBrand('Chemist At Play',this)">CAP</button>
+    <button class="fbtn ss"     onclick="setCitiesBrand('SunScoop',this)">SS</button>
+    <button class="fbtn vinci"  onclick="setCitiesBrand('Vinci Botanicals',this)">Vinci</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Day</span>
+    <select class="fsel" id="cities-day-sel" onchange="setCitiesTime('day')"><option value="">—</option></select>
+    <span class="filter-label">Month</span>
+    <select class="fsel" id="cities-month-sel" onchange="setCitiesTime('month')"><option value="">—</option></select>
+    <span class="filter-label">Year</span>
+    <select class="fsel" id="cities-year-sel" onchange="setCitiesTime('year')"><option value="">—</option></select>
+    <span class="filter-label">Custom</span>
+    <input type="date" class="fsel" id="cities-from-sel" onchange="setCitiesTime('custom')" style="min-width:135px">
+    <span style="color:var(--text3);font-size:10px">→</span>
+    <input type="date" class="fsel" id="cities-to-sel" onchange="setCitiesTime('custom')" style="min-width:135px">
+    <button class="fbtn" onclick="clearCitiesTime()" style="font-size:10px;padding:4px 8px">Reset</button>
+    <div class="fsep"></div>
     <input class="fsearch" placeholder="Search city..." id="cities-search" oninput="renderCities()">
+    <div class="fsep"></div>
+        <span class="filter-label">Compare</span>
+    <select class="fsel" id="cities-compare-sel" onchange="setCompareMode('cities', this.value)" style="min-width:130px">
+      <option value="none">None</option>
+      <option value="prev">vs Prev period</option>
+      <option value="prev_month">vs Same period prev month</option>
+      <option value="prev_year">vs Same period prev year</option>
+    </select>
+    <div class="fsep"></div>
+    <span id="cities-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
 
   <div class="stat-grid" id="cities-kpis"></div>
@@ -480,6 +556,17 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <span style="color:var(--text3);font-size:10px">→</span>
     <input type="date" class="fsel" id="ads-to-sel" onchange="setAdsTime('custom')" style="min-width:135px">
     <button class="fbtn" onclick="clearAdsTime()" style="font-size:10px;padding:4px 8px">Reset</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Category</span>
+    <select class="fsel" id="ads-cat-sel" onchange="setAdsCategory(this.value)" style="min-width:140px"><option value="">All</option></select>
+    <div class="fsep"></div>
+        <span class="filter-label">Compare</span>
+    <select class="fsel" id="ads-compare-sel" onchange="setCompareMode('ads', this.value)" style="min-width:130px">
+      <option value="none">None</option>
+      <option value="prev">vs Prev period</option>
+      <option value="prev_month">vs Same period prev month</option>
+      <option value="prev_year">vs Same period prev year</option>
+    </select>
     <div class="fsep"></div>
     <span id="ads-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
@@ -626,6 +713,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="fbtn" id="kw-mt-phrase" onclick="setKwMatch('PHRASE',this)">PHRASE</button>
     <button class="fbtn" id="kw-mt-na" onclick="setKwMatch('NA',this)">NA</button>
     <div class="fsep"></div>
+    <span class="filter-label">Category</span>
+    <select class="fsel" id="kw-cat-sel" onchange="setKwCategory(this.value)" style="min-width:140px"><option value="">All</option></select>
+    <div class="fsep"></div>
     <input class="fsearch" placeholder="Search keyword / campaign / SKU / category..." id="kw-search" oninput="renderKeywords()">
     <div class="fsep"></div>
     <span style="font-size:10px;color:var(--text3)" id="kw-meta">—</span>
@@ -688,20 +778,23 @@ document.getElementById('auth-pwd').addEventListener('keydown', function(e){
 // ═══ STATE ══════════════════════════════════════════════════════════
 var D = null;       // bk_data.json contents
 var H = {           // per-tab filter state
-  ov:    {brand:'ALL', mode:'all', day:'', month:'', year:'', from:'', to:''},
+  ov:    {brand:'ALL', mode:'all', day:'', month:'', year:'', from:'', to:'', category:'', compare:'none'},
   sales: {brand:'ALL', mode:'all', day:'', month:'', year:'', from:'', to:'', search:'',
+          category:'', compare:'none',
           sortBy:'real_rev', sortDir:'desc'},
-  pos:   {brand:'ALL', state:'ALL', search:''},
-  stock: {brand:'ALL', search:''},
-  cities:{search:''},
+  pos:   {brand:'ALL', state:'ALL', search:'',
+          mode:'all', day:'', month:'', year:'', from:'', to:'', compare:'none'},
+  stock: {brand:'ALL', search:'', category:''},
+  cities:{brand:'ALL', search:'',
+          mode:'all', day:'', month:'', year:'', from:'', to:'', compare:'none'},
   ads:   {brand:'ALL', type:'ALL', metric:'budget',
-          mode:'all', day:'', month:'', year:'', from:'', to:'',
+          mode:'all', day:'', month:'', year:'', from:'', to:'', category:'', compare:'none',
           campSearch:'', kwSearch:'', prodSearch:'',
           campSortBy:'budget', campSortDir:'desc',
           kwSortBy:'budget',   kwSortDir:'desc',
           slotSortBy:'budget', slotSortDir:'desc',
           prodSortBy:'budget', prodSortDir:'desc'},
-  keywords: {brand:'ALL', match:'ALL', search:'',
+  keywords: {brand:'ALL', match:'ALL', search:'', category:'',
              sortBy:'budget', sortDir:'desc'},
 };
 var charts = {};    // chart instances (so we can destroy/recreate)
@@ -842,8 +935,8 @@ function buildFilterOptions() {
 
   var years = Array.from(new Set(months.map(function(m){ return m.slice(0,4); }))).sort();
 
-  // Build month selectors (Overview + Sales)
-  ['ov-month-sel','sales-month-sel'].forEach(function(id){
+  // Build month selectors (Overview + Sales + POs + Cities + Ads)
+  ['ov-month-sel','sales-month-sel','pos-month-sel','cities-month-sel','ads-month-sel'].forEach(function(id){
     var el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = '<option value="">Pick month</option>';
@@ -855,7 +948,7 @@ function buildFilterOptions() {
   });
 
   // Year selectors
-  ['ov-year-sel','sales-year-sel'].forEach(function(id){
+  ['ov-year-sel','sales-year-sel','pos-year-sel','cities-year-sel','ads-year-sel'].forEach(function(id){
     var el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = '<option value="">Pick year</option>';
@@ -867,7 +960,7 @@ function buildFilterOptions() {
   });
 
   // Day selectors
-  ['ov-day-sel','sales-day-sel'].forEach(function(id){
+  ['ov-day-sel','sales-day-sel','pos-day-sel','cities-day-sel','ads-day-sel'].forEach(function(id){
     var el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = '<option value="">Pick day</option>';
@@ -876,6 +969,31 @@ function buildFilterOptions() {
       o.value = d; o.textContent = fmtDate(d);
       el.appendChild(o);
     });
+  });
+
+  // Category selectors (Overview, Sales, Stock, Ads, Ads Keywords)
+  populateCategoryDropdowns();
+}
+
+// Populate Category dropdowns from D.catalog
+function populateCategoryDropdowns() {
+  if (!D || !D.catalog) return;
+  var cats = {};
+  (D.catalog.list || []).forEach(function(s){
+    if (s.m_category) cats[s.m_category] = true;
+  });
+  var sorted = Object.keys(cats).sort();
+  ['ov-cat-sel','sales-cat-sel','stock-cat-sel','ads-cat-sel','kw-cat-sel'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (!el) return;
+    var current = el.value;
+    el.innerHTML = '<option value="">All</option>';
+    sorted.forEach(function(c){
+      var o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      el.appendChild(o);
+    });
+    if (current) el.value = current;
   });
 }
 
@@ -1016,6 +1134,107 @@ function setStockBrand(brand, btn) {
   renderStock();
 }
 
+// ── Category setters (filter SKU-level views) ──
+function setOvCategory(cat){    H.ov.category    = cat || ''; renderOverview(); }
+function setSalesCategory(cat){ H.sales.category = cat || ''; renderSales(); }
+function setStockCategory(cat){ H.stock.category = cat || ''; renderStock(); }
+function setAdsCategory(cat){   H.ads.category   = cat || ''; renderAds(); }
+function setKwCategory(cat){    H.keywords.category = cat || ''; renderKeywords(); }
+
+// ── Cities brand filter ──
+function setCitiesBrand(brand, btn) {
+  H.cities.brand = brand;
+  document.querySelectorAll('#page-cities .filters .fbtn').forEach(function(b){
+    var t = (b.textContent||'').trim();
+    if (['All','BA','CAP','SS','Vinci'].includes(t)) b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderCities();
+}
+
+// ── POs date filters (mirrors setOvTime / setSalesTime) ──
+function setPosTime(mode) {
+  function clearOthers(except){
+    if (except !== 'day')    { H.pos.day=''; var d=document.getElementById('pos-day-sel'); if (d) d.value=''; }
+    if (except !== 'month')  { H.pos.month=''; var m=document.getElementById('pos-month-sel'); if (m) m.value=''; }
+    if (except !== 'year')   { H.pos.year=''; var y=document.getElementById('pos-year-sel'); if (y) y.value=''; }
+    if (except !== 'custom') {
+      H.pos.from=''; H.pos.to='';
+      var f=document.getElementById('pos-from-sel'); if (f) f.value='';
+      var t=document.getElementById('pos-to-sel');   if (t) t.value='';
+    }
+  }
+  var day   = document.getElementById('pos-day-sel').value;
+  var month = document.getElementById('pos-month-sel').value;
+  var year  = document.getElementById('pos-year-sel').value;
+  var from  = document.getElementById('pos-from-sel').value;
+  var to    = document.getElementById('pos-to-sel').value;
+  if (mode === 'day' && day)               { H.pos.mode='day'; H.pos.day=day; clearOthers('day'); }
+  else if (mode === 'month' && month)      { H.pos.mode='month'; H.pos.month=month; clearOthers('month'); }
+  else if (mode === 'year' && year)        { H.pos.mode='year'; H.pos.year=year; clearOthers('year'); }
+  else if (mode === 'custom' && from && to){ H.pos.mode='custom'; H.pos.from=from; H.pos.to=to; clearOthers('custom'); }
+  renderPos();
+}
+function clearPosTime() {
+  H.pos.day=''; H.pos.month=''; H.pos.year=''; H.pos.from=''; H.pos.to=''; H.pos.mode='all';
+  ['pos-day-sel','pos-month-sel','pos-year-sel','pos-from-sel','pos-to-sel'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  renderPos();
+}
+
+// ── Cities date filters ──
+function setCitiesTime(mode) {
+  function clearOthers(except){
+    if (except !== 'day')    { H.cities.day=''; var d=document.getElementById('cities-day-sel'); if (d) d.value=''; }
+    if (except !== 'month')  { H.cities.month=''; var m=document.getElementById('cities-month-sel'); if (m) m.value=''; }
+    if (except !== 'year')   { H.cities.year=''; var y=document.getElementById('cities-year-sel'); if (y) y.value=''; }
+    if (except !== 'custom') {
+      H.cities.from=''; H.cities.to='';
+      var f=document.getElementById('cities-from-sel'); if (f) f.value='';
+      var t=document.getElementById('cities-to-sel');   if (t) t.value='';
+    }
+  }
+  var day   = document.getElementById('cities-day-sel').value;
+  var month = document.getElementById('cities-month-sel').value;
+  var year  = document.getElementById('cities-year-sel').value;
+  var from  = document.getElementById('cities-from-sel').value;
+  var to    = document.getElementById('cities-to-sel').value;
+  if (mode === 'day' && day)               { H.cities.mode='day'; H.cities.day=day; clearOthers('day'); }
+  else if (mode === 'month' && month)      { H.cities.mode='month'; H.cities.month=month; clearOthers('month'); }
+  else if (mode === 'year' && year)        { H.cities.mode='year'; H.cities.year=year; clearOthers('year'); }
+  else if (mode === 'custom' && from && to){ H.cities.mode='custom'; H.cities.from=from; H.cities.to=to; clearOthers('custom'); }
+  renderCities();
+}
+function clearCitiesTime() {
+  H.cities.day=''; H.cities.month=''; H.cities.year=''; H.cities.from=''; H.cities.to=''; H.cities.mode='all';
+  ['cities-day-sel','cities-month-sel','cities-year-sel','cities-from-sel','cities-to-sel'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  renderCities();
+}
+
+// Helper: does a given date string fall inside the resolved window for tab?
+function _dateInWindow(tab, dateStr) {
+  var s = H[tab];
+  if (!s || !s.mode || s.mode === 'all' || !dateStr) return true;
+  var d = String(dateStr).slice(0, 10);  // YYYY-MM-DD
+  if (s.mode === 'day')   return d === s.day;
+  if (s.mode === 'month') return d.slice(0,7) === s.month;
+  if (s.mode === 'year')  return d.slice(0,4) === s.year;
+  if (s.mode === 'custom') return s.from && s.to && d >= s.from && d <= s.to;
+  return true;
+}
+function _windowLabel(tab) {
+  var s = H[tab];
+  if (!s) return '';
+  if (s.mode === 'day')    return 'Day · ' + fmtDate(s.day);
+  if (s.mode === 'month')  return 'Month · ' + fmtMonth(s.month);
+  if (s.mode === 'year')   return 'Year · ' + s.year;
+  if (s.mode === 'custom' && s.from && s.to) return 'Custom · ' + fmtDate(s.from) + ' → ' + fmtDate(s.to);
+  return 'all';
+}
+
 // ═══ AGGREGATION ════════════════════════════════════════════════════
 // Resolve time window for a tab → returns the dates/months it covers
 function resolveWindow(tab) {
@@ -1041,29 +1260,89 @@ function resolveWindow(tab) {
 }
 
 // Compute previous-period equivalent window
-function resolvePrev(win) {
+function resolvePrev(win, tab) {
+  // tab is optional — if provided, use H[tab].compare to decide what 'prev' means.
+  // Default behavior (no tab passed) preserves the original "previous adjacent period".
+  var compareMode = 'prev';
+  if (tab && H[tab] && H[tab].compare) compareMode = H[tab].compare;
+  if (compareMode === 'none') return null;
+
   var hist = D.historical || {};
   var monthsAll = (hist.months || []).map(function(m){ return m.label; });
+
+  // Helper: compute "same period N months ago" for any kind
+  function shiftMonths(n) {
+    if (win.kind === 'month') {
+      var ym = win.month;
+      var d = new Date(ym + '-01');
+      d.setMonth(d.getMonth() - n);
+      var pmo = d.toISOString().slice(0,7);
+      return {kind:'month', month:pmo, label:'vs ' + fmtMonth(pmo)};
+    }
+    if (win.kind === 'day') {
+      var d = new Date(win.date);
+      d.setMonth(d.getMonth() - n);
+      var pd = d.toISOString().slice(0,10);
+      return {kind:'day', date:pd, label:'vs ' + fmtDate(pd)};
+    }
+    if (win.kind === 'year') {
+      var py = (parseInt(win.year, 10) - (n === 12 ? 1 : 0)).toString();
+      return {kind:'year', year:py, label:'vs ' + py};
+    }
+    if (win.kind === 'custom' && win.from && win.to) {
+      var fd = new Date(win.from), td = new Date(win.to);
+      fd.setMonth(fd.getMonth() - n); td.setMonth(td.getMonth() - n);
+      var f = fd.toISOString().slice(0,10), t = td.toISOString().slice(0,10);
+      return {kind:'custom', from:f, to:t, label:'vs ' + fmtDate(f)+'→'+fmtDate(t)};
+    }
+    if (win.kind === 'all') return null;
+    return null;
+  }
+
+  if (compareMode === 'prev_month') return shiftMonths(1);
+  if (compareMode === 'prev_year')  return shiftMonths(12);
+
+  // 'prev' = adjacent previous period — same logic as the old function
   if (win.kind === 'month') {
     var idx = monthsAll.indexOf(win.month);
     if (idx > 0) return {kind:'month', month:monthsAll[idx-1], label:'vs ' + fmtMonth(monthsAll[idx-1])};
     return null;
   }
   if (win.kind === 'day') {
-    var d = new Date(win.date);
-    d.setDate(d.getDate() - 1);
-    var prev = d.toISOString().slice(0,10);
+    var d2 = new Date(win.date);
+    d2.setDate(d2.getDate() - 1);
+    var prev = d2.toISOString().slice(0,10);
     return {kind:'day', date:prev, label:'vs ' + fmtDate(prev)};
   }
   if (win.kind === 'year') {
-    var py = (parseInt(win.year, 10) - 1).toString();
-    return {kind:'year', year:py, label:'vs ' + py};
+    var py2 = (parseInt(win.year, 10) - 1).toString();
+    return {kind:'year', year:py2, label:'vs ' + py2};
+  }
+  if (win.kind === 'custom' && win.from && win.to) {
+    // 'prev' for custom = same-length window immediately before
+    var fd2 = new Date(win.from), td2 = new Date(win.to);
+    var ms = td2 - fd2;
+    var pTo = new Date(fd2.getTime() - 86400000);
+    var pFrom = new Date(pTo.getTime() - ms);
+    var pf = pFrom.toISOString().slice(0,10), pt = pTo.toISOString().slice(0,10);
+    return {kind:'custom', from:pf, to:pt, label:'vs ' + fmtDate(pf)+'→'+fmtDate(pt)};
   }
   return null;
 }
 
+// User-selected compare mode setter
+function setCompareMode(tab, mode) {
+  if (!H[tab]) return;
+  H[tab].compare = mode || 'none';
+  if (tab === 'ov')     renderOverview();
+  if (tab === 'sales')  renderSales();
+  if (tab === 'pos')    renderPos();
+  if (tab === 'cities') renderCities();
+  if (tab === 'ads')    renderAds();
+}
+
 // Aggregate sales over a window for given brand filter
-function aggregateSales(win, brand) {
+function aggregateSales(win, brand, category) {
   var hist = D.historical || {};
   var skuDaily = hist.sales_sku_daily || [];
   var dailyAll = hist.sales_daily || [];
@@ -1089,11 +1368,16 @@ function aggregateSales(win, brand) {
     if (brand === 'ALL') return true;
     return b === brand;
   };
+  var categoryFilter = function(prod) {
+    if (!category) return true;
+    return (prod.m_category || '') === category;
+  };
 
   function addRow(date, iid, units, mrp_rev, real_rev) {
     var prod = catById[iid] || {};
     var b = prod.brand || 'Unknown';
     if (!brandFilter(b)) return;
+    if (!categoryFilter(prod)) return;
     out.units += units;
     out.mrp_rev += mrp_rev;
     out.real_rev += real_rev;
@@ -1203,12 +1487,13 @@ function renderOverview() {
   if (!D || !D.historical) return;
 
   var win = resolveWindow('ov');
-  var prev = resolvePrev(win);
+  var prev = resolvePrev(win, 'ov');
   var brand = H.ov.brand;
-  document.getElementById('ov-window-lbl').textContent = win.label + (prev ? ' · ' + prev.label : '');
+  var category = H.ov.category;
+  document.getElementById('ov-window-lbl').textContent = win.label + (prev ? ' · ' + prev.label : '') + (category ? ' · ' + category : '');
 
-  var cur = aggregateSales(win, brand);
-  var pAg = prev ? aggregateSales(prev, brand) : null;
+  var cur = aggregateSales(win, brand, category);
+  var pAg = prev ? aggregateSales(prev, brand, category) : null;
 
   // ── Brand pills ───────────────────────────────────────────────────
   var pillsHtml = '';
@@ -1351,14 +1636,15 @@ function renderSales() {
   if (!D || !D.historical) return;
 
   var win = resolveWindow('sales');
-  var prev = resolvePrev(win);
+  var prev = resolvePrev(win, 'sales');
   var brand = H.sales.brand;
+  var category = H.sales.category;
   var search = (document.getElementById('sales-search').value || '').toLowerCase();
   H.sales.search = search;
-  document.getElementById('sales-window-lbl').textContent = win.label + (prev ? ' · ' + prev.label : '');
+  document.getElementById('sales-window-lbl').textContent = win.label + (prev ? ' · ' + prev.label : '') + (category ? ' · ' + category : '');
 
-  var cur = aggregateSales(win, brand);
-  var pAg = prev ? aggregateSales(prev, brand) : null;
+  var cur = aggregateSales(win, brand, category);
+  var pAg = prev ? aggregateSales(prev, brand, category) : null;
 
   // ── KPI tiles ─────────────────────────────────────────────────────
   var discPct = cur.mrp_rev > 0 ? ((cur.mrp_rev - cur.real_rev) / cur.mrp_rev * 100) : null;
@@ -1505,7 +1791,7 @@ function exportSalesCsv() {
   if (!D) return;
   var rows = [['Item ID','Product','Clean Name','Brand','Category','MRP','SP','Disc%','Units','MRP Rev','Sales','DRR U','DRR ₹']];
   var win = resolveWindow('sales');
-  var cur = aggregateSales(win, H.sales.brand);
+  var cur = aggregateSales(win, H.sales.brand, H.sales.category);
   Object.values(cur.skus).forEach(function(s){
     if (s.units === 0) return;
     var cat = getCatItem(s.item_id) || {};
@@ -1546,6 +1832,8 @@ function renderPos() {
       if (state === 'Fulfilled' && p.po_state !== 'Fulfilled') return false;
       if (state === 'Expired' && p.po_state !== 'Expired') return false;
     }
+    // Date window filter on order_date (YYYY-MM-DDTHH:mm:ss or YYYY-MM-DD)
+    if (!_dateInWindow('pos', p.order_date)) return false;
     // Brand filter — derive from line_items
     if (brand !== 'ALL') {
       var hasBrand = (p.line_items || []).some(function(it){
@@ -1560,6 +1848,10 @@ function renderPos() {
     }
     return true;
   });
+
+  // Update window label
+  var wl = document.getElementById('pos-window-lbl');
+  if (wl) wl.textContent = _windowLabel('pos');
 
   // KPIs
   var sumVal = filtered.reduce(function(a,p){ return a + (p.total_amount||0); }, 0);
@@ -1618,14 +1910,16 @@ function renderPos() {
 function renderStock() {
   if (!D || !D.skus) return;
   var brand = H.stock.brand;
+  var category = H.stock.category;
   var search = (document.getElementById('stock-search').value || '').toLowerCase();
 
   var skus = D.skus.filter(function(s){
     if (brand !== 'ALL' && s.brand !== brand) return false;
+    var cat = getCatItem(s.item_id) || {};
+    if (category && (cat.m_category || s.m_category || '') !== category) return false;
     if (search) {
-      var cat = getCatItem(s.item_id) || {};
-      var category = (cat.m_category||'')+' '+(cat.category_l1||'')+' '+(cat.category_l2||'');
-      var hay = ((s.name||'')+' '+(s.clean_name||cat.clean_name||'')+' '+(s.item_id||'')+' '+(s.brand||'')+' '+category).toLowerCase();
+      var catText = (cat.m_category||'')+' '+(cat.category_l1||'')+' '+(cat.category_l2||'');
+      var hay = ((s.name||'')+' '+(s.clean_name||cat.clean_name||'')+' '+(s.item_id||'')+' '+(s.brand||'')+' '+catText).toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
@@ -1667,10 +1961,40 @@ function renderStock() {
 function renderCities() {
   if (!D || !D.geo) return;
   var search = (document.getElementById('cities-search').value || '').toLowerCase();
+  var brand = H.cities.brand || 'ALL';
+  var citiesMode = H.cities.mode || 'all';
+
+  // Update window label
+  var wlEl = document.getElementById('cities-window-lbl');
+  if (wlEl) {
+    var lbl = _windowLabel('cities');
+    // Note: D.geo.cities is pre-aggregated all-history; date filter shown but not applied
+    if (citiesMode !== 'all' || brand !== 'ALL') {
+      wlEl.textContent = lbl + (brand !== 'ALL' ? ' · ' + brand : '') +
+        (citiesMode !== 'all' ? ' (date ignored — backend aggregate)' : '');
+    } else {
+      wlEl.textContent = 'all-history';
+    }
+  }
+
   var cities = (D.geo.all_cities || D.geo.top_20 || []).filter(function(c){
     if (search) return ((c.city||'').toLowerCase()).includes(search);
     return true;
   });
+
+  // Brand filter: D.geo.cities is brand-agnostic. We approximate by checking
+  // whether any of D.skus belonging to the brand actually sold in that city.
+  // If we don't have city-level brand data, brand filter degrades gracefully (shows all).
+  if (brand !== 'ALL' && D.skus) {
+    // Build a set of cities where this brand has activity (using top_city per SKU as a proxy)
+    var brandCities = {};
+    D.skus.forEach(function(s){
+      if (s.brand === brand && s.top_city) brandCities[s.top_city] = true;
+    });
+    if (Object.keys(brandCities).length) {
+      cities = cities.filter(function(c){ return brandCities[c.city]; });
+    }
+  }
 
   var totalCities = cities.length;
   var totalUnits = cities.reduce(function(a,c){ return a + (c.units||0); }, 0);
@@ -1942,7 +2266,7 @@ function _adsSliceDaily(series, win) {
 
 // Compute per-campaign totals within the window.
 // Returns array of {cid, name, brand, type, status, ..., metrics}
-function _adsCampaignsInWindow(win, brandFilter, typeFilter) {
+function _adsCampaignsInWindow(win, brandFilter, typeFilter, categoryFilter) {
   if (!D || !D.ads) return [];
   var camps = D.ads.campaigns || [];
   var daily = D.ads.campaigns_daily || {};
@@ -1951,6 +2275,16 @@ function _adsCampaignsInWindow(win, brandFilter, typeFilter) {
     var c = camps[i];
     if (brandFilter !== 'ALL' && c.brand !== brandFilter) continue;
     if (typeFilter !== 'ALL' && c.type !== typeFilter) continue;
+    if (categoryFilter) {
+      // Pass if any linked SKU matches the selected category
+      var pids = c.pids || [];
+      var matched = false;
+      for (var pi=0; pi<pids.length; pi++) {
+        var sk = _adsSkuLookup(pids[pi]);
+        if (sk && (sk.m_category||'') === categoryFilter) { matched = true; break; }
+      }
+      if (!matched) continue;
+    }
     var sub;
     if (win) {
       var s = daily[String(c.cid)];
@@ -1976,7 +2310,7 @@ function _adsCampaignsInWindow(win, brandFilter, typeFilter) {
 
 // Compute per-SKU totals within the window by attributing campaign daily
 // metrics through the catalog's PID list (equal share among pids).
-function _adsProductsInWindow(win, brandFilter, typeFilter) {
+function _adsProductsInWindow(win, brandFilter, typeFilter, categoryFilter) {
   if (!D || !D.ads) return [];
   var bySku = {};   // pid → {metrics + meta}
   var skuLink = {}; // pid → [{cid, name, share, spend, sales, ...}]
@@ -2007,6 +2341,7 @@ function _adsProductsInWindow(win, brandFilter, typeFilter) {
       var sku = _adsSkuLookup(pid);
       var skuBrand = (sku && sku.brand) || c.brand;
       if (brandFilter !== 'ALL' && skuBrand !== brandFilter) continue;
+      if (categoryFilter && (sku && sku.m_category || '') !== categoryFilter) continue;
       if (!bySku[pid]) {
         bySku[pid] = {pid:pid, brand:skuBrand,
                       item_id:(sku && sku.item_id),
@@ -2122,7 +2457,7 @@ function renderAds() {
   if (lblEl) lblEl.textContent = win ? (win.label + ' · ' + win.days + 'd') : '—';
 
   // ── Compute filtered campaign list (drives most aggregates) ──────
-  var campsInWin = _adsCampaignsInWindow(win, brandFilter, typeFilter);
+  var campsInWin = _adsCampaignsInWindow(win, brandFilter, typeFilter, H.ads.category);
 
   // ── Totals ──────────────────────────────────────────────────────────
   var t = {impr:0,atc:0,qty:0,sales:0,budget:0,new_users:0,
@@ -2366,9 +2701,23 @@ function renderAds() {
   document.getElementById('ads-campaigns-body').innerHTML = cBody;
 
   // ── Reco slots table (PRODUCT_RECOMMENDATION only; all-history) ───
+  // Build cid → campaign map for category filtering
+  var _slotCampByCid = {};
+  (D.ads.campaigns || []).forEach(function(c){ _slotCampByCid[c.cid] = c; });
   var slots = (D.ads.reco_slots || []).filter(function(s){
     if (brandFilter !== 'ALL' && s.brand !== brandFilter) return false;
     if (typeFilter === 'PRODUCT_LISTING') return false;
+    // Category filter — campaign passes if any linked SKU matches
+    if (H.ads.category) {
+      var camp = _slotCampByCid[s.cid] || {};
+      var pids = camp.pids || [];
+      var matched = false;
+      for (var pi=0; pi<pids.length; pi++) {
+        var sk = _adsSkuLookup(pids[pi]);
+        if (sk && (sk.m_category||'') === H.ads.category) { matched = true; break; }
+      }
+      if (!matched) return false;
+    }
     return true;
   });
   var sBy = H.ads.slotSortBy, sDir = H.ads.slotSortDir;
@@ -2440,7 +2789,7 @@ function renderAds() {
   // ── Products table (per-SKU within window) ────────────────────────
   var prodSearch = (document.getElementById('ads-prod-search').value || '').toLowerCase();
   H.ads.prodSearch = prodSearch;
-  var prods = _adsProductsInWindow(win, brandFilter, typeFilter);
+  var prods = _adsProductsInWindow(win, brandFilter, typeFilter, H.ads.category);
   prods = prods.filter(function(p){
     if (!prodSearch) return true;
     var hay = ((p.clean_name||'')+' '+(p.name||'')+' '+(p.brand||'')+
@@ -2551,7 +2900,7 @@ function _adsCsvSuffix() {
 function exportAdsCampaignsCsv() {
   if (!D || !D.ads) return;
   var win = _adsResolveWindow();
-  var camps = _adsCampaignsInWindow(win, H.ads.brand, H.ads.type);
+  var camps = _adsCampaignsInWindow(win, H.ads.brand, H.ads.type, H.ads.category);
   var headers = ['Brand','Campaign','Campaign ID','Type','Status','Products','Categories','PID Count','Spend','Sales','RoAS','ATC','Qty','Impressions','New Users','D Sales','I Sales'];
   var rows = camps.map(function(c){
     var pids = c.pids || [];
@@ -2612,7 +2961,7 @@ function exportAdsSlotsCsv() {
 function exportAdsProductsCsv() {
   if (!D || !D.ads) return;
   var win = _adsResolveWindow();
-  var prods = _adsProductsInWindow(win, H.ads.brand, H.ads.type);
+  var prods = _adsProductsInWindow(win, H.ads.brand, H.ads.type, H.ads.category);
   var headers = ['Brand','PID','Item ID','Product','Clean Name','Category','MRP','Spend','Sales','RoAS','ATC','Qty','Impressions','CPS','CPA','CPM','Campaigns'];
   var rows = prods.map(function(p){
     return [p.brand, p.pid, p.item_id, p.name, p.clean_name, p.m_category, p.mrp,
@@ -2658,11 +3007,16 @@ function renderKeywords() {
   }
   var brand = H.keywords.brand;
   var match = H.keywords.match;
+  var category = H.keywords.category;
   var search = (document.getElementById('kw-search').value || '').toLowerCase();
   H.keywords.search = search;
 
   var lblEl = document.getElementById('kw-meta');
-  if (lblEl) lblEl.textContent = 'all-history';
+  if (lblEl) lblEl.textContent = 'all-history' + (category ? ' · ' + category : '');
+
+  // Build cid → campaign map for category filtering
+  var _kwCampMap = {};
+  (D.ads.campaigns || []).forEach(function(c){ _kwCampMap[c.cid] = c; });
 
   // Filter
   var kws = (D.ads.keywords || []).filter(function(k){
@@ -2674,6 +3028,18 @@ function renderKeywords() {
       } else {
         if (mt !== match) return false;
       }
+    }
+    // Category filter — keyword's campaign must have at least one PID in this category
+    if (category) {
+      var camp = _kwCampMap[k.cid];
+      if (!camp) return false;
+      var pids = camp.pids || [];
+      var matched = false;
+      for (var ci=0; ci<pids.length; ci++) {
+        var sk = _adsSkuLookup(pids[ci]);
+        if (sk && (sk.m_category||'') === category) { matched = true; break; }
+      }
+      if (!matched) return false;
     }
     if (search) {
       var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')+' '+(k.brand||'')).toLowerCase();
@@ -2813,13 +3179,27 @@ function renderKeywords() {
 function exportKeywordsCsv() {
   if (!D || !D.ads) return;
   var brand = H.keywords.brand, match = H.keywords.match;
+  var category = H.keywords.category;
   var search = ((document.getElementById('kw-search')||{}).value||'').toLowerCase();
+  var _kwCampMap2 = {};
+  (D.ads.campaigns || []).forEach(function(c){ _kwCampMap2[c.cid] = c; });
   var kws = (D.ads.keywords||[]).filter(function(k){
     if (brand !== 'ALL' && k.brand !== brand) return false;
     if (match !== 'ALL') {
       var mt = (k.match_type || '').toUpperCase();
       if (match === 'NA') { if (mt && mt !== 'NA') return false; }
       else if (mt !== match) return false;
+    }
+    if (category) {
+      var camp = _kwCampMap2[k.cid];
+      if (!camp) return false;
+      var pids = camp.pids || [];
+      var matchCat = false;
+      for (var ki=0; ki<pids.length; ki++) {
+        var sk = _adsSkuLookup(pids[ki]);
+        if (sk && (sk.m_category||'') === category) { matchCat = true; break; }
+      }
+      if (!matchCat) return false;
     }
     if (search) {
       var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')+' '+(k.brand||'')).toLowerCase();
@@ -2875,7 +3255,7 @@ function exportOvTopSkusCsv() {
   if (!D || !D.historical) return;
   var win = resolveWindow('ov');
   var brand = H.ov.brand;
-  var ag = aggregateSales(win, brand);
+  var ag = aggregateSales(win, brand, H.ov.category);
   var skus = Object.values(ag.skus).slice().sort(function(a,b){
     return (b.real_rev||0) - (a.real_rev||0);
   });
