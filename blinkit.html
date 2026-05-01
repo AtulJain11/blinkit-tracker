@@ -201,7 +201,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <!-- Charts: 16-month trend + Brand share -->
   <div class="chart-grid" style="grid-template-columns:2fr 1fr">
     <div class="chart-card">
-      <div class="chart-title">📈 16-Month Trend · MRP vs Realized Revenue</div>
+      <div class="chart-title">📈 16-Month Trend · MRP vs Salesenue</div>
       <div class="chart-wrap"><canvas id="ch-mom-trend"></canvas></div>
     </div>
     <div class="chart-card">
@@ -225,7 +225,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <!-- Top SKUs -->
   <div class="card" style="margin-top:14px">
     <div class="card-hdr">
-      <span class="card-title">🏆 Top 15 SKUs · By Realized Revenue</span>
+      <span class="card-title">🏆 Top 15 SKUs · By Sales</span>
       <span class="card-sub" id="ov-top-sub"></span>
     </div>
     <table>
@@ -235,7 +235,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th>Brand</th>
         <th style="text-align:right">Units</th>
         <th style="text-align:right">MRP Rev</th>
-        <th style="text-align:right">Realized Rev</th>
+        <th style="text-align:right">Sales</th>
         <th style="text-align:right">Disc%</th>
         <th style="text-align:right">PO Value</th>
         <th>Top City</th>
@@ -302,11 +302,13 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="min-width:280px" onclick="sortSales('name')">Product</th>
         <th onclick="sortSales('brand')">Brand</th>
         <th style="text-align:right" onclick="sortSales('mrp')">MRP</th>
-        <th style="text-align:right" onclick="sortSales('sp')">Realized SP</th>
+        <th style="text-align:right" onclick="sortSales('sp')">SP</th>
         <th style="text-align:right" onclick="sortSales('disc')">Disc%</th>
         <th style="text-align:right" onclick="sortSales('units')">Units</th>
         <th style="text-align:right" onclick="sortSales('mrp_rev')">MRP Rev</th>
-        <th style="text-align:right" onclick="sortSales('real_rev')">Realized ▼</th>
+        <th style="text-align:right" onclick="sortSales('real_rev')">Sales ▼</th>
+        <th style="text-align:right" onclick="sortSales('net_sales')">Net Sales</th>
+        <th style="text-align:right" onclick="sortSales('aov')">AOV</th>
         <th style="text-align:right" onclick="sortSales('drr_units')">DRR U</th>
         <th style="text-align:right" onclick="sortSales('drr_rev')">DRR ₹</th>
         <th style="text-align:right" onclick="sortSales('inv')">Inventory</th>
@@ -391,7 +393,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="min-width:280px">Product</th>
         <th>Brand</th>
         <th style="text-align:right">Total Inv</th>
-        <th style="text-align:right">Warehouses</th>
+        <th style="text-align:right">Stocked WH</th>
         <th style="text-align:right">OOS WH</th>
         <th style="text-align:right">Units 30d</th>
         <th style="text-align:right">DOH</th>
@@ -420,9 +422,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th>#</th>
         <th>City</th>
         <th style="text-align:right">Units</th>
-        <th style="text-align:right">MRP Rev</th>
+        <th style="text-align:right">Sales (MRP)</th>
         <th style="text-align:right">Active SKUs</th>
-        <th style="text-align:right">Top SKU Units</th>
+        <th style="text-align:right">Order Lines</th>
       </tr></thead>
       <tbody id="cities-body"></tbody>
     </table>
@@ -512,6 +514,22 @@ function brandTagClass(brand) {
   if (b.includes('sunscoop')) return 'ss';
   if (b.includes('vinci')) return 'vinci';
   return '';
+}
+
+// Prefer mapping clean_name; fall back to Blinkit catalog name
+function displayName(s) {
+  if (!s) return '—';
+  return (s.clean_name && String(s.clean_name).trim()) ? s.clean_name : (s.name || '—');
+}
+
+// Look up a SKU by item_id (uses catalog map for fast access; built once)
+var _catById = null;
+function getCatItem(iid) {
+  if (!_catById && D && D.catalog && D.catalog.list) {
+    _catById = {};
+    D.catalog.list.forEach(function(p){ _catById[p.item_id] = p; });
+  }
+  return _catById ? _catById[iid] : null;
 }
 
 // ═══ BOOTSTRAP ══════════════════════════════════════════════════════
@@ -635,10 +653,20 @@ function setOvTime(mode) {
   renderOverview();
 }
 function clearOvTime() {
-  H.ov.mode = 'all'; H.ov.day=''; H.ov.month=''; H.ov.year=''; H.ov.from=''; H.ov.to='';
+  H.ov.day=''; H.ov.month=''; H.ov.year=''; H.ov.from=''; H.ov.to='';
   ['day','month','year','from','to'].forEach(function(k){
     var el = document.getElementById('ov-'+k+'-sel'); if (el) el.value = '';
   });
+  // Default back to current month (not all-time — too noisy)
+  var curMonth = (D.meta && D.meta.window && D.meta.window.from) ?
+                  D.meta.window.from.slice(0,7) :
+                  (D.historical && D.historical.months.length ? D.historical.months[D.historical.months.length-1].label : null);
+  if (curMonth) {
+    H.ov.mode = 'month'; H.ov.month = curMonth;
+    var ms = document.getElementById('ov-month-sel'); if (ms) ms.value = curMonth;
+  } else {
+    H.ov.mode = 'all';
+  }
   renderOverview();
 }
 
@@ -671,10 +699,19 @@ function setSalesTime(mode) {
   renderSales();
 }
 function clearSalesTime() {
-  H.sales.mode = 'all'; H.sales.day=''; H.sales.month=''; H.sales.year=''; H.sales.from=''; H.sales.to='';
+  H.sales.day=''; H.sales.month=''; H.sales.year=''; H.sales.from=''; H.sales.to='';
   ['day','month','year','from','to'].forEach(function(k){
     var el = document.getElementById('sales-'+k+'-sel'); if (el) el.value = '';
   });
+  var curMonth = (D.meta && D.meta.window && D.meta.window.from) ?
+                  D.meta.window.from.slice(0,7) :
+                  (D.historical && D.historical.months.length ? D.historical.months[D.historical.months.length-1].label : null);
+  if (curMonth) {
+    H.sales.mode = 'month'; H.sales.month = curMonth;
+    var ms = document.getElementById('sales-month-sel'); if (ms) ms.value = curMonth;
+  } else {
+    H.sales.mode = 'all';
+  }
   renderSales();
 }
 function sortSales(col) {
@@ -942,7 +979,7 @@ function renderOverview() {
   }
   kpisHtml += tile('MRP Revenue', fmtINR(cur.mrp_rev), cur.days+' days', 'var(--text)',
     pAg ? {cur:cur.mrp_rev, prev:pAg.mrp_rev} : null);
-  kpisHtml += tile('Realized Rev', fmtINR(cur.real_rev), 'after discount', 'var(--green)',
+  kpisHtml += tile('Sales', fmtINR(cur.real_rev), 'after discount', 'var(--green)',
     pAg ? {cur:cur.real_rev, prev:pAg.real_rev} : null);
   kpisHtml += tile('Discount', fmtPct(discPct), 'avg', 'var(--orange)',
     pDiscPct != null ? {cur:discPct, prev:pDiscPct, isPct:true, invert:true} : null);
@@ -982,7 +1019,7 @@ function renderOverview() {
 
   drawLineChart('ch-mom-trend', labels, [
     {label:'MRP Revenue (Cr)', data:mrpData, color:'#4f8ef7'},
-    {label:'Realized Revenue (Cr)', data:realData, color:'#3ecf8e'},
+    {label:'Sales (Cr)', data:realData, color:'#3ecf8e'},
   ], '₹ Crore');
 
   drawLineChart('ch-mom-units', labels, [
@@ -1023,11 +1060,11 @@ function renderOverview() {
     var poVal = 0;
     if (D.skus) {
       var skuFull = D.skus.find(function(x){ return x.item_id === s.item_id; });
-      if (skuFull) poVal = skuFull.po_value || 0;
+      if (skuFull) poVal = skuFull.po_value_30d || 0;
     }
     rowsHtml += '<tr>' +
       '<td>'+(idx+1)+'</td>' +
-      '<td><div style="font-weight:600;color:var(--text)">'+s.name+'</div>' +
+      '<td><div style="font-weight:600;color:var(--text)">'+displayName(getCatItem(s.item_id) || s)+'</div>' +
         '<div class="pid">'+s.item_id+'</div></td>' +
       '<td><span class="tag '+brandTagClass(s.brand)+'">'+s.brand+'</span></td>' +
       '<td style="text-align:right" class="mono">'+fmtNum(s.units)+'</td>' +
@@ -1076,7 +1113,7 @@ function renderSales() {
   var kpisHtml = '';
   kpisHtml += tile('MRP Revenue', fmtINR(cur.mrp_rev), cur.days+' days', 'var(--text)',
     pAg ? {cur:cur.mrp_rev, prev:pAg.mrp_rev} : null);
-  kpisHtml += tile('Realized Rev', fmtINR(cur.real_rev), 'after discount', 'var(--green)',
+  kpisHtml += tile('Sales', fmtINR(cur.real_rev), 'after discount', 'var(--green)',
     pAg ? {cur:cur.real_rev, prev:pAg.real_rev} : null);
   kpisHtml += tile('Discount %', fmtPct(discPct), 'avg', 'var(--orange)',
     pDiscPct != null ? {cur:discPct, prev:pDiscPct, isPct:true, invert:true} : null);
@@ -1098,7 +1135,7 @@ function renderSales() {
   var dReal = dailyData.map(function(d){ return d.real_rev/1e5; });
   drawLineChart('ch-sales-daily', dLabels, [
     {label:'MRP Rev (L)', data:dMrp, color:'#4f8ef7'},
-    {label:'Realized Rev (L)', data:dReal, color:'#3ecf8e'},
+    {label:'Sales (L)', data:dReal, color:'#3ecf8e'},
   ], '₹ Lakhs');
 
   // ── Brand bar chart ─────────────────────────────────────────────
@@ -1116,7 +1153,9 @@ function renderSales() {
   var skus = Object.values(cur.skus).filter(function(s){
     if (s.units === 0 && cur.units > 0) return false;
     if (search) {
-      var hay = (s.name+' '+s.item_id+' '+s.brand).toLowerCase();
+      var cat = getCatItem(s.item_id);
+      var clean = cat ? (cat.clean_name || '') : '';
+      var hay = (s.name+' '+clean+' '+s.item_id+' '+s.brand).toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
@@ -1127,7 +1166,7 @@ function renderSales() {
   skus.sort(function(a,b){
     var av, bv;
     switch(col) {
-      case 'name':  av=a.name||''; bv=b.name||''; return av.localeCompare(bv) * dir;
+      case 'name':  av=displayName(getCatItem(a.item_id)||a); bv=displayName(getCatItem(b.item_id)||b); return av.localeCompare(bv) * dir;
       case 'brand': av=a.brand||''; bv=b.brand||''; return av.localeCompare(bv) * dir;
       case 'mrp':   av=a.mrp; bv=b.mrp; break;
       case 'sp':    av=a.units>0?a.real_rev/a.units:0; bv=b.units>0?b.real_rev/b.units:0; break;
@@ -1135,6 +1174,8 @@ function renderSales() {
       case 'units': av=a.units; bv=b.units; break;
       case 'mrp_rev': av=a.mrp_rev; bv=b.mrp_rev; break;
       case 'real_rev': av=a.real_rev; bv=b.real_rev; break;
+      case 'net_sales': av=a.real_rev/1.18; bv=b.real_rev/1.18; break;
+      case 'aov': av=a.units>0?a.real_rev/a.units:0; bv=b.units>0?b.real_rev/b.units:0; break;
       case 'drr_units': av=cur.days>0?a.units/cur.days:0; bv=cur.days>0?b.units/cur.days:0; break;
       case 'drr_rev': av=cur.days>0?a.real_rev/cur.days:0; bv=cur.days>0?b.real_rev/cur.days:0; break;
       case 'inv':   av=getSkuInv(a.item_id); bv=getSkuInv(b.item_id); break;
@@ -1150,13 +1191,15 @@ function renderSales() {
   skus.forEach(function(s, idx){
     var sp = s.units > 0 ? (s.real_rev / s.units) : 0;
     var disc = s.mrp_rev > 0 ? ((s.mrp_rev - s.real_rev) / s.mrp_rev * 100) : 0;
+    var netSales = s.real_rev / 1.18;  // ex-GST
+    var aov = s.units > 0 ? (s.real_rev / s.units) : 0;
     var drrU = cur.days > 0 ? s.units / cur.days : 0;
     var drrR = cur.days > 0 ? s.real_rev / cur.days : 0;
     var inv = getSkuInv(s.item_id);
     var topCity = getSkuTopCity(s.item_id) || '—';
     rowsHtml += '<tr>' +
       '<td>' + (idx+1) + '</td>' +
-      '<td><div style="font-weight:600;color:var(--text)">'+s.name+'</div><div class="pid">'+s.item_id+'</div></td>' +
+      '<td><div style="font-weight:600;color:var(--text)">'+displayName(getCatItem(s.item_id) || s)+'</div><div class="pid">'+s.item_id+'</div></td>' +
       '<td><span class="tag '+brandTagClass(s.brand)+'">'+s.brand+'</span></td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(s.mrp)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(sp)+'</td>' +
@@ -1164,13 +1207,15 @@ function renderSales() {
       '<td style="text-align:right" class="mono">'+fmtNum(s.units)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(s.mrp_rev)+'</td>' +
       '<td style="text-align:right;color:var(--green)" class="mono">'+fmtINR(s.real_rev)+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(netSales)+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(aov)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtNum(drrU)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(drrR)+'</td>' +
       '<td style="text-align:right" class="mono">'+(inv != null ? fmtNum(inv) : '—')+'</td>' +
       '<td>'+topCity+'</td>' +
       '</tr>';
   });
-  document.getElementById('sales-sku-body').innerHTML = rowsHtml || '<tr><td colspan="13" style="text-align:center;padding:30px;color:var(--text3)">No SKUs match these filters</td></tr>';
+  document.getElementById('sales-sku-body').innerHTML = rowsHtml || '<tr><td colspan="15" style="text-align:center;padding:30px;color:var(--text3)">No SKUs match these filters</td></tr>';
 }
 
 function getSkuInv(iid) {
@@ -1186,7 +1231,7 @@ function getSkuTopCity(iid) {
 
 function exportSalesCsv() {
   if (!D) return;
-  var rows = [['SKU','Product','Brand','MRP','Realized SP','Disc%','Units','MRP Rev','Realized Rev','DRR U','DRR ₹']];
+  var rows = [['SKU','Product','Brand','MRP','SP','Disc%','Units','MRP Rev','Sales','DRR U','DRR ₹']];
   var win = resolveWindow('sales');
   var cur = aggregateSales(win, H.sales.brand);
   Object.values(cur.skus).forEach(function(s){
@@ -1195,7 +1240,7 @@ function exportSalesCsv() {
     var disc = s.mrp_rev > 0 ? ((s.mrp_rev - s.real_rev) / s.mrp_rev * 100) : 0;
     var drrU = cur.days > 0 ? s.units / cur.days : 0;
     var drrR = cur.days > 0 ? s.real_rev / cur.days : 0;
-    rows.push([s.item_id, s.name, s.brand, s.mrp.toFixed(0), sp.toFixed(0), disc.toFixed(1),
+    rows.push([s.item_id, displayName(getCatItem(s.item_id) || s), s.brand, s.mrp.toFixed(0), sp.toFixed(0), disc.toFixed(1),
                s.units, s.mrp_rev.toFixed(0), s.real_rev.toFixed(0), drrU.toFixed(1), drrR.toFixed(0)]);
   });
   var csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
@@ -1210,7 +1255,7 @@ function exportSalesCsv() {
 // ═══ POs ════════════════════════════════════════════════════════════
 function renderPos() {
   if (!D || !D.pos) return;
-  var pos = D.pos.list || D.pos.all || [];
+  var pos = D.pos.rows || [];
   var brand = H.pos.brand;
   var state = H.pos.state;
   var search = (document.getElementById('pos-search').value || '').toLowerCase();
@@ -1220,30 +1265,36 @@ function renderPos() {
   ((D.catalog && D.catalog.list) || []).forEach(function(p){ catById[p.item_id] = p; });
 
   var filtered = pos.filter(function(p){
-    if (state !== 'ALL' && p.state !== state) return false;
-    // Brand filter — derive from items
+    if (state !== 'ALL') {
+      // Match the actual state name (some have "Cancelled post Creation", etc.)
+      if (state === 'Unscheduled' && p.po_state !== 'Unscheduled') return false;
+      if (state === 'Scheduled' && p.po_state !== 'Scheduled') return false;
+      if (state === 'Fulfilled' && p.po_state !== 'Fulfilled') return false;
+      if (state === 'Expired' && p.po_state !== 'Expired') return false;
+    }
+    // Brand filter — derive from line_items
     if (brand !== 'ALL') {
-      var hasBrand = (p.items || []).some(function(it){
+      var hasBrand = (p.line_items || []).some(function(it){
         var prod = catById[it.item_id];
         return prod && prod.brand === brand;
       });
       if (!hasBrand) return false;
     }
     if (search) {
-      var hay = ((p.po_number||'') + ' ' + (p.facility||'') + ' ' + (p.city||'')).toLowerCase();
+      var hay = ((p.po_number||'') + ' ' + (p.facility_name||'') + ' ' + (p.city_name||'')).toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
   });
 
   // KPIs
-  var sumVal = filtered.reduce(function(a,p){ return a + (p.total_value||0); }, 0);
-  var sumUnits = filtered.reduce(function(a,p){ return a + (p.total_units||0); }, 0);
+  var sumVal = filtered.reduce(function(a,p){ return a + (p.total_amount||0); }, 0);
+  var sumUnits = filtered.reduce(function(a,p){ return a + (p.total_units_ordered||0); }, 0);
   var byState = {};
   filtered.forEach(function(p){
-    var s = p.state || 'Unknown';
+    var s = p.po_state || 'Unknown';
     if (!byState[s]) byState[s] = {count:0, value:0};
-    byState[s].count++; byState[s].value += p.total_value || 0;
+    byState[s].count++; byState[s].value += p.total_amount || 0;
   });
   var unschedCount = (byState['Unscheduled']||{}).count || 0;
   var unschedVal = (byState['Unscheduled']||{}).value || 0;
@@ -1261,26 +1312,26 @@ function renderPos() {
   document.getElementById('pos-kpis').innerHTML = kpisHtml;
 
   // Table — sort by state priority: Unscheduled first
-  var statePri = {'Unscheduled':1, 'Scheduled':2, 'Fulfilled':3, 'Expired':4, 'Cancelled':5};
+  var statePri = {'Unscheduled':1, 'Scheduled':2, 'Fulfilled':3, 'Expired':4, 'Cancelled':5, 'Cancelled post Creation':5};
   filtered.sort(function(a,b){
-    var pa = statePri[a.state]||9, pb = statePri[b.state]||9;
+    var pa = statePri[a.po_state]||9, pb = statePri[b.po_state]||9;
     if (pa !== pb) return pa - pb;
-    return (b.total_value||0) - (a.total_value||0);
+    return (b.total_amount||0) - (a.total_amount||0);
   });
 
   document.getElementById('pos-count').textContent = filtered.length + ' POs';
   var rowsHtml = '';
   filtered.slice(0, 200).forEach(function(p){
-    var stCls = p.state === 'Unscheduled' ? 'partial' : (p.state === 'Fulfilled' ? 'selling' : (p.state === 'Expired' ? 'idle' : ''));
+    var stCls = p.po_state === 'Unscheduled' ? 'partial' : (p.po_state === 'Fulfilled' ? 'selling' : (p.po_state === 'Expired' ? 'idle' : ''));
     rowsHtml += '<tr>' +
       '<td class="mono">'+(p.po_number||'')+'</td>' +
-      '<td>'+(p.facility||'—')+'</td>' +
-      '<td><span class="tag '+stCls+'">'+(p.state||'—')+'</span></td>' +
+      '<td>'+(p.facility_name||'—')+'</td>' +
+      '<td><span class="tag '+stCls+'">'+(p.po_state||'—')+'</span></td>' +
       '<td class="mono">'+fmtDate(p.order_date)+'</td>' +
       '<td class="mono">'+(p.appointment_date ? fmtDate(p.appointment_date) : '—')+'</td>' +
       '<td class="mono">'+(p.expiry_date ? fmtDate(p.expiry_date) : '—')+'</td>' +
-      '<td style="text-align:right" class="mono">'+fmtNum(p.total_units)+'</td>' +
-      '<td style="text-align:right" class="mono">'+fmtINR(p.total_value)+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtNum(p.total_units_ordered)+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(p.total_amount)+'</td>' +
       '</tr>';
   });
   if (filtered.length > 200) {
@@ -1298,7 +1349,7 @@ function renderStock() {
   var skus = D.skus.filter(function(s){
     if (brand !== 'ALL' && s.brand !== brand) return false;
     if (search) {
-      var hay = ((s.name||'')+' '+(s.item_id||'')).toLowerCase();
+      var hay = ((s.name||'')+' '+(s.clean_name||'')+' '+(s.item_id||'')).toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
@@ -1322,10 +1373,10 @@ function renderStock() {
     var inv = s.inventory_total || 0;
     var doh = (s.units_sold_30d > 0) ? ((inv / s.units_sold_30d) * 30).toFixed(0) : '—';
     rowsHtml += '<tr>' +
-      '<td><div style="font-weight:600;color:var(--text)">'+(s.name||'—')+'</div><div class="pid">'+s.item_id+'</div></td>' +
+      '<td><div style="font-weight:600;color:var(--text)">'+displayName(s)+'</div><div class="pid">'+s.item_id+'</div></td>' +
       '<td><span class="tag '+brandTagClass(s.brand)+'">'+(s.brand||'—')+'</span></td>' +
       '<td style="text-align:right" class="mono '+(inv === 0 ? 'sv-red' : '')+'">'+fmtNum(inv)+'</td>' +
-      '<td style="text-align:right" class="mono">'+(s.warehouses_active || 0)+'</td>' +
+      '<td style="text-align:right" class="mono">'+(s.warehouses_stocked || 0)+'</td>' +
       '<td style="text-align:right" class="mono '+(s.warehouses_oos > 0 ? 'sv-red' : '')+'">'+(s.warehouses_oos || 0)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtNum(s.units_sold_30d || 0)+'</td>' +
       '<td style="text-align:right" class="mono">'+doh+'</td>' +
@@ -1345,13 +1396,16 @@ function renderCities() {
 
   var totalCities = cities.length;
   var totalUnits = cities.reduce(function(a,c){ return a + (c.units||0); }, 0);
-  var totalRev = cities.reduce(function(a,c){ return a + (c.mrp_revenue||0); }, 0);
+  var totalRev = cities.reduce(function(a,c){ return a + (c.revenue||0); }, 0);
 
   var kpisHtml = '';
   kpisHtml += '<div class="stat-card"><div class="stat-label">Total Cities</div><div class="stat-value">'+totalCities+'</div></div>';
   kpisHtml += '<div class="stat-card"><div class="stat-label">Total Units</div><div class="stat-value">'+fmtNum(totalUnits)+'</div></div>';
   kpisHtml += '<div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value">'+fmtINR(totalRev)+'</div></div>';
   document.getElementById('cities-kpis').innerHTML = kpisHtml;
+
+  // Sort by units desc
+  cities.sort(function(a,b){ return (b.units||0) - (a.units||0); });
 
   document.getElementById('cities-count').textContent = totalCities + ' cities';
   var rowsHtml = '';
@@ -1360,9 +1414,9 @@ function renderCities() {
       '<td>'+(idx+1)+'</td>' +
       '<td>'+(c.city||'—')+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtNum(c.units)+'</td>' +
-      '<td style="text-align:right" class="mono">'+fmtINR(c.mrp_revenue)+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(c.revenue)+'</td>' +
       '<td style="text-align:right" class="mono">'+(c.active_skus||0)+'</td>' +
-      '<td style="text-align:right" class="mono">'+fmtNum(c.top_sku_units || 0)+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtNum(c.row_count || 0)+'</td>' +
       '</tr>';
   });
   document.getElementById('cities-body').innerHTML = rowsHtml || '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text3)">No cities</td></tr>';
