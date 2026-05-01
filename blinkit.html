@@ -167,11 +167,11 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </a>
   <button class="nav-tab active" onclick="showPage('overview',this)">📊 Overview</button>
   <button class="nav-tab" onclick="showPage('sales',this)">📈 Sales</button>
-  <button class="nav-tab" onclick="showPage('pos',this)">📋 POs</button>
-  <button class="nav-tab" onclick="showPage('stock',this)">📦 Stock</button>
-  <button class="nav-tab" onclick="showPage('cities',this)">🌆 Cities</button>
   <button class="nav-tab" onclick="showPage('ads',this)">📣 Ads</button>
-  <button class="nav-tab" onclick="showPage('keywords',this)">🔑 Keywords</button>
+  <button class="nav-tab" onclick="showPage('keywords',this)">🔑 Ads Keywords</button>
+  <button class="nav-tab" onclick="showPage('stock',this)">📦 Stock</button>
+  <button class="nav-tab" onclick="showPage('pos',this)">📋 POs</button>
+  <button class="nav-tab" onclick="showPage('cities',this)">🌆 Cities</button>
   <div class="nav-right">
     <span class="nav-meta" id="nav-meta">—</span>
     <button class="btn-sm" onclick="location.reload()" title="Refresh">⟲ Refresh</button>
@@ -249,6 +249,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th>#</th>
         <th style="min-width:280px">Product</th>
         <th>Brand</th>
+        <th>Category</th>
         <th style="text-align:right">Units</th>
         <th style="text-align:right">MRP Rev</th>
         <th style="text-align:right">Sales</th>
@@ -284,7 +285,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <input type="date" class="fsel" id="sales-to-sel" onchange="setSalesTime('custom')" style="min-width:135px">
     <button class="fbtn" onclick="clearSalesTime()" style="font-size:10px;padding:4px 8px">Reset</button>
     <div class="fsep"></div>
-    <input class="fsearch" placeholder="Search SKU / title..." id="sales-search" oninput="renderSales()">
+    <input class="fsearch" placeholder="Search SKU / title / category..." id="sales-search" oninput="renderSales()">
     <div class="fsep"></div>
     <span id="sales-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
@@ -317,6 +318,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th onclick="sortSales('img')">#</th>
         <th style="min-width:280px" onclick="sortSales('name')">Product</th>
         <th onclick="sortSales('brand')">Brand</th>
+        <th onclick="sortSales('category')">Category</th>
         <th style="text-align:right" onclick="sortSales('mrp')">MRP</th>
         <th style="text-align:right" onclick="sortSales('sp')">SP</th>
         <th style="text-align:right" onclick="sortSales('disc')">Disc%</th>
@@ -394,7 +396,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="fbtn ss"     onclick="setStockBrand('SunScoop',this)">SS</button>
     <button class="fbtn vinci"  onclick="setStockBrand('Vinci Botanicals',this)">Vinci</button>
     <div class="fsep"></div>
-    <input class="fsearch" placeholder="Search SKU / warehouse..." id="stock-search" oninput="renderStock()">
+    <input class="fsearch" placeholder="Search SKU / category / warehouse..." id="stock-search" oninput="renderStock()">
   </div>
 
   <div class="stat-grid" id="stock-kpis"></div>
@@ -410,6 +412,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <thead><tr>
         <th style="min-width:280px">Product</th>
         <th>Brand</th>
+        <th>Category</th>
         <th style="text-align:right">Total Inv</th>
         <th style="text-align:right">Stocked WH</th>
         <th style="text-align:right">OOS WH</th>
@@ -523,7 +526,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="card-hdr">
       <span class="card-title">🎯 Campaigns</span>
       <span class="card-sub" id="ads-campaigns-count"></span>
-      <input class="fsearch" placeholder="Search campaign..." id="ads-camp-search"
+      <input class="fsearch" placeholder="Search campaign / SKU / category..." id="ads-camp-search"
              oninput="renderAds()" style="margin-left:auto;margin-right:8px;max-width:240px">
       <button class="btn-sm" onclick="exportAdsCampaignsCsv()">⬇ CSV</button>
     </div>
@@ -560,6 +563,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th>#</th>
         <th onclick="sortAdsSlots('brand')">Brand</th>
         <th style="min-width:240px" onclick="sortAdsSlots('campaign_name')">Campaign</th>
+        <th style="min-width:200px">Product / Category</th>
         <th onclick="sortAdsSlots('slot')">Slot</th>
         <th style="text-align:right" onclick="sortAdsSlots('budget')">Spend ▼</th>
         <th style="text-align:right" onclick="sortAdsSlots('sales')">Sales</th>
@@ -577,7 +581,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="card-hdr">
       <span class="card-title">📦 Products · Ad Spend by SKU</span>
       <span class="card-sub" id="ads-products-count"></span>
-      <input class="fsearch" placeholder="Search product / brand..." id="ads-prod-search"
+      <input class="fsearch" placeholder="Search product / category..." id="ads-prod-search"
              oninput="renderAds()" style="margin-left:auto;margin-right:8px;max-width:240px">
       <button class="btn-sm" onclick="exportAdsProductsCsv()">⬇ CSV</button>
     </div>
@@ -588,7 +592,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th>Image</th>
         <th onclick="sortAdsProducts('brand')">Brand</th>
         <th style="min-width:240px" onclick="sortAdsProducts('clean_name')">Product</th>
-        <th onclick="sortAdsProducts('m_lifecycle')">Lifecycle</th>
+        <th onclick="sortAdsProducts('m_category')">Category</th>
         <th style="text-align:right" onclick="sortAdsProducts('mrp')">MRP</th>
         <th style="text-align:right" onclick="sortAdsProducts('budget')">Spend ▼</th>
         <th style="text-align:right" onclick="sortAdsProducts('sales')">Sales</th>
@@ -622,7 +626,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="fbtn" id="kw-mt-phrase" onclick="setKwMatch('PHRASE',this)">PHRASE</button>
     <button class="fbtn" id="kw-mt-na" onclick="setKwMatch('NA',this)">NA</button>
     <div class="fsep"></div>
-    <input class="fsearch" placeholder="Search keyword / campaign..." id="kw-search" oninput="renderKeywords()">
+    <input class="fsearch" placeholder="Search keyword / campaign / SKU / category..." id="kw-search" oninput="renderKeywords()">
     <div class="fsep"></div>
     <span style="font-size:10px;color:var(--text3)" id="kw-meta">—</span>
   </div>
@@ -643,6 +647,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th>#</th>
         <th onclick="sortKw('brand')">Brand</th>
         <th style="min-width:200px" onclick="sortKw('campaign_name')">Campaign</th>
+        <th style="min-width:180px">Product / Category</th>
         <th onclick="sortKw('keyword')">Keyword</th>
         <th onclick="sortKw('match_type')">Match</th>
         <th style="text-align:right" onclick="sortKw('budget')">Spend ▼</th>
@@ -1323,11 +1328,13 @@ function renderOverview() {
       var skuFull = D.skus.find(function(x){ return x.item_id === s.item_id; });
       if (skuFull) poVal = skuFull.po_value_30d || 0;
     }
+    var cat = (getCatItem(s.item_id) || {}).m_category || '';
     rowsHtml += '<tr>' +
       '<td>'+(idx+1)+'</td>' +
       '<td><div style="font-weight:600;color:var(--text)">'+displayName(getCatItem(s.item_id) || s)+'</div>' +
         '<div class="pid">'+s.item_id+'</div></td>' +
       '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
+      '<td><span style="font-size:11px;color:var(--text2)">'+escapeHtml(cat||'—')+'</span></td>' +
       '<td style="text-align:right" class="mono">'+fmtNum(s.units)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(s.mrp_rev)+'</td>' +
       '<td style="text-align:right;color:var(--green)" class="mono">'+fmtINR(s.real_rev)+'</td>' +
@@ -1336,7 +1343,7 @@ function renderOverview() {
       '<td>'+topCity+'</td>' +
       '</tr>';
   });
-  document.getElementById('ov-top-skus').innerHTML = rowsHtml || '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text3)">No data for this filter</td></tr>';
+  document.getElementById('ov-top-skus').innerHTML = rowsHtml || '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3)">No data for this filter</td></tr>';
 }
 
 // ═══ SALES ══════════════════════════════════════════════════════════
@@ -1416,7 +1423,8 @@ function renderSales() {
     if (search) {
       var cat = getCatItem(s.item_id);
       var clean = cat ? (cat.clean_name || '') : '';
-      var hay = (s.name+' '+clean+' '+s.item_id+' '+s.brand).toLowerCase();
+      var category = cat ? ((cat.m_category||'')+' '+(cat.category_l1||'')+' '+(cat.category_l2||'')) : '';
+      var hay = (s.name+' '+clean+' '+s.item_id+' '+s.brand+' '+category).toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
@@ -1429,6 +1437,7 @@ function renderSales() {
     switch(col) {
       case 'name':  av=displayName(getCatItem(a.item_id)||a); bv=displayName(getCatItem(b.item_id)||b); return av.localeCompare(bv) * dir;
       case 'brand': av=a.brand||''; bv=b.brand||''; return av.localeCompare(bv) * dir;
+      case 'category': av=(getCatItem(a.item_id)||{}).m_category||''; bv=(getCatItem(b.item_id)||{}).m_category||''; return av.localeCompare(bv) * dir;
       case 'mrp':   av=a.mrp; bv=b.mrp; break;
       case 'sp':    av=a.units>0?a.real_rev/a.units:0; bv=b.units>0?b.real_rev/b.units:0; break;
       case 'disc':  av=a.mrp_rev>0?(a.mrp_rev-a.real_rev)/a.mrp_rev:0; bv=b.mrp_rev>0?(b.mrp_rev-b.real_rev)/b.mrp_rev:0; break;
@@ -1458,10 +1467,12 @@ function renderSales() {
     var drrR = cur.days > 0 ? s.real_rev / cur.days : 0;
     var inv = getSkuInv(s.item_id);
     var topCity = getSkuTopCity(s.item_id) || '—';
+    var sCat = (getCatItem(s.item_id) || {}).m_category || '';
     rowsHtml += '<tr>' +
       '<td>' + (idx+1) + '</td>' +
       '<td><div style="font-weight:600;color:var(--text)">'+displayName(getCatItem(s.item_id) || s)+'</div><div class="pid">'+s.item_id+'</div></td>' +
       '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
+      '<td><span style="font-size:11px;color:var(--text2)">'+escapeHtml(sCat||'—')+'</span></td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(s.mrp)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(sp)+'</td>' +
       '<td style="text-align:right;color:var(--orange)" class="mono">'+fmtPct(disc)+'</td>' +
@@ -1476,7 +1487,7 @@ function renderSales() {
       '<td>'+topCity+'</td>' +
       '</tr>';
   });
-  document.getElementById('sales-sku-body').innerHTML = rowsHtml || '<tr><td colspan="15" style="text-align:center;padding:30px;color:var(--text3)">No SKUs match these filters</td></tr>';
+  document.getElementById('sales-sku-body').innerHTML = rowsHtml || '<tr><td colspan="16" style="text-align:center;padding:30px;color:var(--text3)">No SKUs match these filters</td></tr>';
 }
 
 function getSkuInv(iid) {
@@ -1492,16 +1503,18 @@ function getSkuTopCity(iid) {
 
 function exportSalesCsv() {
   if (!D) return;
-  var rows = [['SKU','Product','Brand','MRP','SP','Disc%','Units','MRP Rev','Sales','DRR U','DRR ₹']];
+  var rows = [['Item ID','Product','Clean Name','Brand','Category','MRP','SP','Disc%','Units','MRP Rev','Sales','DRR U','DRR ₹']];
   var win = resolveWindow('sales');
   var cur = aggregateSales(win, H.sales.brand);
   Object.values(cur.skus).forEach(function(s){
     if (s.units === 0) return;
+    var cat = getCatItem(s.item_id) || {};
     var sp = s.units > 0 ? (s.real_rev / s.units) : 0;
     var disc = s.mrp_rev > 0 ? ((s.mrp_rev - s.real_rev) / s.mrp_rev * 100) : 0;
     var drrU = cur.days > 0 ? s.units / cur.days : 0;
     var drrR = cur.days > 0 ? s.real_rev / cur.days : 0;
-    rows.push([s.item_id, displayName(getCatItem(s.item_id) || s), s.brand, s.mrp.toFixed(0), sp.toFixed(0), disc.toFixed(1),
+    rows.push([s.item_id, displayName(cat || s), cat.clean_name||'', s.brand, cat.m_category||'',
+               s.mrp.toFixed(0), sp.toFixed(0), disc.toFixed(1),
                s.units, s.mrp_rev.toFixed(0), s.real_rev.toFixed(0), drrU.toFixed(1), drrR.toFixed(0)]);
   });
   var csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
@@ -1610,7 +1623,9 @@ function renderStock() {
   var skus = D.skus.filter(function(s){
     if (brand !== 'ALL' && s.brand !== brand) return false;
     if (search) {
-      var hay = ((s.name||'')+' '+(s.clean_name||'')+' '+(s.item_id||'')).toLowerCase();
+      var cat = getCatItem(s.item_id) || {};
+      var category = (cat.m_category||'')+' '+(cat.category_l1||'')+' '+(cat.category_l2||'');
+      var hay = ((s.name||'')+' '+(s.clean_name||cat.clean_name||'')+' '+(s.item_id||'')+' '+(s.brand||'')+' '+category).toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;
@@ -1633,9 +1648,11 @@ function renderStock() {
   skus.forEach(function(s){
     var inv = s.inventory_total || 0;
     var doh = (s.units_sold_30d > 0) ? ((inv / s.units_sold_30d) * 30).toFixed(0) : '—';
+    var stCat = (getCatItem(s.item_id) || {}).m_category || s.m_category || '';
     rowsHtml += '<tr>' +
       '<td><div style="font-weight:600;color:var(--text)">'+displayName(s)+'</div><div class="pid">'+s.item_id+'</div></td>' +
       '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
+      '<td><span style="font-size:11px;color:var(--text2)">'+escapeHtml(stCat||'—')+'</span></td>' +
       '<td style="text-align:right" class="mono '+(inv === 0 ? 'sv-red' : '')+'">'+fmtNum(inv)+'</td>' +
       '<td style="text-align:right" class="mono">'+(s.warehouses_stocked || 0)+'</td>' +
       '<td style="text-align:right" class="mono '+(s.warehouses_oos > 0 ? 'sv-red' : '')+'">'+(s.warehouses_oos || 0)+'</td>' +
@@ -1643,7 +1660,7 @@ function renderStock() {
       '<td style="text-align:right" class="mono">'+doh+'</td>' +
       '</tr>';
   });
-  document.getElementById('stock-body').innerHTML = rowsHtml || '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3)">No SKUs</td></tr>';
+  document.getElementById('stock-body').innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text3)">No SKUs</td></tr>';
 }
 
 // ═══ CITIES ═════════════════════════════════════════════════════════
@@ -1843,7 +1860,7 @@ function sortAdsProducts(col) {
     H.ads.prodSortDir = (H.ads.prodSortDir === 'desc') ? 'asc' : 'desc';
   } else {
     H.ads.prodSortBy = col;
-    H.ads.prodSortDir = (['clean_name','brand','m_lifecycle','name'].indexOf(col) >= 0) ? 'asc' : 'desc';
+    H.ads.prodSortDir = (['clean_name','brand','m_category','name'].indexOf(col) >= 0) ? 'asc' : 'desc';
   }
   renderAds();
 }
@@ -2267,9 +2284,19 @@ function renderAds() {
   var campSearch = (document.getElementById('ads-camp-search').value || '').toLowerCase();
   H.ads.campSearch = campSearch;
   var camps = campsInWin.filter(function(c){
-    if (campSearch && (c.name||'').toLowerCase().indexOf(campSearch) < 0
-                   && String(c.cid||'').indexOf(campSearch) < 0) return false;
-    return true;
+    if (!campSearch) return true;
+    // Search across campaign name, cid, AND each linked SKU's clean_name + category
+    if ((c.name||'').toLowerCase().indexOf(campSearch) >= 0) return true;
+    if (String(c.cid||'').indexOf(campSearch) >= 0) return true;
+    var pids = c.pids || [];
+    for (var pi=0; pi<pids.length; pi++) {
+      var sk = _adsSkuLookup(pids[pi]);
+      if (!sk) continue;
+      var hay = ((sk.clean_name||'')+' '+(sk.name||'')+' '+(sk.m_category||'')+
+                 ' '+(sk.category_l1||'')+' '+(sk.category_l2||'')).toLowerCase();
+      if (hay.indexOf(campSearch) >= 0) return true;
+    }
+    return false;
   });
   var cBy = H.ads.campSortBy, cDir = H.ads.campSortDir;
   camps.sort(function(a,b){
@@ -2358,11 +2385,44 @@ function renderAds() {
     slots.length + ' slot' + (slots.length === 1 ? '' : 's') +
     (H.ads.mode !== 'all' ? '  · all-history (no daily series)' : '');
   var sBody = '';
+  // Build a quick cid → campaign map for product lookup
+  var _campByCid = {};
+  (D.ads.campaigns || []).forEach(function(c){ _campByCid[c.cid] = c; });
+
   slots.forEach(function(s, i){
+    var camp = _campByCid[s.cid] || {};
+    var pids = camp.pids || [];
+    var slotProdCell = '';
+    if (pids.length === 0) {
+      slotProdCell = '<span style="color:var(--text3);font-size:10px">—</span>';
+    } else if (pids.length === 1) {
+      var sk = _adsSkuLookup(pids[0]);
+      if (sk) {
+        var nm = sk.clean_name || sk.name || ('pid '+pids[0]);
+        var cat = sk.m_category || '';
+        slotProdCell = '<div style="font-size:11px">'+escapeHtml(nm)+'</div>' +
+                       (cat ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(cat)+'</div>' : '');
+      } else {
+        slotProdCell = '<span style="color:var(--text3);font-size:10px">pid '+pids[0]+'</span>';
+      }
+    } else {
+      var sk0 = _adsSkuLookup(pids[0]);
+      var name0 = sk0 ? (sk0.clean_name || sk0.name) : ('pid '+pids[0]);
+      var cats = {};
+      pids.forEach(function(pid){
+        var sk = _adsSkuLookup(pid);
+        if (sk && sk.m_category) cats[sk.m_category] = true;
+      });
+      var catList = Object.keys(cats).join(', ');
+      slotProdCell = '<div style="font-size:11px">'+escapeHtml(name0||'?')+
+                     ' <span style="color:var(--accent);font-size:10px">+'+(pids.length-1)+'</span></div>' +
+                     (catList ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(catList)+'</div>' : '');
+    }
     sBody += '<tr>' +
       '<td>'+(i+1)+'</td>' +
       '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
       '<td><div style="font-size:11px">'+escapeHtml(s.campaign_name||'')+'</div></td>' +
+      '<td>'+slotProdCell+'</td>' +
       '<td><span style="font-weight:500">'+escapeHtml(s.slot||'')+'</span></td>' +
       '<td style="text-align:right">'+fmtINR(s.budget)+'</td>' +
       '<td style="text-align:right">'+fmtINR(s.sales)+'</td>' +
@@ -2373,7 +2433,7 @@ function renderAds() {
     '</tr>';
   });
   if (slots.length === 0) {
-    sBody = '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:20px">No reco slots match the current filter.</td></tr>';
+    sBody = '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:20px">No reco slots match the current filter.</td></tr>';
   }
   document.getElementById('ads-slots-body').innerHTML = sBody;
 
@@ -2383,7 +2443,9 @@ function renderAds() {
   var prods = _adsProductsInWindow(win, brandFilter, typeFilter);
   prods = prods.filter(function(p){
     if (!prodSearch) return true;
-    var hay = ((p.clean_name||'')+' '+(p.name||'')+' '+(p.brand||'')+' '+(p.item_id||'')+' '+(p.pid||'')).toLowerCase();
+    var hay = ((p.clean_name||'')+' '+(p.name||'')+' '+(p.brand||'')+
+               ' '+(p.item_id||'')+' '+(p.pid||'')+' '+(p.m_category||'')+
+               ' '+(p.m_range||'')).toLowerCase();
     return hay.indexOf(prodSearch) >= 0;
   });
   var pBy = H.ads.prodSortBy, pDir = H.ads.prodSortDir;
@@ -2400,10 +2462,7 @@ function renderAds() {
     prods.length + ' product' + (prods.length === 1 ? '' : 's') + ' with ad spend';
   var pBody = '';
   prods.forEach(function(p, i){
-    var lifecycle = p.m_lifecycle || '';
-    var lcColor = lifecycle === 'EPD' ? 'var(--green)' :
-                  lifecycle === 'NPD' ? 'var(--accent)' :
-                  lifecycle === 'D'   ? 'var(--red)' : 'var(--text3)';
+    var cat = p.m_category || '';
     var img = p.image ?
       '<img src="'+escapeHtml(p.image)+'" style="width:36px;height:36px;border-radius:4px;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">' :
       '<div style="width:36px;height:36px;background:var(--surf2);border-radius:4px"></div>';
@@ -2413,7 +2472,7 @@ function renderAds() {
       '<td><span class="tag '+brandTagClass(p.brand)+'">'+brandShort(p.brand)+'</span></td>' +
       '<td><div style="font-weight:500;font-size:11px">'+escapeHtml(p.clean_name||p.name||'?')+'</div>' +
         '<div style="color:var(--text3);font-size:10px">pid '+p.pid+(p.item_id?' · item '+p.item_id:'')+'</div></td>' +
-      '<td><span style="font-size:10px;color:'+lcColor+'">'+escapeHtml(lifecycle||'—')+'</span></td>' +
+      '<td><span style="color:var(--text2);font-size:10px">'+escapeHtml(cat||'—')+'</span></td>' +
       '<td style="text-align:right">'+(p.mrp != null ? fmtINR(p.mrp) : '—')+'</td>' +
       '<td style="text-align:right">'+fmtINR(p.budget)+'</td>' +
       '<td style="text-align:right">'+fmtINR(p.sales)+'</td>' +
@@ -2527,11 +2586,26 @@ function exportAdsKeywordsCsv() {
 function exportAdsSlotsCsv() {
   if (!D || !D.ads) return;
   var brandFilter = H.ads.brand;
+  var campByCid = {};
+  (D.ads.campaigns || []).forEach(function(c){ campByCid[c.cid] = c; });
   var slots = (D.ads.reco_slots||[]).filter(function(s){ return brandFilter === 'ALL' || s.brand === brandFilter; });
-  var headers = ['Brand','Campaign','Campaign ID','Slot','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions'];
+  var headers = ['Brand','Campaign','Campaign ID','Products','Categories','Slot','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions'];
   var rows = slots.map(function(s){
-    return [s.brand, s.campaign_name, s.cid, s.slot,
-            s.budget, s.sales, s.roas, s.direct_roas, s.atc, s.qty, s.impr];
+    var camp = campByCid[s.cid] || {};
+    var pids = camp.pids || [];
+    var prodNames = [], cats = {};
+    pids.forEach(function(pid){
+      var sk = _adsSkuLookup(pid);
+      if (sk) {
+        prodNames.push(sk.clean_name || sk.name || ('pid '+pid));
+        if (sk.m_category) cats[sk.m_category] = true;
+      } else {
+        prodNames.push('pid '+pid);
+      }
+    });
+    return [s.brand, s.campaign_name, s.cid,
+            prodNames.join(' | '), Object.keys(cats).join(' | '),
+            s.slot, s.budget, s.sales, s.roas, s.direct_roas, s.atc, s.qty, s.impr];
   });
   _downloadCsv('ads_recoslots_all-history.csv', headers, rows);
 }
@@ -2539,9 +2613,9 @@ function exportAdsProductsCsv() {
   if (!D || !D.ads) return;
   var win = _adsResolveWindow();
   var prods = _adsProductsInWindow(win, H.ads.brand, H.ads.type);
-  var headers = ['Brand','PID','Item ID','Product','Clean Name','Lifecycle','MRP','Spend','Sales','RoAS','ATC','Qty','Impressions','CPS','CPA','CPM','Campaigns'];
+  var headers = ['Brand','PID','Item ID','Product','Clean Name','Category','MRP','Spend','Sales','RoAS','ATC','Qty','Impressions','CPS','CPA','CPM','Campaigns'];
   var rows = prods.map(function(p){
-    return [p.brand, p.pid, p.item_id, p.name, p.clean_name, p.m_lifecycle, p.mrp,
+    return [p.brand, p.pid, p.item_id, p.name, p.clean_name, p.m_category, p.mrp,
             p.budget, p.sales, p.roas, p.atc, p.qty, p.impr,
             p.cps, p.cpa, p.cpm, p.campaign_count];
   });
@@ -2602,8 +2676,27 @@ function renderKeywords() {
       }
     }
     if (search) {
-      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')).toLowerCase();
-      if (hay.indexOf(search) < 0) return false;
+      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')+' '+(k.brand||'')).toLowerCase();
+      // Also search the linked campaign's products/categories
+      if (hay.indexOf(search) < 0) {
+        var found = false;
+        var camp = null;
+        if (D.ads.campaigns) {
+          for (var ci=0; ci<D.ads.campaigns.length; ci++) {
+            if (D.ads.campaigns[ci].cid === k.cid) { camp = D.ads.campaigns[ci]; break; }
+          }
+        }
+        if (camp && camp.pids) {
+          for (var pi=0; pi<camp.pids.length; pi++) {
+            var sk = _adsSkuLookup(camp.pids[pi]);
+            if (!sk) continue;
+            var skHay = ((sk.clean_name||'')+' '+(sk.name||'')+' '+(sk.m_category||'')+
+                         ' '+(sk.category_l1||'')+' '+(sk.category_l2||'')).toLowerCase();
+            if (skHay.indexOf(search) >= 0) { found = true; break; }
+          }
+        }
+        if (!found) return false;
+      }
     }
     return true;
   });
@@ -2657,13 +2750,46 @@ function renderKeywords() {
     kws.length + ' keyword' + (kws.length === 1 ? '' : 's');
 
   // Table body — show top 500, more available via search/CSV
+  // Build cid → campaign map for product lookup
+  var _kwCampByCid = {};
+  (D.ads.campaigns || []).forEach(function(c){ _kwCampByCid[c.cid] = c; });
+
   var body = '';
   var displayKws = kws.slice(0, 500);
   displayKws.forEach(function(k, i){
+    var camp = _kwCampByCid[k.cid] || {};
+    var pids = camp.pids || [];
+    var prodCell = '';
+    if (pids.length === 0) {
+      prodCell = '<span style="color:var(--text3);font-size:10px">—</span>';
+    } else if (pids.length === 1) {
+      var sk = _adsSkuLookup(pids[0]);
+      if (sk) {
+        var nm = sk.clean_name || sk.name || ('pid '+pids[0]);
+        var cat = sk.m_category || '';
+        prodCell = '<div style="font-size:11px">'+escapeHtml(nm)+'</div>' +
+                   (cat ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(cat)+'</div>' : '');
+      } else {
+        prodCell = '<span style="color:var(--text3);font-size:10px">pid '+pids[0]+'</span>';
+      }
+    } else {
+      var sk0 = _adsSkuLookup(pids[0]);
+      var name0 = sk0 ? (sk0.clean_name || sk0.name) : ('pid '+pids[0]);
+      var cats = {};
+      pids.forEach(function(pid){
+        var sk = _adsSkuLookup(pid);
+        if (sk && sk.m_category) cats[sk.m_category] = true;
+      });
+      var catList = Object.keys(cats).join(', ');
+      prodCell = '<div style="font-size:11px">'+escapeHtml(name0||'?')+
+                 ' <span style="color:var(--accent);font-size:10px">+'+(pids.length-1)+'</span></div>' +
+                 (catList ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(catList)+'</div>' : '');
+    }
     body += '<tr>' +
       '<td>'+(i+1)+'</td>' +
       '<td><span class="tag '+brandTagClass(k.brand)+'">'+brandShort(k.brand)+'</span></td>' +
       '<td><div style="font-size:11px">'+escapeHtml(k.campaign_name||'')+'</div></td>' +
+      '<td>'+prodCell+'</td>' +
       '<td><span style="font-weight:500">'+escapeHtml(k.keyword||'')+'</span></td>' +
       '<td><span style="color:var(--text3);font-size:10px">'+(k.match_type||'NA')+'</span></td>' +
       '<td style="text-align:right">'+fmtINR(k.budget)+'</td>' +
@@ -2676,11 +2802,11 @@ function renderKeywords() {
     '</tr>';
   });
   if (kws.length > 500) {
-    body += '<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:12px;font-size:11px">' +
+    body += '<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:12px;font-size:11px">' +
       'Showing top 500 of '+kws.length+'. Use search or download CSV for full list.</td></tr>';
   }
   if (kws.length === 0) {
-    body = '<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:20px">No keywords match the current filter.</td></tr>';
+    body = '<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:20px">No keywords match the current filter.</td></tr>';
   }
   document.getElementById('kw-body').innerHTML = body;
 }
@@ -2696,15 +2822,49 @@ function exportKeywordsCsv() {
       else if (mt !== match) return false;
     }
     if (search) {
-      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')).toLowerCase();
-      if (hay.indexOf(search) < 0) return false;
+      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')+' '+(k.brand||'')).toLowerCase();
+      if (hay.indexOf(search) < 0) {
+        var found = false;
+        var camp = null;
+        if (D.ads.campaigns) {
+          for (var ci=0; ci<D.ads.campaigns.length; ci++) {
+            if (D.ads.campaigns[ci].cid === k.cid) { camp = D.ads.campaigns[ci]; break; }
+          }
+        }
+        if (camp && camp.pids) {
+          for (var pi=0; pi<camp.pids.length; pi++) {
+            var sk = _adsSkuLookup(camp.pids[pi]);
+            if (!sk) continue;
+            var skHay = ((sk.clean_name||'')+' '+(sk.name||'')+' '+(sk.m_category||'')+
+                         ' '+(sk.category_l1||'')+' '+(sk.category_l2||'')).toLowerCase();
+            if (skHay.indexOf(search) >= 0) { found = true; break; }
+          }
+        }
+        if (!found) return false;
+      }
     }
     return true;
   });
-  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','CPA'];
+  var campByCid = {};
+  (D.ads.campaigns || []).forEach(function(c){ campByCid[c.cid] = c; });
+  var headers = ['Brand','Campaign','Campaign ID','Products','Categories','Keyword','Match','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','CPA'];
   var rows = kws.map(function(k){
     var cpa = k.atc > 0 ? k.budget/k.atc : 0;
-    return [k.brand, k.campaign_name, k.cid, k.keyword, k.match_type,
+    var camp = campByCid[k.cid] || {};
+    var pids = camp.pids || [];
+    var prodNames = [], cats = {};
+    pids.forEach(function(pid){
+      var sk = _adsSkuLookup(pid);
+      if (sk) {
+        prodNames.push(sk.clean_name || sk.name || ('pid '+pid));
+        if (sk.m_category) cats[sk.m_category] = true;
+      } else {
+        prodNames.push('pid '+pid);
+      }
+    });
+    return [k.brand, k.campaign_name, k.cid,
+            prodNames.join(' | '), Object.keys(cats).join(' | '),
+            k.keyword, k.match_type,
             k.budget, k.sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr, cpa];
   });
   _downloadCsv('keywords_all-history.csv', headers, rows);
@@ -2719,11 +2879,11 @@ function exportOvTopSkusCsv() {
   var skus = Object.values(ag.skus).slice().sort(function(a,b){
     return (b.real_rev||0) - (a.real_rev||0);
   });
-  var headers = ['Rank','Item ID','Brand','Product','Clean Name','Units','MRP Revenue','Sales','Discount %','PO Value','Top City'];
+  var headers = ['Rank','Item ID','Brand','Product','Clean Name','Category','Units','MRP Revenue','Sales','Discount %','PO Value','Top City'];
   var rows = skus.map(function(s, i){
     var cat = getCatItem(s.item_id) || {};
     var disc = s.mrp_rev > 0 ? ((s.mrp_rev - s.real_rev)/s.mrp_rev*100) : 0;
-    return [i+1, s.item_id, s.brand, s.name, cat.clean_name||'',
+    return [i+1, s.item_id, s.brand, s.name, cat.clean_name||'', cat.m_category||'',
             s.units, s.mrp_rev, s.real_rev, disc.toFixed(1), s.po_value||0, s.top_city||''];
   });
   _downloadCsv('overview_top_skus_'+(win.label||'all').replace(/[^A-Za-z0-9._-]/g,'_')+'.csv', headers, rows);
@@ -2733,18 +2893,24 @@ function exportPosCsv() {
   var brand = H.pos.brand, state = H.pos.state;
   var search = ((document.getElementById('pos-search')||{}).value||'').toLowerCase();
   var rows = (D.pos.rows || []).filter(function(p){
-    if (brand !== 'ALL' && p.brand !== brand) return false;
-    if (state !== 'ALL' && p.state !== state) return false;
+    if (brand !== 'ALL') {
+      var pBrand = p.brand || p.manufacturer_name || '';
+      if (pBrand !== brand) return false;
+    }
+    if (state !== 'ALL' && p.po_state !== state) return false;
     if (search) {
-      var hay = ((p.po_id||'')+' '+(p.city||'')+' '+(p.facility||'')+' '+(p.brand||'')).toLowerCase();
+      var hay = ((p.po_number||'')+' '+(p.city_name||'')+' '+(p.facility_name||'')+' '+(p.manufacturer_name||'')).toLowerCase();
       if (hay.indexOf(search) < 0) return false;
     }
     return true;
   });
-  var headers = ['PO ID','Brand','State','Created','Expected','Delivered','City','Facility','Items','Qty','PO Value','Fulfilled Value'];
+  var headers = ['PO Number','Manufacturer','State','Order Date','Appointment','Expiry','Delivery',
+                 'City','Facility','Vendor','Items','Units Ordered','PO Value','Units GRN'];
   var csvRows = rows.map(function(p){
-    return [p.po_id, p.brand, p.state, p.created_date, p.expected_date, p.delivered_date,
-            p.city, p.facility, p.item_count, p.qty, p.po_value, p.fulfilled_value];
+    return [p.po_number, p.manufacturer_name, p.po_state, p.order_date,
+            p.appointment_date, p.expiry_date, p.delivery_date,
+            p.city_name, p.facility_name, p.vendor_name,
+            p.item_count, p.total_units_ordered, p.total_amount, p.total_grn_quantity];
   });
   _downloadCsv('pos.csv', headers, csvRows);
 }
@@ -2753,30 +2919,23 @@ function exportStockCsv() {
   var brand = H.stock.brand;
   var search = ((document.getElementById('stock-search')||{}).value||'').toLowerCase();
   var rows = [];
-  var warehouses = (D.warehouses && D.warehouses.list) || [];
   var skus = D.skus || [];
-  // Walk stock from skus[].stock or D.stock; whatever is exposed
-  // Defensive: handle either shape
-  var src = (D.stock && D.stock.rows) || [];
-  if (!src.length && skus.length) {
-    // synthesize from skus
-    skus.forEach(function(s){
-      if (!s.stock) return;
-      Object.keys(s.stock).forEach(function(wh){
-        src.push({item_id:s.item_id, brand:s.brand, name:s.name,
-                  warehouse:wh, qty:s.stock[wh]});
-      });
-    });
-  }
-  src.forEach(function(r){
-    if (brand !== 'ALL' && r.brand !== brand) return;
+  // Per-SKU summary line (one row per SKU, not per warehouse)
+  skus.forEach(function(s){
+    if (brand !== 'ALL' && s.brand !== brand) return;
+    var cat = getCatItem(s.item_id) || {};
     if (search) {
-      var hay = ((r.name||'')+' '+(r.warehouse||'')+' '+(r.item_id||'')).toLowerCase();
-      if (hay.indexOf(search) < 0) return;
+      var hay = ((s.name||'')+' '+(s.clean_name||cat.clean_name||'')+' '+(s.item_id||'')+' '+(s.brand||'')+' '+(cat.m_category||'')).toLowerCase();
+      if (!hay.includes(search)) return;
     }
-    rows.push([r.item_id, r.brand, r.name, r.warehouse, r.qty]);
+    rows.push([
+      s.item_id, displayName(s), cat.clean_name||'', s.brand, cat.m_category||'',
+      s.inventory_total||0, s.warehouses_stocked||0, s.warehouses_oos||0,
+      s.units_sold_30d||0,
+      (s.units_sold_30d > 0) ? ((s.inventory_total||0) / s.units_sold_30d * 30).toFixed(0) : ''
+    ]);
   });
-  var headers = ['Item ID','Brand','Product','Warehouse','Qty'];
+  var headers = ['Item ID','Product','Clean Name','Brand','Category','Total Inv','Stocked WH','OOS WH','Units 30d','DOH'];
   _downloadCsv('stock.csv', headers, rows);
 }
 function exportCitiesCsv() {
