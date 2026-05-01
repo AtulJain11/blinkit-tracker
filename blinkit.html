@@ -146,6 +146,19 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<script>
+// Auto-unlock if already authed in this browser session (mirrors FK)
+(function(){
+  if (sessionStorage.getItem('jarvis_bk_auth') === '1') {
+    document.addEventListener('DOMContentLoaded', function(){
+      var g = document.getElementById('auth-gate');  if (g) g.style.display = 'none';
+      var n = document.getElementById('main-nav');   if (n) n.style.display = 'flex';
+      if (typeof bootstrap === 'function') bootstrap();
+    });
+  }
+})();
+</script>
+
 <!-- ═══ NAV ══════════════════════════════════════════════════════════ -->
 <nav style="display:none" id="main-nav">
   <a class="nav-logo">
@@ -439,6 +452,7 @@ function authCheck() {
   // Simple hex check (matches FK)
   var h = 0; for (var i=0; i<pwd.length; i++) { h = ((h<<5)-h) + pwd.charCodeAt(i); h |= 0; }
   if (h === 749264648) {  // 'onesto2024' hash
+    sessionStorage.setItem('jarvis_bk_auth', '1');
     document.getElementById('auth-gate').style.display = 'none';
     document.getElementById('main-nav').style.display = 'flex';
     bootstrap();
@@ -549,12 +563,20 @@ function bootstrap() {
         var ms = document.getElementById('ov-month-sel'); if (ms) ms.value = curMonth;
         var ms2 = document.getElementById('sales-month-sel'); if (ms2) ms2.value = curMonth;
       }
-      // Set nav meta
+      // Set nav meta — "Updated YYYY-MM-DD HH:MM" (mirrors FK pattern)
       var meta = D.meta || {};
-      var w = meta.window || {};
-      document.getElementById('nav-meta').textContent =
-        (meta.entity_name || 'Onesto Labs') + ' · ' +
-        (w.from || '—') + ' → ' + (w.to || '—');
+      var updated = '—';
+      if (meta.generated_at) {
+        try {
+          var d = new Date(meta.generated_at);
+          var pad = function(n){ return n < 10 ? '0'+n : ''+n; };
+          updated = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate())
+                  + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        } catch(e) {
+          updated = String(meta.generated_at).slice(0, 16).replace('T', ' ');
+        }
+      }
+      document.getElementById('nav-meta').textContent = 'Updated ' + updated;
       renderAll();
     })
     .catch(function(e){
