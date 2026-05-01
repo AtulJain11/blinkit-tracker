@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS — Blinkit Intelligence</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0a0b0e;--bg2:#111318;--bg3:#181b22;
+  --border:#1e2230;--border2:#2a2f40;
+  --text:#e8eaf0;--text2:#8892a4;--text3:#4a5168;
+  --accent:#4f8ef7;--green:#3ecf8e;--red:#f05252;
+  --orange:#f5a524;--yellow:#f5c842;--purple:#a78bfa;
+  /* Brand colors */
+  --ba:#4f8ef7;     /* BARE ANATOMY = blue */
+  --cap:#3ecf8e;    /* Chemist At Play = green */
+  --ss:#f5a524;     /* SunScoop = orange */
+  --vinci:#a78bfa;  /* Vinci Botanicals = purple */
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Calibri',sans-serif;min-height:100vh}
+.mono{font-family:'Courier New',monospace}
+
+/* NAV */
+nav{display:flex;align-items:center;padding:0 24px;height:52px;background:var(--bg2);
+    border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;gap:0}
+.nav-logo{display:flex;align-items:center;gap:10px;margin-right:28px;text-decoration:none}
+.nav-logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,#fdcb2e,#f5a524);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#0a0b0e}
+.nav-logo-text{font-weight:800;font-size:15px;color:var(--text);letter-spacing:.5px}
+.nav-tab{height:52px;padding:0 16px;border:none;background:none;color:var(--text2);
+  font-family:'Calibri',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:5px}
+.nav-tab:hover{color:var(--text)}.nav-tab.active{color:var(--text);border-bottom-color:var(--accent)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.nav-meta{font-size:11px;color:var(--text3);font-family:'Courier New',monospace}
+.btn-sm{padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);
+  color:var(--text2);font-size:12px;font-family:'Calibri',sans-serif;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+
+/* PAGE */
+.page{display:none;padding:20px 24px;max-width:1600px;margin:0 auto}
+.page.active{display:block}
+
+/* FILTER BAR */
+.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.filter-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.fbtn{padding:4px 11px;border-radius:16px;border:1px solid var(--border2);background:none;
+  color:var(--text2);font-size:12px;font-family:'Calibri',sans-serif;font-weight:600;cursor:pointer;transition:all .15s}
+.fbtn:hover{border-color:var(--text2);color:var(--text)}
+.fbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.fbtn.ba.active{background:var(--ba);border-color:var(--ba)}
+.fbtn.cap.active{background:var(--cap);border-color:var(--cap);color:#0a0b0e}
+.fbtn.ss.active{background:var(--ss);border-color:var(--ss);color:#0a0b0e}
+.fbtn.vinci.active{background:var(--vinci);border-color:var(--vinci)}
+.fsep{width:1px;height:18px;background:var(--border);margin:0 2px}
+select.fsel,input.fsel{padding:4px 10px;border-radius:16px;border:1px solid var(--border2);background:var(--bg2);
+  color:var(--text2);font-size:12px;font-family:'Calibri',sans-serif;font-weight:600;cursor:pointer;outline:none}
+input.fsearch{padding:4px 12px;border-radius:16px;border:1px solid var(--border2);background:var(--bg2);
+  color:var(--text);font-size:12px;font-family:'Courier New',monospace;outline:none;width:200px}
+input.fsearch::placeholder{color:var(--text3)}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:5px}
+.stat-value{font-size:22px;font-weight:800;color:var(--text)}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.sv-green{color:var(--green)}.sv-red{color:var(--red)}.sv-orange{color:var(--orange)}
+
+/* BRAND PILLS */
+.brand-pills{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.brand-pill{padding:9px 16px;border-radius:28px;border:1px solid var(--border2);background:var(--bg2);
+  font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px}
+.brand-pill .dot{width:7px;height:7px;border-radius:50%}
+.brand-pill.ba .dot{background:var(--ba)}
+.brand-pill.cap .dot{background:var(--cap)}
+.brand-pill.ss .dot{background:var(--ss)}
+.brand-pill.vinci .dot{background:var(--vinci)}
+
+/* CARD / TABLE */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card-title{font-size:13px;font-weight:700}.card-sub{font-size:11px;color:var(--text3)}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--text2);
+  background:var(--bg3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;
+  cursor:pointer;user-select:none}
+th:hover{color:var(--text)}
+td{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+td.num,th.num{text-align:right;font-family:'Courier New',monospace}
+.tcode{font-family:'Courier New',monospace;font-size:11px;color:var(--text2)}
+.timg{width:32px;height:32px;border-radius:6px;background:var(--bg3);object-fit:cover;display:inline-block;vertical-align:middle}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;
+  font-family:'Calibri',sans-serif;letter-spacing:.4px}
+.b-blue   {background:rgba(79,142,247,.15);color:#7badf9}
+.b-green  {background:rgba(62,207,142,.15);color:#56dba2}
+.b-orange {background:rgba(245,165,36,.15);color:#f5b545}
+.b-red    {background:rgba(240,82,82,.15);color:#ff6f6f}
+.b-purple {background:rgba(167,139,250,.15);color:#bda6fb}
+.b-gray   {background:rgba(136,146,164,.15);color:var(--text2)}
+
+/* CHART */
+.chart-grid{display:grid;gap:10px;margin-bottom:18px}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.chart-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px}
+.chart-wrap{position:relative;height:240px}
+
+/* BRAND CARD GRID (overview) */
+.brand-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:18px}
+.brand-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;
+  border-left:3px solid var(--text3)}
+.brand-card.ba{border-left-color:var(--ba)}
+.brand-card.cap{border-left-color:var(--cap)}
+.brand-card.ss{border-left-color:var(--ss)}
+.brand-card.vinci{border-left-color:var(--vinci)}
+.bc-name{font-size:13px;font-weight:800;margin-bottom:8px}
+.bc-stat{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+.bc-stat .lbl{color:var(--text2)}
+.bc-stat .val{color:var(--text);font-weight:700;font-family:'Courier New',monospace}
+
+/* PO ROW EXPAND */
+.po-row{cursor:pointer}
+.po-line-items{background:var(--bg);border-top:1px solid var(--border);padding:0}
+.po-line-items table{font-size:11px}
+.po-line-items th{background:var(--bg);font-size:10px;padding:6px 12px}
+.po-line-items td{padding:6px 12px;border-bottom-color:var(--border)}
+.expand-icon{display:inline-block;transition:transform .2s;color:var(--text3);margin-right:4px}
+.expand-icon.open{transform:rotate(90deg);color:var(--accent)}
+
+/* CITY HEAT */
+.city-bar{height:6px;background:var(--accent);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:8px}
+
+/* WAREHOUSE GRID */
+.wh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:18px}
+.wh-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.wh-name{font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.wh-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0;color:var(--text2)}
+.wh-row .v{color:var(--text);font-weight:700;font-family:'Courier New',monospace}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:99998;gap:14px}
+.spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PILL ROW (state breakdown bars) */
+.pill-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.pill{padding:6px 12px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);
+  font-size:11px;display:inline-flex;align-items:center;gap:6px}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:var(--text3)}
+.pill .v{font-family:'Courier New',monospace;font-weight:700;color:var(--text)}
+</style>
+</head>
+
+<body>
+
+<!-- ═══ PASSWORD GATE ═════════════════════════════════════════════════════════ -->
+<div id="pw-screen" style="position:fixed;inset:0;background:#0a0b0e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#fdcb2e,#f5a524);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#0a0b0e">B</div>
+    <span style="font-size:18px;font-weight:800;color:#e8eaf0;letter-spacing:.5px;font-family:'Calibri',sans-serif">JARVIS · Blinkit</span>
+  </div>
+  <div style="background:#111318;border:1px solid #1e2230;border-radius:12px;padding:28px 32px;display:flex;flex-direction:column;gap:14px;width:320px">
+    <div style="font-size:12px;color:#8892a4;font-family:'Calibri',sans-serif;text-align:center">Enter password to continue</div>
+    <input id="pw-input" type="password" placeholder="Password"
+      style="padding:10px 14px;border-radius:8px;border:1px solid #2a2f40;background:#0a0b0e;color:#e8eaf0;font-size:14px;font-family:'Calibri',sans-serif;outline:none;width:100%;box-sizing:border-box"
+      onkeydown="if(event.key==='Enter')checkPW()">
+    <div id="pw-err" style="color:#f05252;font-size:11px;font-family:'Calibri',sans-serif;display:none;text-align:center">Wrong password</div>
+    <button onclick="checkPW()"
+      style="padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,#fdcb2e,#f5a524);color:#0a0b0e;font-size:13px;font-weight:700;font-family:'Calibri',sans-serif;cursor:pointer">Unlock</button>
+  </div>
+  <div style="font-size:10px;color:#4a5168;font-family:'Courier New',monospace">Onesto Labs · Blinkit Intelligence</div>
+</div>
+
+<script>
+function checkPW(){
+  var pw=document.getElementById('pw-input').value;
+  // Same password as Flipkart: onesto2024
+  var stored='6f6e6573746f32303234';  // hex of "onesto2024"
+  function hexEncode(s){var r='';for(var i=0;i<s.length;i++)r+=s.charCodeAt(i).toString(16);return r;}
+  if(hexEncode(pw)===stored){
+    document.getElementById('pw-screen').style.display='none';
+    sessionStorage.setItem('bk-auth','1');
+    loadData();
+  } else {
+    var err=document.getElementById('pw-err');
+    err.style.display='block';
+    document.getElementById('pw-input').style.borderColor='#f05252';
+    setTimeout(function(){err.style.display='none';document.getElementById('pw-input').style.borderColor='#2a2f40';},2000);
+  }
+}
+// Auto-unlock if already authed this session
+if(sessionStorage.getItem('bk-auth')==='1'){
+  document.getElementById('pw-screen').style.display='none';
+}
+</script>
+
+<!-- ═══ LOADING ═══════════════════════════════════════════════════════════════ -->
+<div id="loading"><div class="spin"></div><p style="color:var(--text2);font-family:'Calibri',sans-serif">Loading Blinkit data...</p></div>
+
+<!-- ═══ NAV ═══════════════════════════════════════════════════════════════════ -->
+<nav>
+  <a class="nav-logo" href="#"><div class="nav-logo-icon">B</div><span class="nav-logo-text">JARVIS · BK</span></a>
+  <button class="nav-tab active" onclick="showPage('overview',this)">📊 Overview</button>
+  <button class="nav-tab" onclick="showPage('sales',this)">📈 Sales</button>
+  <button class="nav-tab" onclick="showPage('pos',this)">📋 POs</button>
+  <button class="nav-tab" onclick="showPage('stock',this)">📦 Stock</button>
+  <button class="nav-tab" onclick="showPage('cities',this)">🌆 Cities</button>
+  <div class="nav-right">
+    <span class="nav-meta" id="nav-meta">—</span>
+    <button class="btn-sm" onclick="loadData()">↻ Refresh</button>
+  </div>
+</nav>
+
+<!-- ═══ OVERVIEW ══════════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-overview">
+  <div class="filters">
+    <span class="filter-label">Brand</span>
+    <button class="fbtn active" id="ov-brand-all" onclick="setOvBrand('ALL',this)">All</button>
+    <button class="fbtn ba"     id="ov-brand-ba"  onclick="setOvBrand('Bare Anatomy',this)">BA</button>
+    <button class="fbtn cap"    id="ov-brand-cap" onclick="setOvBrand('Chemist At Play',this)">CAP</button>
+    <button class="fbtn ss"     id="ov-brand-ss"  onclick="setOvBrand('SunScoop',this)">SS</button>
+    <button class="fbtn vinci"  id="ov-brand-vinci" onclick="setOvBrand('Vinci Botanicals',this)">Vinci</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Window</span>
+    <span id="ov-window" class="mono" style="font-size:11px;color:var(--text3)">—</span>
+  </div>
+
+  <!-- KPI tiles -->
+  <div class="stat-grid" id="ov-kpi"></div>
+
+  <!-- Brand cards -->
+  <div class="card" style="padding:14px">
+    <div class="card-title" style="margin-bottom:12px">🏷️ Brand Performance</div>
+    <div class="brand-card-grid" id="ov-brand-cards"></div>
+  </div>
+
+  <!-- Charts: PO state breakdown + Sales by brand -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr">
+    <div class="chart-card">
+      <div class="chart-title">📊 PO Pipeline</div>
+      <div class="chart-wrap"><canvas id="ch-ov-po"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">💰 Sales by Brand (MRP Revenue)</div>
+      <div class="chart-wrap"><canvas id="ch-ov-brand"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Top SKUs -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🏆 Top 15 SKUs · By MRP Revenue</span>
+      <span class="card-sub" id="ov-skus-sub"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th></th>
+        <th>SKU</th>
+        <th>Brand</th>
+        <th class="num">Units Sold</th>
+        <th class="num">MRP Revenue</th>
+        <th class="num">Inventory</th>
+        <th class="num">PO Value</th>
+        <th>Top City</th>
+      </tr></thead>
+      <tbody id="ov-skus-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ SALES TAB ═════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-sales">
+  <div class="filters">
+    <span class="filter-label">Brand</span>
+    <button class="fbtn active" onclick="setSalesBrand('ALL',this)">All</button>
+    <button class="fbtn ba"     onclick="setSalesBrand('Bare Anatomy',this)">BA</button>
+    <button class="fbtn cap"    onclick="setSalesBrand('Chemist At Play',this)">CAP</button>
+    <button class="fbtn ss"     onclick="setSalesBrand('SunScoop',this)">SS</button>
+    <button class="fbtn vinci"  onclick="setSalesBrand('Vinci Botanicals',this)">Vinci</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Category</span>
+    <select class="fsel" id="sales-cat-sel" onchange="renderSales()">
+      <option value="ALL">All Categories</option>
+    </select>
+    <div class="fsep"></div>
+    <span class="filter-label">Status</span>
+    <select class="fsel" id="sales-status-sel" onchange="renderSales()">
+      <option value="ALL">All</option>
+      <option value="selling">Selling Only</option>
+      <option value="no_sales">No Sales</option>
+    </select>
+    <div class="fsep"></div>
+    <input class="fsearch" placeholder="Search SKU / title..." id="sales-search" oninput="renderSales()">
+  </div>
+
+  <!-- KPI tiles -->
+  <div class="stat-grid" id="sales-kpi"></div>
+
+  <!-- SKU table -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🧾 SKU-level Sales</span>
+      <span class="card-sub" id="sales-sku-count"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Image</th>
+        <th onclick="sortSales('name')">Product</th>
+        <th onclick="sortSales('brand')">Brand</th>
+        <th class="num" onclick="sortSales('mrp')">MRP</th>
+        <th class="num" onclick="sortSales('units_sold_30d')">Units</th>
+        <th class="num" onclick="sortSales('mrp_revenue_30d')">MRP Revenue ▼</th>
+        <th class="num" onclick="sortSales('inventory_total')">Inventory</th>
+        <th class="num" onclick="sortSales('po_value_30d')">PO Value</th>
+        <th class="num" onclick="sortSales('po_count_30d')">POs</th>
+        <th class="num" onclick="sortSales('active_in_cities')">Cities</th>
+        <th>Top City</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody id="sales-sku-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ POs TAB ═══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-pos">
+  <div class="filters">
+    <span class="filter-label">State</span>
+    <button class="fbtn active" onclick="setPosState('ALL',this)">All</button>
+    <button class="fbtn" onclick="setPosState('Scheduled',this)">Scheduled</button>
+    <button class="fbtn" onclick="setPosState('Unscheduled',this)">Unscheduled (No Appt)</button>
+    <button class="fbtn" onclick="setPosState('Fulfilled',this)">Fulfilled</button>
+    <button class="fbtn" onclick="setPosState('Expired',this)">Expired</button>
+    <button class="fbtn" onclick="setPosState('Cancelled post Creation',this)">Cancelled</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Facility</span>
+    <select class="fsel" id="pos-facility-sel" onchange="renderPos()">
+      <option value="ALL">All Facilities</option>
+    </select>
+    <div class="fsep"></div>
+    <input class="fsearch" placeholder="Search PO number / facility..." id="pos-search" oninput="renderPos()">
+  </div>
+
+  <!-- KPI tiles -->
+  <div class="stat-grid" id="pos-kpi"></div>
+
+  <!-- Pipeline pills -->
+  <div class="card" style="padding:12px 16px">
+    <div class="card-title" style="margin-bottom:10px">PO Pipeline · State Breakdown</div>
+    <div id="pos-pipeline" class="pill-row"></div>
+  </div>
+
+  <!-- PO table -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">📋 Purchase Orders</span>
+      <span class="card-sub" id="pos-count"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th></th>
+        <th onclick="sortPos('po_number')">PO Number</th>
+        <th onclick="sortPos('po_state')">State</th>
+        <th onclick="sortPos('facility_name')">Facility</th>
+        <th class="num" onclick="sortPos('total_amount')">Value ▼</th>
+        <th class="num" onclick="sortPos('total_units_ordered')">Units</th>
+        <th class="num" onclick="sortPos('item_count')">SKUs</th>
+        <th onclick="sortPos('order_date')">Order Date</th>
+        <th onclick="sortPos('appointment_date')">Appointment</th>
+        <th onclick="sortPos('expiry_date')">Expiry</th>
+      </tr></thead>
+      <tbody id="pos-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ STOCK TAB ═════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-stock">
+  <div class="filters">
+    <span class="filter-label">Brand</span>
+    <button class="fbtn active" onclick="setStockBrand('ALL',this)">All</button>
+    <button class="fbtn ba"     onclick="setStockBrand('Bare Anatomy',this)">BA</button>
+    <button class="fbtn cap"    onclick="setStockBrand('Chemist At Play',this)">CAP</button>
+    <button class="fbtn ss"     onclick="setStockBrand('SunScoop',this)">SS</button>
+    <button class="fbtn vinci"  onclick="setStockBrand('Vinci Botanicals',this)">Vinci</button>
+    <div class="fsep"></div>
+    <input class="fsearch" placeholder="Search SKU / warehouse..." id="stock-search" oninput="renderStock()">
+  </div>
+
+  <!-- KPI tiles -->
+  <div class="stat-grid" id="stock-kpi"></div>
+
+  <!-- Tab switcher: by SKU / by Warehouse -->
+  <div class="filters" style="margin-bottom:14px">
+    <button class="fbtn active" id="stock-view-sku" onclick="setStockView('sku',this)">📦 By SKU</button>
+    <button class="fbtn" id="stock-view-wh" onclick="setStockView('wh',this)">🏭 By Warehouse</button>
+  </div>
+
+  <!-- SKU view -->
+  <div class="card" id="stock-sku-card">
+    <div class="card-hdr">
+      <span class="card-title">📦 SKU Inventory</span>
+      <span class="card-sub" id="stock-sku-count"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Image</th>
+        <th onclick="sortStock('name')">Product</th>
+        <th onclick="sortStock('brand')">Brand</th>
+        <th class="num" onclick="sortStock('soh_backend')">Backend</th>
+        <th class="num" onclick="sortStock('soh_frontend')">Frontend</th>
+        <th class="num" onclick="sortStock('inventory_total')">Total ▼</th>
+        <th class="num" onclick="sortStock('warehouses_stocked')">Stocked WH</th>
+        <th class="num" onclick="sortStock('warehouses_oos')">OOS WH</th>
+        <th class="num" onclick="sortStock('units_sold_30d')">Sold 30d</th>
+      </tr></thead>
+      <tbody id="stock-sku-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Warehouse view -->
+  <div id="stock-wh-card" style="display:none">
+    <div class="wh-grid" id="stock-wh-grid"></div>
+  </div>
+</div>
+
+<!-- ═══ CITIES TAB ════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-cities">
+  <div class="filters">
+    <span class="filter-label">Sort by</span>
+    <select class="fsel" id="cities-sort-sel" onchange="renderCities()">
+      <option value="revenue">MRP Revenue</option>
+      <option value="units">Units</option>
+      <option value="active_skus">Active SKUs</option>
+    </select>
+    <div class="fsep"></div>
+    <span class="filter-label">Show</span>
+    <select class="fsel" id="cities-limit-sel" onchange="renderCities()">
+      <option value="20">Top 20</option>
+      <option value="50">Top 50</option>
+      <option value="100">Top 100</option>
+      <option value="all">All</option>
+    </select>
+    <div class="fsep"></div>
+    <input class="fsearch" placeholder="Search city..." id="cities-search" oninput="renderCities()">
+  </div>
+
+  <div class="stat-grid" id="cities-kpi"></div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🌆 City Performance</span>
+      <span class="card-sub" id="cities-count"></span>
+    </div>
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th onclick="sortCities('city')">City</th>
+        <th class="num" onclick="sortCities('revenue')">MRP Revenue ▼</th>
+        <th class="num">Share</th>
+        <th class="num" onclick="sortCities('units')">Units</th>
+        <th class="num" onclick="sortCities('active_skus')">Active SKUs</th>
+      </tr></thead>
+      <tbody id="cities-body"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- ═══ SCRIPT: state, data loading, render functions ════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<script>
+
+// ─── GLOBAL STATE ────────────────────────────────────────────────────────────
+var D = null;          // bk_data.json contents
+var H = {              // tab state
+  ov:     {brand:'ALL'},
+  sales:  {brand:'ALL', sortKey:'mrp_revenue_30d', sortDir:'desc'},
+  pos:    {state:'ALL', sortKey:'total_amount', sortDir:'desc', expanded:{}},
+  stock:  {brand:'ALL', view:'sku', sortKey:'inventory_total', sortDir:'desc'},
+  cities: {sortKey:'revenue', sortDir:'desc'},
+};
+
+// ─── FORMATTERS ──────────────────────────────────────────────────────────────
+function fmtCr(v){
+  if(v==null||isNaN(v)||v===0) return '—';
+  if(v>=1e7) return '₹'+(v/1e7).toFixed(2)+'Cr';
+  if(v>=1e5) return '₹'+(v/1e5).toFixed(1)+'L';
+  if(v>=1e3) return '₹'+(v/1e3).toFixed(1)+'K';
+  return '₹'+Math.round(v).toLocaleString('en-IN');
+}
+function fmtUnits(v){
+  if(v==null||isNaN(v)||v===0) return '—';
+  if(v>=1e5) return (v/1e5).toFixed(1)+'L';
+  if(v>=1e3) return (v/1e3).toFixed(1)+'K';
+  return Math.round(v).toLocaleString('en-IN');
+}
+function fmtInt(v){
+  if(v==null||isNaN(v)) return '—';
+  return Math.round(v).toLocaleString('en-IN');
+}
+function fmtPct(v){
+  if(v==null||isNaN(v)) return '—';
+  return (+v).toFixed(1)+'%';
+}
+function fmtDate(s){
+  if(!s) return '—';
+  s = String(s);
+  // Get YYYY-MM-DD prefix
+  if(s.length >= 10) return s.substring(0,10);
+  return s;
+}
+function escHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function brandClass(b){
+  if(!b) return '';
+  var n = String(b).toLowerCase();
+  if(n.indexOf('bare')>=0) return 'ba';
+  if(n.indexOf('chemist')>=0) return 'cap';
+  if(n.indexOf('sunscoop')>=0) return 'ss';
+  if(n.indexOf('vinci')>=0) return 'vinci';
+  return '';
+}
+
+// ─── PAGE NAVIGATION ─────────────────────────────────────────────────────────
+function showPage(name, btn){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  // Re-render the active tab so it always reflects latest state/data
+  if(!D) return;
+  if(name==='overview') renderOverview();
+  if(name==='sales')    renderSales();
+  if(name==='pos')      renderPos();
+  if(name==='stock')    renderStock();
+  if(name==='cities')   renderCities();
+}
+
+// ─── DATA LOAD ───────────────────────────────────────────────────────────────
+async function loadData(){
+  try {
+    var res = await fetch('bk_data.json?'+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    D = await res.json();
+    var meta = D.meta || {};
+    var manuf = (meta.manufacturer && meta.manufacturer.name) || 'Onesto Labs';
+    var df = meta.date_from || '?', dt = meta.date_to || '?';
+    document.getElementById('nav-meta').textContent =
+      manuf+' · '+df+' → '+dt;
+    document.getElementById('loading').style.display='none';
+    populateFilters();
+    renderAll();
+  } catch (e) {
+    console.error('loadData failed', e);
+    document.getElementById('loading').innerHTML =
+      '<p style="color:var(--red);font-family:Calibri">Failed to load bk_data.json: '+e.message+'</p>'+
+      '<p style="color:var(--text2);font-family:Calibri;font-size:12px">Make sure bk_data.json is in the same folder as this HTML.</p>';
+  }
+}
+
+function populateFilters(){
+  // Categories dropdown for sales tab
+  var cats = (D.filters && D.filters.sales_categories) || [];
+  var sel = document.getElementById('sales-cat-sel');
+  if(sel){
+    sel.innerHTML = '<option value="ALL">All Categories</option>' +
+      cats.map(function(c){return '<option value="'+escHtml(c)+'">'+escHtml(c)+'</option>'}).join('');
+  }
+  // Facilities dropdown for POs tab
+  var facs = (D.filters && D.filters.po_facilities) || [];
+  var fsel = document.getElementById('pos-facility-sel');
+  if(fsel){
+    fsel.innerHTML = '<option value="ALL">All Facilities</option>' +
+      facs.map(function(f){return '<option value="'+escHtml(f)+'">'+escHtml(f)+'</option>'}).join('');
+  }
+}
+
+function renderAll(){
+  renderOverview();
+  // Other tabs render lazily on first navigation
+}
+
+// ─── BRAND FILTER HELPER ─────────────────────────────────────────────────────
+function brandMatch(skuBrand, filterBrand){
+  if(filterBrand === 'ALL') return true;
+  return skuBrand === filterBrand;
+}
+
+// ─── OVERVIEW ────────────────────────────────────────────────────────────────
+function setOvBrand(b, btn){
+  H.ov.brand = b;
+  document.querySelectorAll('#page-overview .filters .fbtn').forEach(function(x){x.classList.remove('active')});
+  btn.classList.add('active');
+  renderOverview();
+}
+
+function renderOverview(){
+  if(!D) return;
+  var brand = H.ov.brand;
+  var pulse = D.pulse || {};
+  var meta = D.meta || {};
+
+  // Window label
+  document.getElementById('ov-window').textContent =
+    (meta.date_from||'?')+' → '+(meta.date_to||'?')+' (30 days)';
+
+  // Filter brands list to selected brand (or all)
+  var brands = D.brands || [];
+  var filteredBrands = brand==='ALL' ? brands : brands.filter(function(b){return b.name===brand});
+
+  // Compute filtered totals
+  var totalUnits=0, totalRev=0, totalPoValue=0, totalSkusActive=0, totalCities=new Set();
+  filteredBrands.forEach(function(b){
+    totalUnits   += b.units_sold || 0;
+    totalRev     += b.mrp_revenue || 0;
+    totalPoValue += b.po_value || 0;
+    totalSkusActive += b.active_skus_30d || 0;
+  });
+
+  // For 'ALL' brand: use pulse values (more authoritative for global numbers)
+  if(brand==='ALL'){
+    totalRev     = (D.skus||[]).reduce(function(s,x){return s+(x.mrp_revenue_30d||0)},0);
+    totalUnits   = (D.skus||[]).reduce(function(s,x){return s+(x.units_sold_30d||0)},0);
+    totalPoValue = pulse.po_value || 0;
+    totalSkusActive = pulse.active_skus || 0;
+  }
+
+  // KPI tiles
+  var kpiEl = document.getElementById('ov-kpi');
+  kpiEl.innerHTML = [
+    statCard('MRP Revenue', fmtCr(totalRev), '30 days'),
+    statCard('Units Sold',  fmtUnits(totalUnits), '30 days'),
+    statCard('PO Value',    fmtCr(totalPoValue), pulse.po_count + ' POs'),
+    statCard('Items Delivered', fmtUnits(pulse.items_delivered), '30 days'),
+    statCard('Active SKUs', String(totalSkusActive), 'with sales 30d'),
+    statCard('Brand Fund',  fmtCr(pulse.brand_fund_total), pulse.brand_fund_pids + ' PIDs'),
+  ].join('');
+
+  // Brand cards
+  var bcEl = document.getElementById('ov-brand-cards');
+  bcEl.innerHTML = brands.map(function(b){
+    var cls = brandClass(b.name);
+    return ''+
+    '<div class="brand-card '+cls+'">'+
+      '<div class="bc-name">'+escHtml(b.name)+'</div>'+
+      '<div class="bc-stat"><span class="lbl">MRP Revenue</span><span class="val">'+fmtCr(b.mrp_revenue)+'</span></div>'+
+      '<div class="bc-stat"><span class="lbl">Units Sold</span><span class="val">'+fmtUnits(b.units_sold)+'</span></div>'+
+      '<div class="bc-stat"><span class="lbl">PO Value</span><span class="val">'+fmtCr(b.po_value)+'</span></div>'+
+      '<div class="bc-stat"><span class="lbl">Active SKUs</span><span class="val">'+b.active_skus_30d+' / '+b.catalog_skus+'</span></div>'+
+      '<div class="bc-stat"><span class="lbl">Cities</span><span class="val">'+b.cities_active+'</span></div>'+
+    '</div>';
+  }).join('');
+
+  // Charts
+  drawOvPoChart();
+  drawOvBrandChart();
+
+  // Top 15 SKUs
+  var skus = (D.skus||[]).slice();
+  if(brand!=='ALL') skus = skus.filter(function(s){return s.brand===brand});
+  skus.sort(function(a,b){return (b.mrp_revenue_30d||0)-(a.mrp_revenue_30d||0)});
+  var top = skus.slice(0,15);
+  document.getElementById('ov-skus-sub').textContent = top.length+' of '+skus.length+' SKUs';
+
+  var bodyEl = document.getElementById('ov-skus-body');
+  bodyEl.innerHTML = top.map(function(s, i){
+    var img = s.image ? '<img class="timg" src="'+escHtml(s.image)+'" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+    var bc = brandClass(s.brand);
+    return ''+
+    '<tr>'+
+      '<td>'+img+'</td>'+
+      '<td><div style="font-weight:600">'+escHtml((s.name||'').substring(0,55))+'</div>'+
+        '<div class="tcode">'+s.item_id+'</div></td>'+
+      '<td><span class="badge b-'+(bc==='ba'?'blue':bc==='cap'?'green':bc==='ss'?'orange':bc==='vinci'?'purple':'gray')+'">'+escHtml(s.brand||'—')+'</span></td>'+
+      '<td class="num">'+fmtUnits(s.units_sold_30d)+'</td>'+
+      '<td class="num"><b>'+fmtCr(s.mrp_revenue_30d)+'</b></td>'+
+      '<td class="num">'+fmtUnits(s.inventory_total||0)+'</td>'+
+      '<td class="num">'+fmtCr(s.po_value_30d)+'</td>'+
+      '<td>'+escHtml(s.top_city||'—')+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function statCard(label, value, sub){
+  return ''+
+  '<div class="stat-card">'+
+    '<div class="stat-label">'+escHtml(label)+'</div>'+
+    '<div class="stat-value">'+value+'</div>'+
+    (sub ? '<div class="stat-sub">'+escHtml(sub)+'</div>' : '')+
+  '</div>';
+}
+
+// ─── CHARTS ──────────────────────────────────────────────────────────────────
+var _charts = {};
+function destroyChart(id){ if(_charts[id]){ _charts[id].destroy(); delete _charts[id]; } }
+
+function drawOvPoChart(){
+  destroyChart('ov-po');
+  var pos = (D.pos && D.pos.by_state_value) || {};
+  var stateColors = {
+    'Created':'#4f8ef7', 'Scheduled':'#4f8ef7',
+    'Unscheduled':'#f5a524',
+    'Fulfilled':'#3ecf8e',
+    'Expired':'#f05252',
+    'Cancelled':'#8892a4', 'Cancelled post Creation':'#8892a4',
+  };
+  var labels=[], data=[], colors=[];
+  Object.keys(pos).forEach(function(st){
+    if(pos[st]===0) return;
+    labels.push(st);
+    data.push(pos[st]);
+    colors.push(stateColors[st] || '#8892a4');
+  });
+  var ctx = document.getElementById('ch-ov-po');
+  if(!ctx) return;
+  _charts['ov-po'] = new Chart(ctx, {
+    type:'doughnut',
+    data:{labels:labels, datasets:[{data:data, backgroundColor:colors, borderColor:'#0a0b0e', borderWidth:2}]},
+    options:{
+      maintainAspectRatio:false, responsive:true,
+      plugins:{
+        legend:{position:'right', labels:{color:'#e8eaf0', font:{size:11}, padding:8}},
+        tooltip:{callbacks:{label:function(c){return c.label+': '+fmtCr(c.raw)}}},
+      },
+    },
+  });
+}
+
+function drawOvBrandChart(){
+  destroyChart('ov-brand');
+  var brands = D.brands || [];
+  var labels = brands.map(function(b){return b.name});
+  var data = brands.map(function(b){return b.mrp_revenue||0});
+  var colors = brands.map(function(b){
+    var c = brandClass(b.name);
+    return c==='ba'?'#4f8ef7':c==='cap'?'#3ecf8e':c==='ss'?'#f5a524':c==='vinci'?'#a78bfa':'#8892a4';
+  });
+  var ctx = document.getElementById('ch-ov-brand');
+  if(!ctx) return;
+  _charts['ov-brand'] = new Chart(ctx, {
+    type:'bar',
+    data:{labels:labels, datasets:[{data:data, backgroundColor:colors, borderRadius:6}]},
+    options:{
+      maintainAspectRatio:false, responsive:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(c){return fmtCr(c.raw)}}},
+      },
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:10}}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10},callback:function(v){return fmtCr(v)}}, grid:{color:'#1e2230'}},
+      },
+    },
+  });
+}
+
+// ─── SALES TAB ───────────────────────────────────────────────────────────────
+function setSalesBrand(b, btn){
+  H.sales.brand = b;
+  document.querySelectorAll('#page-sales .filters .fbtn').forEach(function(x){x.classList.remove('active')});
+  btn.classList.add('active');
+  renderSales();
+}
+function sortSales(key){
+  if(H.sales.sortKey === key) H.sales.sortDir = H.sales.sortDir==='asc'?'desc':'asc';
+  else { H.sales.sortKey = key; H.sales.sortDir = 'desc'; }
+  renderSales();
+}
+
+function renderSales(){
+  if(!D) return;
+  var brand = H.sales.brand;
+  var cat = (document.getElementById('sales-cat-sel')||{}).value || 'ALL';
+  var status = (document.getElementById('sales-status-sel')||{}).value || 'ALL';
+  var search = ((document.getElementById('sales-search')||{}).value || '').toLowerCase().trim();
+
+  var skus = (D.skus||[]).slice();
+
+  // Brand filter
+  if(brand !== 'ALL') skus = skus.filter(function(s){return s.brand===brand});
+  // Category filter (uses category_l0 from catalog or category from sales)
+  if(cat !== 'ALL') skus = skus.filter(function(s){return s.category_l0===cat});
+  // Status filter
+  if(status !== 'ALL'){
+    skus = skus.filter(function(s){return (s.status||[]).indexOf(status) >= 0});
+  }
+  // Search
+  if(search){
+    skus = skus.filter(function(s){
+      return (s.name||'').toLowerCase().indexOf(search) >= 0 ||
+             String(s.item_id||'').indexOf(search) >= 0;
+    });
+  }
+
+  // Sort
+  var key = H.sales.sortKey, dir = H.sales.sortDir;
+  skus.sort(function(a,b){
+    var av = a[key], bv = b[key];
+    if(av==null) av = (typeof bv === 'number') ? -Infinity : '';
+    if(bv==null) bv = (typeof av === 'number') ? -Infinity : '';
+    if(typeof av === 'number') return dir==='asc' ? av-bv : bv-av;
+    return dir==='asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+  });
+
+  // KPI tiles
+  var totalUnits = skus.reduce(function(s,x){return s+(x.units_sold_30d||0)},0);
+  var totalRev   = skus.reduce(function(s,x){return s+(x.mrp_revenue_30d||0)},0);
+  var totalPo    = skus.reduce(function(s,x){return s+(x.po_value_30d||0)},0);
+  var activeCount = skus.filter(function(s){return s.units_sold_30d>0}).length;
+  var totalInv   = skus.reduce(function(s,x){return s+(x.inventory_total||0)},0);
+
+  document.getElementById('sales-kpi').innerHTML = [
+    statCard('MRP Revenue', fmtCr(totalRev),  '30 days'),
+    statCard('Units Sold',  fmtUnits(totalUnits), '30 days'),
+    statCard('PO Value',    fmtCr(totalPo),   ''),
+    statCard('Active SKUs', String(activeCount), 'of '+skus.length+' filtered'),
+    statCard('Inventory',   fmtUnits(totalInv), 'units total'),
+  ].join('');
+
+  // Table
+  document.getElementById('sales-sku-count').textContent = skus.length+' SKUs';
+  var bodyEl = document.getElementById('sales-sku-body');
+  bodyEl.innerHTML = skus.map(function(s){
+    var img = s.image ? '<img class="timg" src="'+escHtml(s.image)+'" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+    var bc = brandClass(s.brand);
+    var statusBadge = (s.status||[]).indexOf('selling') >= 0
+      ? '<span class="badge b-green">Selling</span>'
+      : (s.status||[]).indexOf('zero_stock') >= 0
+        ? '<span class="badge b-red">No Stock</span>'
+        : (s.status||[]).indexOf('no_sales') >= 0
+          ? '<span class="badge b-gray">No Sales</span>'
+          : '<span class="badge b-gray">—</span>';
+    return ''+
+    '<tr>'+
+      '<td>'+img+'</td>'+
+      '<td><div style="font-weight:600">'+escHtml((s.name||'').substring(0,55))+'</div>'+
+        '<div class="tcode">'+s.item_id+'</div></td>'+
+      '<td><span class="badge b-'+(bc==='ba'?'blue':bc==='cap'?'green':bc==='ss'?'orange':bc==='vinci'?'purple':'gray')+'">'+escHtml(s.brand||'—')+'</span></td>'+
+      '<td class="num">'+fmtCr(s.mrp)+'</td>'+
+      '<td class="num">'+fmtUnits(s.units_sold_30d)+'</td>'+
+      '<td class="num"><b>'+fmtCr(s.mrp_revenue_30d)+'</b></td>'+
+      '<td class="num">'+fmtUnits(s.inventory_total||0)+'</td>'+
+      '<td class="num">'+fmtCr(s.po_value_30d)+'</td>'+
+      '<td class="num">'+(s.po_count_30d||0)+'</td>'+
+      '<td class="num">'+(s.active_in_cities||0)+'</td>'+
+      '<td>'+escHtml(s.top_city||'—')+'</td>'+
+      '<td>'+statusBadge+'</td>'+
+    '</tr>';
+  }).join('') || '<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:30px">No SKUs match filters</td></tr>';
+}
+
+// ─── POs TAB ─────────────────────────────────────────────────────────────────
+function setPosState(s, btn){
+  H.pos.state = s;
+  document.querySelectorAll('#page-pos .filters .fbtn').forEach(function(x){x.classList.remove('active')});
+  btn.classList.add('active');
+  renderPos();
+}
+function sortPos(key){
+  if(H.pos.sortKey === key) H.pos.sortDir = H.pos.sortDir==='asc'?'desc':'asc';
+  else { H.pos.sortKey = key; H.pos.sortDir = 'desc'; }
+  renderPos();
+}
+function togglePoExpand(po_number){
+  H.pos.expanded[po_number] = !H.pos.expanded[po_number];
+  renderPos();
+}
+
+function renderPos(){
+  if(!D || !D.pos) return;
+  var state = H.pos.state;
+  var facility = (document.getElementById('pos-facility-sel')||{}).value || 'ALL';
+  var search = ((document.getElementById('pos-search')||{}).value || '').toLowerCase().trim();
+
+  var rows = (D.pos.rows||[]).slice();
+
+  // State filter
+  if(state !== 'ALL') rows = rows.filter(function(p){return p.po_state===state});
+  // Facility filter
+  if(facility !== 'ALL') rows = rows.filter(function(p){return p.facility_name===facility});
+  // Search
+  if(search){
+    rows = rows.filter(function(p){
+      return String(p.po_number||'').toLowerCase().indexOf(search) >= 0 ||
+             (p.facility_name||'').toLowerCase().indexOf(search) >= 0;
+    });
+  }
+
+  // Sort
+  var key = H.pos.sortKey, dir = H.pos.sortDir;
+  rows.sort(function(a,b){
+    var av = a[key], bv = b[key];
+    if(av==null) av = (typeof bv === 'number') ? -Infinity : '';
+    if(bv==null) bv = (typeof av === 'number') ? -Infinity : '';
+    if(typeof av === 'number') return dir==='asc' ? av-bv : bv-av;
+    return dir==='asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+  });
+
+  // KPI tiles
+  var totalValue = rows.reduce(function(s,p){return s+(p.total_amount||0)},0);
+  var totalUnits = rows.reduce(function(s,p){return s+(p.total_units_ordered||0)},0);
+  var totalLineItems = rows.reduce(function(s,p){return s+(p.item_count||0)},0);
+  var noApptCount = rows.filter(function(p){
+    return p.po_state==='Unscheduled' && (!p.appointment_date || String(p.appointment_date).trim()==='');
+  }).length;
+
+  document.getElementById('pos-kpi').innerHTML = [
+    statCard('Total POs',     String(rows.length), state==='ALL'?'all states':state),
+    statCard('Total Value',   fmtCr(totalValue), ''),
+    statCard('Units Ordered', fmtUnits(totalUnits), ''),
+    statCard('Line Items',    fmtInt(totalLineItems), 'PO×SKU rows'),
+    statCard('No Appointment', String(noApptCount), 'action needed', noApptCount>0?'sv-orange':''),
+  ].join('');
+
+  // Pipeline pills (always show all states from full data, not filtered)
+  var byCount = D.pos.by_state_count || {};
+  var byValue = D.pos.by_state_value || {};
+  var stateColors = {
+    'Created':'#4f8ef7', 'Scheduled':'#4f8ef7',
+    'Unscheduled':'#f5a524',
+    'Fulfilled':'#3ecf8e',
+    'Expired':'#f05252',
+    'Cancelled':'#8892a4', 'Cancelled post Creation':'#8892a4',
+  };
+  document.getElementById('pos-pipeline').innerHTML = Object.keys(byCount).map(function(st){
+    var c = stateColors[st] || '#8892a4';
+    return '<span class="pill"><span class="dot" style="background:'+c+'"></span>'+
+      '<span>'+escHtml(st)+'</span>'+
+      '<span class="v">'+byCount[st]+' POs</span>'+
+      '<span class="v" style="color:var(--text2)">'+fmtCr(byValue[st])+'</span>'+
+      '</span>';
+  }).join('');
+
+  // Table
+  document.getElementById('pos-count').textContent = rows.length+' POs';
+
+  var stateBadgeColor = {
+    'Scheduled':'b-blue', 'Created':'b-blue',
+    'Unscheduled':'b-orange',
+    'Fulfilled':'b-green',
+    'Expired':'b-red',
+    'Cancelled':'b-gray', 'Cancelled post Creation':'b-gray',
+  };
+
+  var bodyEl = document.getElementById('pos-body');
+  bodyEl.innerHTML = rows.slice(0, 500).map(function(p){
+    var sb = stateBadgeColor[p.po_state] || 'b-gray';
+    var apptCell = p.appointment_date && String(p.appointment_date).trim() !== ''
+      ? fmtDate(p.appointment_date)
+      : '<span class="badge b-orange">Not Set</span>';
+    var isExp = !!H.pos.expanded[p.po_number];
+    var lineItemsRow = isExp ? renderPoLineItems(p) : '';
+    return ''+
+    '<tr class="po-row" onclick="togglePoExpand(\''+p.po_number+'\')">'+
+      '<td><span class="expand-icon '+(isExp?'open':'')+'">▶</span></td>'+
+      '<td><span class="tcode">'+escHtml(p.po_number)+'</span></td>'+
+      '<td><span class="badge '+sb+'">'+escHtml(p.po_state||'—')+'</span></td>'+
+      '<td>'+escHtml((p.facility_name||'').substring(0,40))+'</td>'+
+      '<td class="num"><b>'+fmtCr(p.total_amount)+'</b></td>'+
+      '<td class="num">'+fmtUnits(p.total_units_ordered)+'</td>'+
+      '<td class="num">'+(p.item_count||0)+'</td>'+
+      '<td>'+fmtDate(p.order_date)+'</td>'+
+      '<td>'+apptCell+'</td>'+
+      '<td>'+fmtDate(p.expiry_date)+'</td>'+
+    '</tr>'+
+    lineItemsRow;
+  }).join('');
+
+  if(rows.length > 500){
+    bodyEl.innerHTML += '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:14px">'+
+      'Showing first 500 of '+rows.length+' POs · use filters to narrow down</td></tr>';
+  }
+}
+
+function renderPoLineItems(p){
+  var items = p.line_items || [];
+  if(!items.length) return '';
+  var html = items.map(function(li){
+    var img = '';
+    return ''+
+    '<tr>'+
+      '<td colspan="2">'+escHtml((li.name||'').substring(0,55))+'<br>'+
+        '<span class="tcode">'+li.item_id+'</span></td>'+
+      '<td><span class="tcode">'+escHtml(li.uom_text||'—')+'</span></td>'+
+      '<td class="num">'+fmtUnits(li.units_ordered)+'</td>'+
+      '<td class="num">'+fmtUnits(li.remaining_quantity)+'</td>'+
+      '<td class="num">'+fmtCr(li.cost_price)+'</td>'+
+      '<td class="num">'+fmtCr(li.landing_rate)+'</td>'+
+      '<td class="num">'+fmtCr(li.mrp)+'</td>'+
+      '<td class="num"><b>'+fmtCr(li.total_amount)+'</b></td>'+
+    '</tr>';
+  }).join('');
+  return '<tr class="po-line-items"><td colspan="10" style="padding:0">'+
+    '<table style="margin:0">'+
+      '<thead><tr>'+
+        '<th colspan="2">Product</th>'+
+        '<th>UoM</th>'+
+        '<th class="num">Ordered</th>'+
+        '<th class="num">Remaining</th>'+
+        '<th class="num">Cost</th>'+
+        '<th class="num">Landing</th>'+
+        '<th class="num">MRP</th>'+
+        '<th class="num">Total</th>'+
+      '</tr></thead>'+
+      '<tbody>'+html+'</tbody>'+
+    '</table></td></tr>';
+}
+
+// ─── STOCK TAB ───────────────────────────────────────────────────────────────
+function setStockBrand(b, btn){
+  H.stock.brand = b;
+  document.querySelectorAll('#page-stock .filters .fbtn:not([id^=stock-view])').forEach(function(x){x.classList.remove('active')});
+  btn.classList.add('active');
+  renderStock();
+}
+function setStockView(v, btn){
+  H.stock.view = v;
+  document.getElementById('stock-view-sku').classList.remove('active');
+  document.getElementById('stock-view-wh').classList.remove('active');
+  btn.classList.add('active');
+  document.getElementById('stock-sku-card').style.display = v==='sku' ? '' : 'none';
+  document.getElementById('stock-wh-card').style.display = v==='wh' ? '' : 'none';
+  renderStock();
+}
+function sortStock(key){
+  if(H.stock.sortKey === key) H.stock.sortDir = H.stock.sortDir==='asc'?'desc':'asc';
+  else { H.stock.sortKey = key; H.stock.sortDir = 'desc'; }
+  renderStock();
+}
+
+function renderStock(){
+  if(!D) return;
+  var brand = H.stock.brand;
+  var view = H.stock.view;
+  var search = ((document.getElementById('stock-search')||{}).value || '').toLowerCase().trim();
+
+  // KPI tiles (always full-data for context, but filtered by brand)
+  var skus = (D.skus||[]).slice();
+  if(brand !== 'ALL') skus = skus.filter(function(s){return s.brand===brand});
+
+  var totalBe = skus.reduce(function(s,x){return s+(x.soh_backend||0)},0);
+  var totalFe = skus.reduce(function(s,x){return s+(x.soh_frontend||0)},0);
+  var totalInv = totalBe + totalFe;
+  var oosCount = skus.filter(function(s){return (s.inventory_total||0)===0 && (s.units_sold_30d||0)>0}).length;
+
+  document.getElementById('stock-kpi').innerHTML = [
+    statCard('Backend Stock', fmtUnits(totalBe), 'units'),
+    statCard('Frontend Stock', fmtUnits(totalFe), 'units'),
+    statCard('Total Inventory', fmtUnits(totalInv), 'all warehouses'),
+    statCard('Selling but OOS', String(oosCount), 'restock priority', oosCount>0?'sv-red':''),
+  ].join('');
+
+  if(view === 'sku') renderStockSku(skus, search);
+  else renderStockWh(brand, search);
+}
+
+function renderStockSku(skus, search){
+  // Search filter
+  if(search){
+    skus = skus.filter(function(s){
+      return (s.name||'').toLowerCase().indexOf(search) >= 0 ||
+             String(s.item_id||'').indexOf(search) >= 0;
+    });
+  }
+  // Sort
+  var key = H.stock.sortKey, dir = H.stock.sortDir;
+  skus.sort(function(a,b){
+    var av = a[key], bv = b[key];
+    if(av==null) av = (typeof bv === 'number') ? -Infinity : '';
+    if(bv==null) bv = (typeof av === 'number') ? -Infinity : '';
+    if(typeof av === 'number') return dir==='asc' ? av-bv : bv-av;
+    return dir==='asc' ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+  });
+
+  document.getElementById('stock-sku-count').textContent = skus.length+' SKUs';
+  var bodyEl = document.getElementById('stock-sku-body');
+  bodyEl.innerHTML = skus.map(function(s){
+    var img = s.image ? '<img class="timg" src="'+escHtml(s.image)+'" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+    var bc = brandClass(s.brand);
+    var bbb = (bc==='ba'?'blue':bc==='cap'?'green':bc==='ss'?'orange':bc==='vinci'?'purple':'gray');
+    var invBadge = (s.inventory_total||0)===0 ? '<span class="badge b-red">0</span>' : fmtUnits(s.inventory_total);
+    return ''+
+    '<tr>'+
+      '<td>'+img+'</td>'+
+      '<td><div style="font-weight:600">'+escHtml((s.name||'').substring(0,55))+'</div>'+
+        '<div class="tcode">'+s.item_id+'</div></td>'+
+      '<td><span class="badge b-'+bbb+'">'+escHtml(s.brand||'—')+'</span></td>'+
+      '<td class="num">'+fmtUnits(s.soh_backend)+'</td>'+
+      '<td class="num">'+fmtUnits(s.soh_frontend)+'</td>'+
+      '<td class="num"><b>'+invBadge+'</b></td>'+
+      '<td class="num">'+s.warehouses_stocked+' / '+s.warehouses_total+'</td>'+
+      '<td class="num">'+s.warehouses_oos+'</td>'+
+      '<td class="num">'+fmtUnits(s.units_sold_30d)+'</td>'+
+    '</tr>';
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:30px">No SKUs match filters</td></tr>';
+}
+
+function renderStockWh(brand, search){
+  var whs = (D.warehouses || []).slice();
+  if(search){
+    whs = whs.filter(function(w){
+      return (w.facility_name||'').toLowerCase().indexOf(search) >= 0;
+    });
+  }
+  // Note: we don't filter warehouses by brand because the warehouse aggregations
+  // are total across all SKUs. The filter is reflected in the KPI tile only.
+  whs.sort(function(a,b){return (b.soh_frontend||0) - (a.soh_frontend||0)});
+
+  var grid = document.getElementById('stock-wh-grid');
+  grid.innerHTML = whs.map(function(w){
+    return '<div class="wh-card">'+
+      '<div class="wh-name">'+escHtml(w.facility_name)+'</div>'+
+      '<div class="wh-row"><span>Backend</span><span class="v">'+fmtUnits(w.soh_backend)+'</span></div>'+
+      '<div class="wh-row"><span>Frontend</span><span class="v">'+fmtUnits(w.soh_frontend)+'</span></div>'+
+      '<div class="wh-row"><span>Distinct SKUs</span><span class="v">'+w.distinct_skus+'</span></div>'+
+      '<div class="wh-row"><span style="color:var(--orange)">Replenishment</span><span class="v" style="color:var(--orange)">'+w.count_skus_replenish+'</span></div>'+
+      '<div class="wh-row"><span style="color:var(--red)">Zero Stock</span><span class="v" style="color:var(--red)">'+w.count_skus_zero+'</span></div>'+
+      '<div class="wh-row"><span>POs (30d)</span><span class="v">'+w.po_count+' · '+fmtCr(w.po_value)+'</span></div>'+
+    '</div>';
+  }).join('') || '<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:40px">No warehouses match filters</div>';
+}
+
+// ─── CITIES TAB ──────────────────────────────────────────────────────────────
+function sortCities(key){
+  if(H.cities.sortKey === key) H.cities.sortDir = H.cities.sortDir==='asc'?'desc':'asc';
+  else { H.cities.sortKey = key; H.cities.sortDir = 'desc'; }
+  renderCities();
+}
+
+function renderCities(){
+  if(!D || !D.geo) return;
+  var sortKey = (document.getElementById('cities-sort-sel')||{}).value || H.cities.sortKey;
+  H.cities.sortKey = sortKey;
+  var limitV = (document.getElementById('cities-limit-sel')||{}).value || '20';
+  var search = ((document.getElementById('cities-search')||{}).value || '').toLowerCase().trim();
+
+  var cities = (D.geo.all_cities || []).slice();
+
+  if(search){
+    cities = cities.filter(function(c){
+      return (c.city||'').toLowerCase().indexOf(search) >= 0;
+    });
+  }
+  cities.sort(function(a,b){
+    var av = a[sortKey], bv = b[sortKey];
+    if(av==null) av = -Infinity;
+    if(bv==null) bv = -Infinity;
+    return bv-av;
+  });
+  var limit = limitV === 'all' ? cities.length : parseInt(limitV, 10);
+  var top = cities.slice(0, limit);
+
+  var totalRev = cities.reduce(function(s,c){return s+(c.revenue||0)},0);
+  var totalUnits = cities.reduce(function(s,c){return s+(c.units||0)},0);
+  var totalCities = cities.length;
+
+  document.getElementById('cities-kpi').innerHTML = [
+    statCard('Total Revenue (filtered)', fmtCr(totalRev), '30 days'),
+    statCard('Total Units (filtered)',   fmtUnits(totalUnits), ''),
+    statCard('Cities (filtered)',        String(totalCities), 'with sales'),
+    statCard('Top City',                 (top[0]||{}).city || '—', fmtCr((top[0]||{}).revenue)),
+  ].join('');
+
+  document.getElementById('cities-count').textContent = top.length+' of '+cities.length+' cities';
+
+  var maxRev = Math.max.apply(null, top.map(function(c){return c.revenue}));
+
+  var bodyEl = document.getElementById('cities-body');
+  bodyEl.innerHTML = top.map(function(c, i){
+    var sharePct = totalRev > 0 ? (c.revenue / totalRev * 100) : 0;
+    var bar = maxRev > 0 ? (c.revenue / maxRev * 100) : 0;
+    return ''+
+    '<tr>'+
+      '<td><span class="tcode">'+(i+1)+'</span></td>'+
+      '<td><b>'+escHtml(c.city)+'</b></td>'+
+      '<td class="num">'+fmtCr(c.revenue)+
+        '<span class="city-bar" style="width:'+(bar*0.6).toFixed(0)+'px"></span></td>'+
+      '<td class="num">'+sharePct.toFixed(1)+'%</td>'+
+      '<td class="num">'+fmtUnits(c.units)+'</td>'+
+      '<td class="num">'+c.active_skus+'</td>'+
+    '</tr>';
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:30px">No cities match filters</td></tr>';
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+// Auto-load if already authenticated this session
+if(sessionStorage.getItem('bk-auth')==='1'){
+  loadData();
+}
+</script>
+
+</body>
+</html>
