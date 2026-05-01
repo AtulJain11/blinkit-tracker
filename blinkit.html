@@ -170,6 +170,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <button class="nav-tab" onclick="showPage('pos',this)">📋 POs</button>
   <button class="nav-tab" onclick="showPage('stock',this)">📦 Stock</button>
   <button class="nav-tab" onclick="showPage('cities',this)">🌆 Cities</button>
+  <button class="nav-tab" onclick="showPage('ads',this)">📣 Ads</button>
   <div class="nav-right">
     <span class="nav-meta" id="nav-meta">—</span>
     <button class="btn-sm" onclick="location.reload()" title="Refresh">⟲ Refresh</button>
@@ -444,6 +445,144 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ═══ ADS PAGE ═════════════════════════════════════════════════════ -->
+<div class="page" id="page-ads">
+  <div class="filters">
+    <span class="filter-label">Brand</span>
+    <button class="fbtn active" id="ads-brand-all" onclick="setAdsBrand('ALL',this)">All</button>
+    <button class="fbtn ba"     id="ads-brand-ba"  onclick="setAdsBrand('Bare Anatomy',this)">BA</button>
+    <button class="fbtn cap"    id="ads-brand-cap" onclick="setAdsBrand('Chemist At Play',this)">CAP</button>
+    <button class="fbtn ss"     id="ads-brand-ss"  onclick="setAdsBrand('SunScoop',this)">SS</button>
+    <button class="fbtn vinci"  id="ads-brand-vinci" onclick="setAdsBrand('Vinci Botanicals',this)">Vinci</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Type</span>
+    <button class="fbtn active" id="ads-type-all" onclick="setAdsType('ALL',this)">All</button>
+    <button class="fbtn" id="ads-type-listing" onclick="setAdsType('PRODUCT_LISTING',this)">Product Listing</button>
+    <button class="fbtn" id="ads-type-reco" onclick="setAdsType('PRODUCT_RECOMMENDATION',this)">Recommendation</button>
+    <div class="fsep"></div>
+    <span id="ads-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
+  </div>
+
+  <!-- KPI tiles -->
+  <div class="stat-grid" id="ads-kpis"></div>
+
+  <!-- Charts: daily trend + brand donut -->
+  <div class="chart-grid" style="grid-template-columns:2fr 1fr">
+    <div class="chart-card">
+      <div class="chart-title">📈 Daily Ad Performance · <span id="ads-metric-label">Budget Consumed</span>
+        <select class="fsel" id="ads-metric-sel" onchange="renderAds()" style="margin-left:10px;font-size:10px">
+          <option value="budget">Budget Consumed (₹)</option>
+          <option value="impr">Impressions</option>
+          <option value="atc">ATC (D+I)</option>
+          <option value="qty">Qty Sold (D+I)</option>
+          <option value="sales">Sales (D+I)</option>
+          <option value="roas">RoAS</option>
+          <option value="new_users">New Users</option>
+        </select>
+      </div>
+      <div class="chart-wrap"><canvas id="ch-ads-daily"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🏷 Spend Share by Brand</div>
+      <div class="chart-wrap"><canvas id="ch-ads-brand"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Campaign-type donut + sales-vs-spend bar -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr">
+    <div class="chart-card">
+      <div class="chart-title">🎯 Spend Share by Campaign Type</div>
+      <div class="chart-wrap"><canvas id="ch-ads-type"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">💰 Sales vs Spend by Brand</div>
+      <div class="chart-wrap"><canvas id="ch-ads-roas"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Campaigns table -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🎯 Campaigns</span>
+      <span class="card-sub" id="ads-campaigns-count"></span>
+      <input class="fsearch" placeholder="Search campaign..." id="ads-camp-search"
+             oninput="renderAds()" style="margin-left:auto;margin-right:8px;max-width:240px">
+      <button class="btn-sm" onclick="exportAdsCampaignsCsv()">⬇ CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th onclick="sortAdsCampaigns('brand')">Brand</th>
+        <th style="min-width:240px" onclick="sortAdsCampaigns('name')">Campaign</th>
+        <th onclick="sortAdsCampaigns('type')">Type</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('budget')">Spend ▼</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('sales')">Sales</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('roas')">RoAS</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('atc')">ATC</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('qty')">Qty</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('impr')">Impr</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('new_users')">New Users</th>
+      </tr></thead>
+      <tbody id="ads-campaigns-body"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Keywords table (PRODUCT_LISTING only) -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🔑 Keywords · Product Listing</span>
+      <span class="card-sub" id="ads-keywords-count"></span>
+      <input class="fsearch" placeholder="Search keyword / campaign..." id="ads-kw-search"
+             oninput="renderAds()" style="margin-left:auto;margin-right:8px;max-width:240px">
+      <button class="btn-sm" onclick="exportAdsKeywordsCsv()">⬇ CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th onclick="sortAdsKeywords('brand')">Brand</th>
+        <th style="min-width:200px" onclick="sortAdsKeywords('campaign_name')">Campaign</th>
+        <th onclick="sortAdsKeywords('keyword')">Keyword</th>
+        <th onclick="sortAdsKeywords('match_type')">Match</th>
+        <th style="text-align:right" onclick="sortAdsKeywords('budget')">Spend ▼</th>
+        <th style="text-align:right" onclick="sortAdsKeywords('sales')">Sales</th>
+        <th style="text-align:right" onclick="sortAdsKeywords('roas')">RoAS</th>
+        <th style="text-align:right" onclick="sortAdsKeywords('atc')">ATC</th>
+        <th style="text-align:right" onclick="sortAdsKeywords('qty')">Qty</th>
+        <th style="text-align:right" onclick="sortAdsKeywords('impr')">Impr</th>
+      </tr></thead>
+      <tbody id="ads-keywords-body"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- Reco slots table (PRODUCT_RECOMMENDATION only) -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🎰 Reco Slots · Product Recommendation</span>
+      <span class="card-sub" id="ads-slots-count"></span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportAdsSlotsCsv()">⬇ CSV</button>
+    </div>
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th onclick="sortAdsSlots('brand')">Brand</th>
+        <th style="min-width:240px" onclick="sortAdsSlots('campaign_name')">Campaign</th>
+        <th onclick="sortAdsSlots('slot')">Slot</th>
+        <th style="text-align:right" onclick="sortAdsSlots('budget')">Spend ▼</th>
+        <th style="text-align:right" onclick="sortAdsSlots('sales')">Sales</th>
+        <th style="text-align:right" onclick="sortAdsSlots('roas')">RoAS</th>
+        <th style="text-align:right" onclick="sortAdsSlots('atc')">ATC</th>
+        <th style="text-align:right" onclick="sortAdsSlots('qty')">Qty</th>
+        <th style="text-align:right" onclick="sortAdsSlots('impr')">Impr</th>
+      </tr></thead>
+      <tbody id="ads-slots-body"></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <script>
 // ═══ AUTH ═══════════════════════════════════════════════════════════
@@ -474,6 +613,10 @@ var H = {           // per-tab filter state
   pos:   {brand:'ALL', state:'ALL', search:''},
   stock: {brand:'ALL', search:''},
   cities:{search:''},
+  ads:   {brand:'ALL', type:'ALL', metric:'budget', campSearch:'', kwSearch:'',
+          campSortBy:'budget', campSortDir:'desc',
+          kwSortBy:'budget',   kwSortDir:'desc',
+          slotSortBy:'budget', slotSortDir:'desc'},
 };
 var charts = {};    // chart instances (so we can destroy/recreate)
 
@@ -952,6 +1095,7 @@ function renderAll() {
   renderPos();
   renderStock();
   renderCities();
+  renderAds();
 }
 
 // ═══ OVERVIEW ══════════════════════════════════════════════════════
@@ -1514,6 +1658,496 @@ function drawBarChart(id, labels, data, colors, ylabel) {
       }
     }
   });
+}
+
+// ═══ ADS TAB ═══════════════════════════════════════════════════════════
+// Brand colour palette (kept consistent with Sales/Overview)
+var ADS_BRAND_COLOR = {
+  'Bare Anatomy':'#4f8ef7', 'Chemist At Play':'#3ecf8e',
+  'SunScoop':'#f5a524', 'Vinci Botanicals':'#a78bfa', 'Other':'#888'
+};
+var ADS_TYPE_COLOR = {
+  'PRODUCT_LISTING':'#4f8ef7', 'PRODUCT_RECOMMENDATION':'#a78bfa'
+};
+
+function setAdsBrand(brand, btn) {
+  H.ads.brand = brand;
+  document.querySelectorAll('#page-ads .filters .fbtn').forEach(function(b){
+    var t = (b.textContent||'').trim();
+    if (['All','BA','CAP','SS','Vinci'].includes(t)) b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderAds();
+}
+function setAdsType(type, btn) {
+  H.ads.type = type;
+  document.querySelectorAll('#page-ads .filters .fbtn').forEach(function(b){
+    var t = (b.textContent||'').trim();
+    if (['All','Product Listing','Recommendation'].includes(t)) b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderAds();
+}
+function sortAdsCampaigns(col) {
+  if (H.ads.campSortBy === col) {
+    H.ads.campSortDir = (H.ads.campSortDir === 'desc') ? 'asc' : 'desc';
+  } else {
+    H.ads.campSortBy = col;
+    // Sensible default direction by column type
+    H.ads.campSortDir = (['name','brand','type'].indexOf(col) >= 0) ? 'asc' : 'desc';
+  }
+  renderAds();
+}
+function sortAdsKeywords(col) {
+  if (H.ads.kwSortBy === col) {
+    H.ads.kwSortDir = (H.ads.kwSortDir === 'desc') ? 'asc' : 'desc';
+  } else {
+    H.ads.kwSortBy = col;
+    H.ads.kwSortDir = (['keyword','match_type','campaign_name','brand'].indexOf(col) >= 0) ? 'asc' : 'desc';
+  }
+  renderAds();
+}
+function sortAdsSlots(col) {
+  if (H.ads.slotSortBy === col) {
+    H.ads.slotSortDir = (H.ads.slotSortDir === 'desc') ? 'asc' : 'desc';
+  } else {
+    H.ads.slotSortBy = col;
+    H.ads.slotSortDir = (['slot','campaign_name','brand'].indexOf(col) >= 0) ? 'asc' : 'desc';
+  }
+  renderAds();
+}
+
+// Helper: filter a metrics row (campaign / keyword / slot) by current Brand + Type
+function _adsRowAllowed(row, brandFilter, typeFilter) {
+  if (brandFilter !== 'ALL' && row.brand !== brandFilter) return false;
+  if (typeFilter !== 'ALL') {
+    // Campaigns have row.type. Keywords are PRODUCT_LISTING only.
+    // Slots are PRODUCT_RECOMMENDATION only. We filter the table to skip if mismatch.
+    if (row.type && row.type !== typeFilter) return false;
+  }
+  return true;
+}
+
+// Helper: aggregate daily series respecting the Brand + Type filter
+function _adsAggregateDaily() {
+  if (!D || !D.ads) return [];
+  var brand = H.ads.brand;
+  var type  = H.ads.type;
+
+  // Fast path: all-brands + all-types → use D.ads.daily directly
+  if (brand === 'ALL' && type === 'ALL') {
+    return D.ads.daily.slice();
+  }
+
+  // Brand-filtered, type=ALL → use D.ads.by_brand_daily[brand]
+  if (type === 'ALL' && brand !== 'ALL' && D.ads.by_brand_daily && D.ads.by_brand_daily[brand]) {
+    return D.ads.by_brand_daily[brand].slice();
+  }
+
+  // Otherwise (any combination involving type filter) we don't have a pre-aggregated
+  // series → reconstruct from campaigns × daily would require per-campaign daily,
+  // which we didn't store. Fallback: use brand series if available, scaled by the
+  // type's share of brand spend. Approximate but fine for headline charts.
+  if (type !== 'ALL') {
+    // Compute the share of spend that 'type' represents within the brand subset
+    var camps = (D.ads.campaigns || []).filter(function(c){
+      return _adsRowAllowed(c, brand, 'ALL');
+    });
+    var totalSpend = camps.reduce(function(a,c){ return a + (c.budget||0); }, 0);
+    var typeSpend  = camps.filter(function(c){ return c.type === type; })
+                          .reduce(function(a,c){ return a + (c.budget||0); }, 0);
+    var ratio = totalSpend > 0 ? (typeSpend / totalSpend) : 0;
+    var src = (brand === 'ALL') ? D.ads.daily :
+              (D.ads.by_brand_daily && D.ads.by_brand_daily[brand] ? D.ads.by_brand_daily[brand] : []);
+    return src.map(function(d){
+      var out = {date:d.date};
+      ['impr','atc','qty','sales','budget','new_users'].forEach(function(k){
+        out[k] = (d[k]||0) * ratio;
+      });
+      out.roas = out.budget > 0 ? out.sales / out.budget : 0;
+      return out;
+    });
+  }
+  return [];
+}
+
+// Helper: aggregate totals respecting Brand + Type filter
+function _adsAggregateTotals() {
+  if (!D || !D.ads) return null;
+  var brand = H.ads.brand;
+  var type  = H.ads.type;
+
+  // Sum from campaigns list, since it's already sliced by brand+type
+  var camps = (D.ads.campaigns || []).filter(function(c){
+    return _adsRowAllowed(c, brand, type);
+  });
+  var t = {impr:0, atc:0, qty:0, sales:0, budget:0, new_users:0,
+           d_atc:0, i_atc:0, d_qty:0, i_qty:0, d_sales:0, i_sales:0};
+  camps.forEach(function(c){
+    Object.keys(t).forEach(function(k){ t[k] += (c[k]||0); });
+  });
+  t.roas = t.budget > 0 ? t.sales / t.budget : 0;
+  t.direct_roas = t.budget > 0 ? t.d_sales / t.budget : 0;
+  t.cpm = t.impr > 0 ? (t.budget * 1000 / t.impr) : 0;
+  return t;
+}
+
+function renderAds() {
+  if (!D || !D.ads) {
+    var el = document.getElementById('ads-kpis');
+    if (el) el.innerHTML = '<div class="stat-card" style="grid-column:1/-1"><div class="stat-label">No ads data</div><div class="stat-value" style="font-size:14px;color:var(--text2)">Run BK_Ads_Downloader.py + BK_Ads_Processor.py to populate this tab.</div></div>';
+    return;
+  }
+
+  var meta = D.ads.meta || {};
+  var winLbl = (meta.from_date && meta.to_date) ?
+    (fmtDate(meta.from_date)+' → '+fmtDate(meta.to_date)+' · '+(meta.days||30)+' days') :
+    '—';
+  var lblEl = document.getElementById('ads-window-lbl');
+  if (lblEl) lblEl.textContent = winLbl;
+
+  var t = _adsAggregateTotals();
+  if (!t) return;
+  var brandFilter = H.ads.brand;
+  var typeFilter  = H.ads.type;
+
+  // ── KPI tiles ───────────────────────────────────────────────────────
+  function tile(label, value, sub, color) {
+    return '<div class="stat-card">' +
+      '<div class="stat-label">'+label+'</div>' +
+      '<div class="stat-value" style="color:'+color+';font-size:18px">'+value+'</div>' +
+      '<div class="stat-sub">'+sub+'</div></div>';
+  }
+  var kpi = '';
+  kpi += tile('Spend',       fmtINR(t.budget),  meta.days+'d window',  'var(--accent)');
+  kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',     'var(--green)');
+  kpi += tile('RoAS',        (t.roas||0).toFixed(2)+'x', 'sales / spend','var(--purple)');
+  kpi += tile('Impressions', fmtNum(t.impr),    'CPM ₹'+(t.cpm||0).toFixed(0),'var(--text)');
+  kpi += tile('ATC',         fmtNum(t.atc),     'add-to-carts',         'var(--text)');
+  kpi += tile('Qty Sold',    fmtNum(t.qty),     'units',                'var(--text)');
+  kpi += tile('New Users',   fmtNum(t.new_users), 'acquired',           'var(--orange)');
+  // Active campaigns in current filter
+  var activeCamps = (D.ads.campaigns||[]).filter(function(c){
+    return _adsRowAllowed(c, brandFilter, typeFilter) && (c.budget||0) > 0;
+  }).length;
+  kpi += tile('Campaigns',   activeCamps,       'with spend',           'var(--text)');
+  document.getElementById('ads-kpis').innerHTML = kpi;
+
+  // ── Daily metric chart ─────────────────────────────────────────────
+  var metric = H.ads.metric || 'budget';
+  var metricLabels = {
+    budget: 'Budget Consumed (₹)',
+    impr:   'Impressions',
+    atc:    'ATC (D+I)',
+    qty:    'Qty Sold (D+I)',
+    sales:  'Sales (₹, D+I)',
+    roas:   'RoAS',
+    new_users: 'New Users'
+  };
+  var lblMetricEl = document.getElementById('ads-metric-label');
+  if (lblMetricEl) lblMetricEl.textContent = metricLabels[metric] || metric;
+
+  var daily = _adsAggregateDaily();
+  daily.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  var dLabels = daily.map(function(r){ return fmtDate(r.date); });
+  var scaleDiv = 1, ylabel = metricLabels[metric] || metric;
+  // Scale large values to Lakhs/K for readability
+  if (metric === 'budget' || metric === 'sales') {
+    scaleDiv = 1e5; ylabel = (metricLabels[metric] || metric).replace('₹','₹ Lakhs');
+  } else if (metric === 'impr') {
+    scaleDiv = 1e6; ylabel = 'Impressions (M)';
+  }
+  var dValues = daily.map(function(r){ return (r[metric]||0) / scaleDiv; });
+  var lineColor = (metric === 'budget' || metric === 'sales') ? '#3ecf8e' :
+                  (metric === 'roas') ? '#a78bfa' : '#4f8ef7';
+  drawLineChart('ch-ads-daily', dLabels, [
+    {label:metricLabels[metric] || metric, data:dValues, color:lineColor},
+  ], ylabel);
+
+  // ── Brand donut (spend share) ──────────────────────────────────────
+  var byBrand = (D.ads.by_brand || []).slice();
+  // Apply type filter to brand totals if needed
+  if (typeFilter !== 'ALL') {
+    // recompute by_brand from campaigns
+    var bbAccum = {};
+    (D.ads.campaigns || []).forEach(function(c){
+      if (c.type !== typeFilter) return;
+      bbAccum[c.brand] = (bbAccum[c.brand] || 0) + (c.budget||0);
+    });
+    byBrand = Object.keys(bbAccum).map(function(b){
+      return {brand:b, budget:bbAccum[b]};
+    });
+  }
+  var bLabels = [], bData = [], bColors = [];
+  byBrand.forEach(function(b){
+    if (!b.brand || (b.budget||0) <= 0) return;
+    bLabels.push(b.brand);
+    bData.push(b.budget);
+    bColors.push(ADS_BRAND_COLOR[b.brand] || '#888');
+  });
+  drawDonutChart('ch-ads-brand', bLabels, bData, bColors);
+
+  // ── Campaign-type donut ─────────────────────────────────────────────
+  var byType = D.ads.by_campaign_type || {};
+  var tLabels = [], tData = [], tColors = [];
+  Object.keys(byType).forEach(function(k){
+    var v = byType[k].budget || 0;
+    if (v <= 0) return;
+    // If a brand filter is applied, recompute from campaigns
+    if (brandFilter !== 'ALL') {
+      v = (D.ads.campaigns||[]).filter(function(c){
+        return c.brand === brandFilter && c.type === k;
+      }).reduce(function(a,c){ return a + (c.budget||0); }, 0);
+    }
+    if (v <= 0) return;
+    tLabels.push(k.replace('_', ' ').toLowerCase().replace(/\b\w/g, function(s){return s.toUpperCase();}));
+    tData.push(v);
+    tColors.push(ADS_TYPE_COLOR[k] || '#888');
+  });
+  drawDonutChart('ch-ads-type', tLabels, tData, tColors);
+
+  // ── Sales-vs-spend bar (per brand) ─────────────────────────────────
+  var rLabels = [], rSpend = [], rSales = [];
+  byBrand.forEach(function(b){
+    if (!b.brand || (b.budget||0) <= 0) return;
+    var sales = b.sales;
+    if (sales == null || typeFilter !== 'ALL') {
+      // Recompute from campaigns when filtering by type
+      sales = (D.ads.campaigns||[]).filter(function(c){
+        return c.brand === b.brand && (typeFilter === 'ALL' || c.type === typeFilter);
+      }).reduce(function(a,c){ return a + (c.sales||0); }, 0);
+    }
+    rLabels.push(b.brand);
+    rSpend.push(b.budget / 1e5);
+    rSales.push(sales / 1e5);
+  });
+  drawAdsRoasChart('ch-ads-roas', rLabels, rSpend, rSales);
+
+  // ── Campaigns table ────────────────────────────────────────────────
+  var campSearch = (document.getElementById('ads-camp-search').value || '').toLowerCase();
+  H.ads.campSearch = campSearch;
+  var camps = (D.ads.campaigns || []).filter(function(c){
+    if (!_adsRowAllowed(c, brandFilter, typeFilter)) return false;
+    if (campSearch && (c.name||'').toLowerCase().indexOf(campSearch) < 0
+                   && String(c.cid||'').indexOf(campSearch) < 0) return false;
+    return true;
+  });
+  // Sort
+  var cBy = H.ads.campSortBy, cDir = H.ads.campSortDir;
+  camps.sort(function(a,b){
+    var av = a[cBy], bv = b[cBy];
+    if (typeof av === 'string' || typeof bv === 'string') {
+      av = (av||'').toString(); bv = (bv||'').toString();
+      return cDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    av = av || 0; bv = bv || 0;
+    return cDir === 'asc' ? av - bv : bv - av;
+  });
+  document.getElementById('ads-campaigns-count').textContent =
+    camps.length + ' campaign' + (camps.length === 1 ? '' : 's');
+  var cBody = '';
+  camps.forEach(function(c, i){
+    var brandClass = brandTagClass(c.brand);
+    cBody += '<tr>' +
+      '<td>'+(i+1)+'</td>' +
+      '<td><span class="tag '+brandClass+'">'+(c.brand||'—')+'</span></td>' +
+      '<td><div style="font-weight:500">'+escapeHtml(c.name||'')+'</div>' +
+        '<div style="color:var(--text3);font-size:10px">cid '+c.cid+'</div></td>' +
+      '<td><span style="color:var(--text2);font-size:10px">'+ (c.type||'').replace('PRODUCT_','') +'</span></td>' +
+      '<td style="text-align:right">'+fmtINR(c.budget)+'</td>' +
+      '<td style="text-align:right">'+fmtINR(c.sales)+'</td>' +
+      '<td style="text-align:right;color:'+( (c.roas||0) >= 2 ? 'var(--green)' : (c.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(c.roas||0).toFixed(2)+'x</td>' +
+      '<td style="text-align:right">'+fmtNum(c.atc)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(c.qty)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(c.impr)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(c.new_users)+'</td>' +
+    '</tr>';
+  });
+  if (camps.length === 0) {
+    cBody = '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:20px">No campaigns match the current filter.</td></tr>';
+  }
+  document.getElementById('ads-campaigns-body').innerHTML = cBody;
+
+  // ── Keywords table (PRODUCT_LISTING only) ─────────────────────────
+  var kwSearch = (document.getElementById('ads-kw-search').value || '').toLowerCase();
+  H.ads.kwSearch = kwSearch;
+  var kws = (D.ads.keywords || []).filter(function(k){
+    if (brandFilter !== 'ALL' && k.brand !== brandFilter) return false;
+    // Keywords are PRODUCT_LISTING only — hide if user filters to RECOMMENDATION
+    if (typeFilter === 'PRODUCT_RECOMMENDATION') return false;
+    if (kwSearch) {
+      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')).toLowerCase();
+      if (hay.indexOf(kwSearch) < 0) return false;
+    }
+    return true;
+  });
+  var kBy = H.ads.kwSortBy, kDir = H.ads.kwSortDir;
+  kws.sort(function(a,b){
+    var av = a[kBy], bv = b[kBy];
+    if (typeof av === 'string' || typeof bv === 'string') {
+      av = (av||'').toString(); bv = (bv||'').toString();
+      return kDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    av = av || 0; bv = bv || 0;
+    return kDir === 'asc' ? av - bv : bv - av;
+  });
+  document.getElementById('ads-keywords-count').textContent =
+    kws.length + ' keyword' + (kws.length === 1 ? '' : 's');
+  var kBody = '';
+  // Limit display to top 200 to keep DOM responsive — search to drill deeper
+  var displayKws = kws.slice(0, 200);
+  displayKws.forEach(function(k, i){
+    kBody += '<tr>' +
+      '<td>'+(i+1)+'</td>' +
+      '<td><span class="tag '+brandTagClass(k.brand)+'">'+(k.brand||'—')+'</span></td>' +
+      '<td><div style="font-size:11px">'+escapeHtml(k.campaign_name||'')+'</div></td>' +
+      '<td><span style="font-weight:500">'+escapeHtml(k.keyword||'')+'</span></td>' +
+      '<td><span style="color:var(--text3);font-size:10px">'+(k.match_type||'')+'</span></td>' +
+      '<td style="text-align:right">'+fmtINR(k.budget)+'</td>' +
+      '<td style="text-align:right">'+fmtINR(k.sales)+'</td>' +
+      '<td style="text-align:right;color:'+( (k.roas||0) >= 2 ? 'var(--green)' : (k.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(k.roas||0).toFixed(2)+'x</td>' +
+      '<td style="text-align:right">'+fmtNum(k.atc)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(k.qty)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(k.impr)+'</td>' +
+    '</tr>';
+  });
+  if (kws.length > 200) {
+    kBody += '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px;font-size:11px">' +
+      'Showing top 200 of '+kws.length+'. Use search to filter further or download CSV for full list.</td></tr>';
+  }
+  if (kws.length === 0) {
+    kBody = '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:20px">' +
+      (typeFilter === 'PRODUCT_RECOMMENDATION'
+        ? 'Keywords are only available for Product Listing campaigns.'
+        : 'No keywords match the current filter.') +
+      '</td></tr>';
+  }
+  document.getElementById('ads-keywords-body').innerHTML = kBody;
+
+  // ── Reco slots table (PRODUCT_RECOMMENDATION only) ────────────────
+  var slots = (D.ads.reco_slots || []).filter(function(s){
+    if (brandFilter !== 'ALL' && s.brand !== brandFilter) return false;
+    if (typeFilter === 'PRODUCT_LISTING') return false;
+    return true;
+  });
+  var sBy = H.ads.slotSortBy, sDir = H.ads.slotSortDir;
+  slots.sort(function(a,b){
+    var av = a[sBy], bv = b[sBy];
+    if (typeof av === 'string' || typeof bv === 'string') {
+      av = (av||'').toString(); bv = (bv||'').toString();
+      return sDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    av = av || 0; bv = bv || 0;
+    return sDir === 'asc' ? av - bv : bv - av;
+  });
+  document.getElementById('ads-slots-count').textContent =
+    slots.length + ' slot' + (slots.length === 1 ? '' : 's');
+  var sBody = '';
+  slots.forEach(function(s, i){
+    sBody += '<tr>' +
+      '<td>'+(i+1)+'</td>' +
+      '<td><span class="tag '+brandTagClass(s.brand)+'">'+(s.brand||'—')+'</span></td>' +
+      '<td><div style="font-size:11px">'+escapeHtml(s.campaign_name||'')+'</div></td>' +
+      '<td><span style="font-weight:500">'+escapeHtml(s.slot||'')+'</span></td>' +
+      '<td style="text-align:right">'+fmtINR(s.budget)+'</td>' +
+      '<td style="text-align:right">'+fmtINR(s.sales)+'</td>' +
+      '<td style="text-align:right;color:'+( (s.roas||0) >= 2 ? 'var(--green)' : (s.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(s.roas||0).toFixed(2)+'x</td>' +
+      '<td style="text-align:right">'+fmtNum(s.atc)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(s.qty)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(s.impr)+'</td>' +
+    '</tr>';
+  });
+  if (slots.length === 0) {
+    sBody = '<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:20px">No reco slots match the current filter.</td></tr>';
+  }
+  document.getElementById('ads-slots-body').innerHTML = sBody;
+}
+
+// Sales-vs-spend grouped bar chart for the Ads tab
+function drawAdsRoasChart(id, labels, spendData, salesData) {
+  destroyChart(id);
+  var canvas = document.getElementById(id);
+  if (!canvas) return;
+  charts[id] = new Chart(canvas, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'Spend (₹L)', data:spendData, backgroundColor:'#f5a524', borderRadius:4},
+        {label:'Sales (₹L)', data:salesData, backgroundColor:'#3ecf8e', borderRadius:4},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8892a4', font:{size:11}}}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:10}}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'#1e2230'}, title:{display:true, text:'₹ Lakhs', color:'#8892a4'}}
+      }
+    }
+  });
+}
+
+// Small HTML escape helper
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// CSV exports for the 3 ads tables
+function _csvEscape(v) {
+  if (v == null) return '';
+  v = String(v);
+  if (v.indexOf(',') >= 0 || v.indexOf('"') >= 0 || v.indexOf('\n') >= 0) {
+    return '"' + v.replace(/"/g,'""') + '"';
+  }
+  return v;
+}
+function _downloadCsv(filename, headers, rows) {
+  var out = headers.map(_csvEscape).join(',') + '\n';
+  rows.forEach(function(r){ out += r.map(_csvEscape).join(',') + '\n'; });
+  var blob = new Blob([out], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+function exportAdsCampaignsCsv() {
+  if (!D || !D.ads) return;
+  var brandFilter = H.ads.brand, typeFilter = H.ads.type;
+  var camps = (D.ads.campaigns||[]).filter(function(c){ return _adsRowAllowed(c, brandFilter, typeFilter); });
+  var headers = ['Brand','Campaign','Campaign ID','Type','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','New Users','D Sales','I Sales'];
+  var rows = camps.map(function(c){
+    return [c.brand, c.name, c.cid, c.type, c.budget, c.sales, c.roas, c.direct_roas,
+            c.atc, c.qty, c.impr, c.new_users, c.d_sales, c.i_sales];
+  });
+  _downloadCsv('ads_campaigns_'+(D.ads.meta && D.ads.meta.from_date ? D.ads.meta.from_date+'_'+D.ads.meta.to_date : 'all')+'.csv', headers, rows);
+}
+function exportAdsKeywordsCsv() {
+  if (!D || !D.ads) return;
+  var brandFilter = H.ads.brand;
+  var kws = (D.ads.keywords||[]).filter(function(k){ return brandFilter === 'ALL' || k.brand === brandFilter; });
+  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions'];
+  var rows = kws.map(function(k){
+    return [k.brand, k.campaign_name, k.cid, k.keyword, k.match_type,
+            k.budget, k.sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr];
+  });
+  _downloadCsv('ads_keywords_'+(D.ads.meta && D.ads.meta.from_date ? D.ads.meta.from_date+'_'+D.ads.meta.to_date : 'all')+'.csv', headers, rows);
+}
+function exportAdsSlotsCsv() {
+  if (!D || !D.ads) return;
+  var brandFilter = H.ads.brand;
+  var slots = (D.ads.reco_slots||[]).filter(function(s){ return brandFilter === 'ALL' || s.brand === brandFilter; });
+  var headers = ['Brand','Campaign','Campaign ID','Slot','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions'];
+  var rows = slots.map(function(s){
+    return [s.brand, s.campaign_name, s.cid, s.slot,
+            s.budget, s.sales, s.roas, s.direct_roas, s.atc, s.qty, s.impr];
+  });
+  _downloadCsv('ads_recoslots_'+(D.ads.meta && D.ads.meta.from_date ? D.ads.meta.from_date+'_'+D.ads.meta.to_date : 'all')+'.csv', headers, rows);
 }
 
 </script>
