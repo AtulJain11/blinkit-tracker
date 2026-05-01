@@ -171,6 +171,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <button class="nav-tab" onclick="showPage('stock',this)">📦 Stock</button>
   <button class="nav-tab" onclick="showPage('cities',this)">🌆 Cities</button>
   <button class="nav-tab" onclick="showPage('ads',this)">📣 Ads</button>
+  <button class="nav-tab" onclick="showPage('keywords',this)">🔑 Keywords</button>
   <div class="nav-right">
     <span class="nav-meta" id="nav-meta">—</span>
     <button class="btn-sm" onclick="location.reload()" title="Refresh">⟲ Refresh</button>
@@ -241,6 +242,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="card-hdr">
       <span class="card-title">🏆 Top 15 SKUs · By Sales</span>
       <span class="card-sub" id="ov-top-sub"></span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportOvTopSkusCsv()">⬇ CSV</button>
     </div>
     <table>
       <thead><tr>
@@ -362,6 +364,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="card-hdr">
       <span class="card-title">📋 Purchase Orders</span>
       <span class="card-sub" id="pos-count"></span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportPosCsv()">⬇ CSV</button>
     </div>
     <div style="overflow-x:auto">
     <table>
@@ -400,6 +403,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="card-hdr">
       <span class="card-title">📦 SKU Inventory</span>
       <span class="card-sub" id="stock-count"></span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportStockCsv()">⬇ CSV</button>
     </div>
     <div style="overflow-x:auto">
     <table>
@@ -430,6 +434,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="card-hdr">
       <span class="card-title">🌆 City Performance</span>
       <span class="card-sub" id="cities-count"></span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportCitiesCsv()">⬇ CSV</button>
     </div>
     <table>
       <thead><tr>
@@ -528,6 +533,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th>#</th>
         <th onclick="sortAdsCampaigns('brand')">Brand</th>
         <th style="min-width:240px" onclick="sortAdsCampaigns('name')">Campaign</th>
+        <th style="min-width:200px">Product / Category</th>
         <th onclick="sortAdsCampaigns('type')">Type</th>
         <th style="text-align:right" onclick="sortAdsCampaigns('budget')">Spend ▼</th>
         <th style="text-align:right" onclick="sortAdsCampaigns('sales')">Sales</th>
@@ -538,35 +544,6 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="text-align:right" onclick="sortAdsCampaigns('new_users')">New Users</th>
       </tr></thead>
       <tbody id="ads-campaigns-body"></tbody>
-    </table>
-    </div>
-  </div>
-
-  <!-- Keywords table (PRODUCT_LISTING only) -->
-  <div class="card" style="margin-top:14px">
-    <div class="card-hdr">
-      <span class="card-title">🔑 Keywords · Product Listing</span>
-      <span class="card-sub" id="ads-keywords-count"></span>
-      <input class="fsearch" placeholder="Search keyword / campaign..." id="ads-kw-search"
-             oninput="renderAds()" style="margin-left:auto;margin-right:8px;max-width:240px">
-      <button class="btn-sm" onclick="exportAdsKeywordsCsv()">⬇ CSV</button>
-    </div>
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr>
-        <th>#</th>
-        <th onclick="sortAdsKeywords('brand')">Brand</th>
-        <th style="min-width:200px" onclick="sortAdsKeywords('campaign_name')">Campaign</th>
-        <th onclick="sortAdsKeywords('keyword')">Keyword</th>
-        <th onclick="sortAdsKeywords('match_type')">Match</th>
-        <th style="text-align:right" onclick="sortAdsKeywords('budget')">Spend ▼</th>
-        <th style="text-align:right" onclick="sortAdsKeywords('sales')">Sales</th>
-        <th style="text-align:right" onclick="sortAdsKeywords('roas')">RoAS</th>
-        <th style="text-align:right" onclick="sortAdsKeywords('atc')">ATC</th>
-        <th style="text-align:right" onclick="sortAdsKeywords('qty')">Qty</th>
-        <th style="text-align:right" onclick="sortAdsKeywords('impr')">Impr</th>
-      </tr></thead>
-      <tbody id="ads-keywords-body"></tbody>
     </table>
     </div>
   </div>
@@ -628,6 +605,60 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<!-- ═══ KEYWORDS PAGE ════════════════════════════════════════════════ -->
+<div class="page" id="page-keywords">
+  <div class="filters">
+    <span class="filter-label">Brand</span>
+    <button class="fbtn active" id="kw-brand-all" onclick="setKwBrand('ALL',this)">All</button>
+    <button class="fbtn ba"     id="kw-brand-ba"  onclick="setKwBrand('Bare Anatomy',this)">BA</button>
+    <button class="fbtn cap"    id="kw-brand-cap" onclick="setKwBrand('Chemist At Play',this)">CAP</button>
+    <button class="fbtn ss"     id="kw-brand-ss"  onclick="setKwBrand('SunScoop',this)">SS</button>
+    <button class="fbtn vinci"  id="kw-brand-vinci" onclick="setKwBrand('Vinci Botanicals',this)">Vinci</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Match</span>
+    <button class="fbtn active" id="kw-mt-all" onclick="setKwMatch('ALL',this)">All</button>
+    <button class="fbtn" id="kw-mt-exact" onclick="setKwMatch('EXACT',this)">EXACT</button>
+    <button class="fbtn" id="kw-mt-broad" onclick="setKwMatch('BROAD',this)">BROAD</button>
+    <button class="fbtn" id="kw-mt-phrase" onclick="setKwMatch('PHRASE',this)">PHRASE</button>
+    <button class="fbtn" id="kw-mt-na" onclick="setKwMatch('NA',this)">NA</button>
+    <div class="fsep"></div>
+    <input class="fsearch" placeholder="Search keyword / campaign..." id="kw-search" oninput="renderKeywords()">
+    <div class="fsep"></div>
+    <span style="font-size:10px;color:var(--text3)" id="kw-meta">—</span>
+  </div>
+
+  <!-- KPI tiles for keywords -->
+  <div class="stat-grid" id="kw-kpis"></div>
+
+  <!-- Keywords table -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🔑 Keywords · Product Listing</span>
+      <span class="card-sub" id="kw-count"></span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportKeywordsCsv()">⬇ CSV</button>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th onclick="sortKw('brand')">Brand</th>
+        <th style="min-width:200px" onclick="sortKw('campaign_name')">Campaign</th>
+        <th onclick="sortKw('keyword')">Keyword</th>
+        <th onclick="sortKw('match_type')">Match</th>
+        <th style="text-align:right" onclick="sortKw('budget')">Spend ▼</th>
+        <th style="text-align:right" onclick="sortKw('sales')">Sales</th>
+        <th style="text-align:right" onclick="sortKw('roas')">RoAS</th>
+        <th style="text-align:right" onclick="sortKw('atc')">ATC</th>
+        <th style="text-align:right" onclick="sortKw('qty')">Qty</th>
+        <th style="text-align:right" onclick="sortKw('impr')">Impr</th>
+        <th style="text-align:right" onclick="sortKw('cpa')">CPA</th>
+      </tr></thead>
+      <tbody id="kw-body"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════════ -->
 <script>
 // ═══ AUTH ═══════════════════════════════════════════════════════════
@@ -665,6 +696,8 @@ var H = {           // per-tab filter state
           kwSortBy:'budget',   kwSortDir:'desc',
           slotSortBy:'budget', slotSortDir:'desc',
           prodSortBy:'budget', prodSortDir:'desc'},
+  keywords: {brand:'ALL', match:'ALL', search:'',
+             sortBy:'budget', sortDir:'desc'},
 };
 var charts = {};    // chart instances (so we can destroy/recreate)
 
@@ -719,6 +752,19 @@ function brandTagClass(brand) {
   if (b.includes('sunscoop')) return 'ss';
   if (b.includes('vinci')) return 'vinci';
   return '';
+}
+
+// Short display label for brand names. Always use this for any brand text
+// that is rendered to the user. The full canonical brand name is preserved
+// in JSON for filter matching and is only mapped to the short form on display.
+function brandShort(brand) {
+  if (!brand) return '—';
+  var b = brand.toLowerCase();
+  if (b.includes('bare')) return 'BA';
+  if (b.includes('chemist')) return 'CAP';
+  if (b.includes('sunscoop')) return 'SS';
+  if (b.includes('vinci')) return 'Vinci';
+  return brand;
 }
 
 // Prefer mapping clean_name; fall back to Blinkit catalog name
@@ -1144,6 +1190,7 @@ function renderAll() {
   renderStock();
   renderCities();
   renderAds();
+  renderKeywords();
 }
 
 // ═══ OVERVIEW ══════════════════════════════════════════════════════
@@ -1166,7 +1213,7 @@ function renderOverview() {
     var skuCount = Object.values(cur.skus).filter(function(s){ return s.brand === b; }).length;
     pillsHtml += '<div class="brand-pill '+cls+'">' +
       '<span class="dot"></span>' +
-      '<span>' + b + '</span>' +
+      '<span>' + brandShort(b) + '</span>' +
       '<span class="pill-meta">' + skuCount + ' SKUs · ' + fmtINR(br.mrp_rev) + '</span>' +
       '</div>';
   });
@@ -1249,7 +1296,7 @@ function renderOverview() {
   var brandColorMap = {'Bare Anatomy':'#4f8ef7', 'Chemist At Play':'#3ecf8e',
                        'SunScoop':'#f5a524', 'Vinci Botanicals':'#a78bfa'};
   Object.keys(cur.brand_breakdown).forEach(function(b){
-    brandLabels.push(b);
+    brandLabels.push(brandShort(b));
     brandVals.push(cur.brand_breakdown[b].mrp_rev);
     brandColors.push(brandColorMap[b] || '#888');
   });
@@ -1280,7 +1327,7 @@ function renderOverview() {
       '<td>'+(idx+1)+'</td>' +
       '<td><div style="font-weight:600;color:var(--text)">'+displayName(getCatItem(s.item_id) || s)+'</div>' +
         '<div class="pid">'+s.item_id+'</div></td>' +
-      '<td><span class="tag '+brandTagClass(s.brand)+'">'+s.brand+'</span></td>' +
+      '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
       '<td style="text-align:right" class="mono">'+fmtNum(s.units)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(s.mrp_rev)+'</td>' +
       '<td style="text-align:right;color:var(--green)" class="mono">'+fmtINR(s.real_rev)+'</td>' +
@@ -1357,7 +1404,7 @@ function renderSales() {
   var brandColorMap = {'Bare Anatomy':'#4f8ef7', 'Chemist At Play':'#3ecf8e',
                        'SunScoop':'#f5a524', 'Vinci Botanicals':'#a78bfa'};
   Object.keys(cur.brand_breakdown).forEach(function(b){
-    brandLabels.push(b);
+    brandLabels.push(brandShort(b));
     brandVals.push(cur.brand_breakdown[b].real_rev / 1e7);  // Cr
     brandColors.push(brandColorMap[b] || '#888');
   });
@@ -1414,7 +1461,7 @@ function renderSales() {
     rowsHtml += '<tr>' +
       '<td>' + (idx+1) + '</td>' +
       '<td><div style="font-weight:600;color:var(--text)">'+displayName(getCatItem(s.item_id) || s)+'</div><div class="pid">'+s.item_id+'</div></td>' +
-      '<td><span class="tag '+brandTagClass(s.brand)+'">'+s.brand+'</span></td>' +
+      '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(s.mrp)+'</td>' +
       '<td style="text-align:right" class="mono">'+fmtINR(sp)+'</td>' +
       '<td style="text-align:right;color:var(--orange)" class="mono">'+fmtPct(disc)+'</td>' +
@@ -1588,7 +1635,7 @@ function renderStock() {
     var doh = (s.units_sold_30d > 0) ? ((inv / s.units_sold_30d) * 30).toFixed(0) : '—';
     rowsHtml += '<tr>' +
       '<td><div style="font-weight:600;color:var(--text)">'+displayName(s)+'</div><div class="pid">'+s.item_id+'</div></td>' +
-      '<td><span class="tag '+brandTagClass(s.brand)+'">'+(s.brand||'—')+'</span></td>' +
+      '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
       '<td style="text-align:right" class="mono '+(inv === 0 ? 'sv-red' : '')+'">'+fmtNum(inv)+'</td>' +
       '<td style="text-align:right" class="mono">'+(s.warehouses_stocked || 0)+'</td>' +
       '<td style="text-align:right" class="mono '+(s.warehouses_oos > 0 ? 'sv-red' : '')+'">'+(s.warehouses_oos || 0)+'</td>' +
@@ -2184,7 +2231,7 @@ function renderAds() {
     Object.keys(brandAccum).sort(function(a,b){
       return brandAccum[b].budget - brandAccum[a].budget;
     }).forEach(function(brand){
-      bLabels.push(brand);
+      bLabels.push(brandShort(brand));
       bData.push(brandAccum[brand].budget);
       bColors.push(ADS_BRAND_COLOR[brand] || '#888');
     });
@@ -2210,7 +2257,7 @@ function renderAds() {
   Object.keys(brandAccum).sort(function(a,b){
     return brandAccum[b].budget - brandAccum[a].budget;
   }).forEach(function(brand){
-    rLabels.push(brand);
+    rLabels.push(brandShort(brand));
     rSpend.push(brandAccum[brand].budget / 1e5);
     rSales.push(brandAccum[brand].sales / 1e5);
   });
@@ -2238,13 +2285,44 @@ function renderAds() {
     camps.length + ' campaign' + (camps.length === 1 ? '' : 's');
   var cBody = '';
   camps.forEach(function(c, i){
+    // Product/Category cell — pull SKU info via the campaign's PIDs
+    var pids = c.pids || [];
+    var prodCell = '';
+    if (pids.length === 0) {
+      prodCell = '<span style="color:var(--text3);font-size:10px">—</span>';
+    } else if (pids.length === 1) {
+      var sku = _adsSkuLookup(pids[0]);
+      if (sku) {
+        var nm = sku.clean_name || sku.name || ('pid '+pids[0]);
+        var cat = sku.m_category || sku.category_l2 || sku.category_l1 || '';
+        prodCell = '<div style="font-size:11px">'+escapeHtml(nm)+'</div>' +
+                   (cat ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(cat)+'</div>' : '');
+      } else {
+        prodCell = '<span style="color:var(--text3);font-size:10px">pid '+pids[0]+'</span>';
+      }
+    } else {
+      // Multi-PID: show first product + count of others
+      var sku0 = _adsSkuLookup(pids[0]);
+      var name0 = sku0 ? (sku0.clean_name || sku0.name) : ('pid '+pids[0]);
+      // Aggregate categories
+      var cats = {};
+      pids.forEach(function(pid){
+        var sk = _adsSkuLookup(pid);
+        if (sk && sk.m_category) cats[sk.m_category] = true;
+      });
+      var catList = Object.keys(cats).join(', ');
+      prodCell = '<div style="font-size:11px">'+escapeHtml(name0||'?')+
+                 ' <span style="color:var(--accent);font-size:10px">+'+(pids.length-1)+'</span></div>' +
+                 (catList ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(catList)+'</div>' : '');
+    }
     cBody += '<tr>' +
       '<td>'+(i+1)+'</td>' +
-      '<td><span class="tag '+brandTagClass(c.brand)+'">'+(c.brand||'—')+'</span></td>' +
+      '<td><span class="tag '+brandTagClass(c.brand)+'">'+brandShort(c.brand)+'</span></td>' +
       '<td><div style="font-weight:500">'+escapeHtml(c.name||'')+'</div>' +
         '<div style="color:var(--text3);font-size:10px">cid '+c.cid+
         (c.status && c.status !== 'ACTIVE' ? ' · <span style="color:var(--orange)">'+c.status+'</span>' : '')+
         '</div></td>' +
+      '<td>'+prodCell+'</td>' +
       '<td><span style="color:var(--text2);font-size:10px">'+(c.type||'').replace('PRODUCT_','')+'</span></td>' +
       '<td style="text-align:right">'+fmtINR(c.budget)+'</td>' +
       '<td style="text-align:right">'+fmtINR(c.sales)+'</td>' +
@@ -2256,66 +2334,9 @@ function renderAds() {
     '</tr>';
   });
   if (camps.length === 0) {
-    cBody = '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:20px">No campaigns match the current filter.</td></tr>';
+    cBody = '<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:20px">No campaigns match the current filter.</td></tr>';
   }
   document.getElementById('ads-campaigns-body').innerHTML = cBody;
-
-  // ── Keywords table (PRODUCT_LISTING only; uses all-history numbers) ──
-  // Note: we don't have keywords_daily, so keyword totals are all-history
-  // when a date filter is active. We surface this with a sub-note.
-  var kwSearch = (document.getElementById('ads-kw-search').value || '').toLowerCase();
-  H.ads.kwSearch = kwSearch;
-  var kws = (D.ads.keywords || []).filter(function(k){
-    if (brandFilter !== 'ALL' && k.brand !== brandFilter) return false;
-    if (typeFilter === 'PRODUCT_RECOMMENDATION') return false;
-    if (kwSearch) {
-      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')).toLowerCase();
-      if (hay.indexOf(kwSearch) < 0) return false;
-    }
-    return true;
-  });
-  var kBy = H.ads.kwSortBy, kDir = H.ads.kwSortDir;
-  kws.sort(function(a,b){
-    var av = a[kBy], bv = b[kBy];
-    if (typeof av === 'string' || typeof bv === 'string') {
-      av = (av||'').toString(); bv = (bv||'').toString();
-      return kDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
-    }
-    av = av || 0; bv = bv || 0;
-    return kDir === 'asc' ? av - bv : bv - av;
-  });
-  document.getElementById('ads-keywords-count').textContent =
-    kws.length + ' keyword' + (kws.length === 1 ? '' : 's') +
-    (H.ads.mode !== 'all' ? '  · all-history (no daily series)' : '');
-  var kBody = '';
-  var displayKws = kws.slice(0, 200);
-  displayKws.forEach(function(k, i){
-    kBody += '<tr>' +
-      '<td>'+(i+1)+'</td>' +
-      '<td><span class="tag '+brandTagClass(k.brand)+'">'+(k.brand||'—')+'</span></td>' +
-      '<td><div style="font-size:11px">'+escapeHtml(k.campaign_name||'')+'</div></td>' +
-      '<td><span style="font-weight:500">'+escapeHtml(k.keyword||'')+'</span></td>' +
-      '<td><span style="color:var(--text3);font-size:10px">'+(k.match_type||'')+'</span></td>' +
-      '<td style="text-align:right">'+fmtINR(k.budget)+'</td>' +
-      '<td style="text-align:right">'+fmtINR(k.sales)+'</td>' +
-      '<td style="text-align:right;color:'+( (k.roas||0) >= 2 ? 'var(--green)' : (k.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(k.roas||0).toFixed(2)+'x</td>' +
-      '<td style="text-align:right">'+fmtNum(k.atc)+'</td>' +
-      '<td style="text-align:right">'+fmtNum(k.qty)+'</td>' +
-      '<td style="text-align:right">'+fmtNum(k.impr)+'</td>' +
-    '</tr>';
-  });
-  if (kws.length > 200) {
-    kBody += '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px;font-size:11px">' +
-      'Showing top 200 of '+kws.length+'. Use search to filter further or download CSV for full list.</td></tr>';
-  }
-  if (kws.length === 0) {
-    kBody = '<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:20px">' +
-      (typeFilter === 'PRODUCT_RECOMMENDATION'
-        ? 'Keywords are only available for Product Listing campaigns.'
-        : 'No keywords match the current filter.') +
-      '</td></tr>';
-  }
-  document.getElementById('ads-keywords-body').innerHTML = kBody;
 
   // ── Reco slots table (PRODUCT_RECOMMENDATION only; all-history) ───
   var slots = (D.ads.reco_slots || []).filter(function(s){
@@ -2340,7 +2361,7 @@ function renderAds() {
   slots.forEach(function(s, i){
     sBody += '<tr>' +
       '<td>'+(i+1)+'</td>' +
-      '<td><span class="tag '+brandTagClass(s.brand)+'">'+(s.brand||'—')+'</span></td>' +
+      '<td><span class="tag '+brandTagClass(s.brand)+'">'+brandShort(s.brand)+'</span></td>' +
       '<td><div style="font-size:11px">'+escapeHtml(s.campaign_name||'')+'</div></td>' +
       '<td><span style="font-weight:500">'+escapeHtml(s.slot||'')+'</span></td>' +
       '<td style="text-align:right">'+fmtINR(s.budget)+'</td>' +
@@ -2389,7 +2410,7 @@ function renderAds() {
     pBody += '<tr>' +
       '<td>'+(i+1)+'</td>' +
       '<td>'+img+'</td>' +
-      '<td><span class="tag '+brandTagClass(p.brand)+'">'+(p.brand||'—')+'</span></td>' +
+      '<td><span class="tag '+brandTagClass(p.brand)+'">'+brandShort(p.brand)+'</span></td>' +
       '<td><div style="font-weight:500;font-size:11px">'+escapeHtml(p.clean_name||p.name||'?')+'</div>' +
         '<div style="color:var(--text3);font-size:10px">pid '+p.pid+(p.item_id?' · item '+p.item_id:'')+'</div></td>' +
       '<td><span style="font-size:10px;color:'+lcColor+'">'+escapeHtml(lifecycle||'—')+'</span></td>' +
@@ -2472,9 +2493,21 @@ function exportAdsCampaignsCsv() {
   if (!D || !D.ads) return;
   var win = _adsResolveWindow();
   var camps = _adsCampaignsInWindow(win, H.ads.brand, H.ads.type);
-  var headers = ['Brand','Campaign','Campaign ID','Type','Status','Spend','Sales','RoAS','ATC','Qty','Impressions','New Users','D Sales','I Sales'];
+  var headers = ['Brand','Campaign','Campaign ID','Type','Status','Products','Categories','PID Count','Spend','Sales','RoAS','ATC','Qty','Impressions','New Users','D Sales','I Sales'];
   var rows = camps.map(function(c){
+    var pids = c.pids || [];
+    var prodNames = [], cats = {};
+    pids.forEach(function(pid){
+      var sk = _adsSkuLookup(pid);
+      if (sk) {
+        prodNames.push(sk.clean_name || sk.name || ('pid '+pid));
+        if (sk.m_category) cats[sk.m_category] = true;
+      } else {
+        prodNames.push('pid '+pid);
+      }
+    });
     return [c.brand, c.name, c.cid, c.type, c.status||'',
+            prodNames.join(' | '), Object.keys(cats).join(' | '), pids.length,
             c.budget, c.sales, c.roas, c.atc, c.qty, c.impr,
             c.new_users, c.d_sales, c.i_sales];
   });
@@ -2513,6 +2546,250 @@ function exportAdsProductsCsv() {
             p.cps, p.cpa, p.cpm, p.campaign_count];
   });
   _downloadCsv('ads_products_'+_adsCsvSuffix()+'.csv', headers, rows);
+}
+
+// ═══ KEYWORDS TAB (PRODUCT_LISTING keywords across all-history) ═══════
+function setKwBrand(brand, btn) {
+  H.keywords.brand = brand;
+  document.querySelectorAll('#page-keywords .filters .fbtn').forEach(function(b){
+    var t = (b.textContent||'').trim();
+    if (['All','BA','CAP','SS','Vinci'].includes(t)) b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderKeywords();
+}
+function setKwMatch(match, btn) {
+  H.keywords.match = match;
+  document.querySelectorAll('#page-keywords .filters .fbtn').forEach(function(b){
+    var t = (b.textContent||'').trim();
+    if (['All','EXACT','BROAD','PHRASE','NA'].includes(t)) b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+  renderKeywords();
+}
+function sortKw(col) {
+  if (H.keywords.sortBy === col) {
+    H.keywords.sortDir = (H.keywords.sortDir === 'desc') ? 'asc' : 'desc';
+  } else {
+    H.keywords.sortBy = col;
+    H.keywords.sortDir = (['keyword','campaign_name','brand','match_type'].indexOf(col) >= 0) ? 'asc' : 'desc';
+  }
+  renderKeywords();
+}
+function renderKeywords() {
+  if (!D || !D.ads) {
+    var el = document.getElementById('kw-kpis');
+    if (el) el.innerHTML = '<div class="stat-card" style="grid-column:1/-1"><div class="stat-label">No ads data</div></div>';
+    return;
+  }
+  var brand = H.keywords.brand;
+  var match = H.keywords.match;
+  var search = (document.getElementById('kw-search').value || '').toLowerCase();
+  H.keywords.search = search;
+
+  var lblEl = document.getElementById('kw-meta');
+  if (lblEl) lblEl.textContent = 'all-history';
+
+  // Filter
+  var kws = (D.ads.keywords || []).filter(function(k){
+    if (brand !== 'ALL' && k.brand !== brand) return false;
+    if (match !== 'ALL') {
+      var mt = (k.match_type || '').toUpperCase();
+      if (match === 'NA') {
+        if (mt && mt !== 'NA') return false;
+      } else {
+        if (mt !== match) return false;
+      }
+    }
+    if (search) {
+      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')).toLowerCase();
+      if (hay.indexOf(search) < 0) return false;
+    }
+    return true;
+  });
+  // Compute CPA on the fly
+  kws = kws.map(function(k){
+    var copy = {};
+    for (var p in k) copy[p] = k[p];
+    copy.cpa = (k.atc > 0) ? (k.budget / k.atc) : 0;
+    return copy;
+  });
+
+  // KPI tiles
+  var t = {budget:0, sales:0, atc:0, qty:0, impr:0};
+  kws.forEach(function(k){
+    t.budget += (k.budget||0);
+    t.sales  += (k.sales||0);
+    t.atc    += (k.atc||0);
+    t.qty    += (k.qty||0);
+    t.impr   += (k.impr||0);
+  });
+  t.roas = t.budget > 0 ? t.sales / t.budget : 0;
+  t.cpa  = t.atc > 0 ? t.budget / t.atc : 0;
+  function tile(label, value, sub, color) {
+    return '<div class="stat-card">' +
+      '<div class="stat-label">'+label+'</div>' +
+      '<div class="stat-value" style="color:'+color+';font-size:18px">'+value+'</div>' +
+      '<div class="stat-sub">'+sub+'</div></div>';
+  }
+  var kpi = '';
+  kpi += tile('Spend',       fmtINR(t.budget),  kws.length+' keywords', 'var(--accent)');
+  kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',      'var(--green)');
+  kpi += tile('RoAS',        (t.roas||0).toFixed(2)+'x', 'sales / spend','var(--purple)');
+  kpi += tile('Impressions', fmtNum(t.impr),    '',                     'var(--text)');
+  kpi += tile('ATC',         fmtNum(t.atc),     'add-to-carts',         'var(--text)');
+  kpi += tile('Qty',         fmtNum(t.qty),     'units',                'var(--text)');
+  kpi += tile('CPA',         fmtINR(t.cpa),     'cost per ATC',         'var(--orange)');
+  document.getElementById('kw-kpis').innerHTML = kpi;
+
+  // Sort
+  var by = H.keywords.sortBy, dir = H.keywords.sortDir;
+  kws.sort(function(a,b){
+    var av = a[by], bv = b[by];
+    if (typeof av === 'string' || typeof bv === 'string') {
+      av = (av||'').toString(); bv = (bv||'').toString();
+      return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    av = av || 0; bv = bv || 0;
+    return dir === 'asc' ? av - bv : bv - av;
+  });
+  document.getElementById('kw-count').textContent =
+    kws.length + ' keyword' + (kws.length === 1 ? '' : 's');
+
+  // Table body — show top 500, more available via search/CSV
+  var body = '';
+  var displayKws = kws.slice(0, 500);
+  displayKws.forEach(function(k, i){
+    body += '<tr>' +
+      '<td>'+(i+1)+'</td>' +
+      '<td><span class="tag '+brandTagClass(k.brand)+'">'+brandShort(k.brand)+'</span></td>' +
+      '<td><div style="font-size:11px">'+escapeHtml(k.campaign_name||'')+'</div></td>' +
+      '<td><span style="font-weight:500">'+escapeHtml(k.keyword||'')+'</span></td>' +
+      '<td><span style="color:var(--text3);font-size:10px">'+(k.match_type||'NA')+'</span></td>' +
+      '<td style="text-align:right">'+fmtINR(k.budget)+'</td>' +
+      '<td style="text-align:right">'+fmtINR(k.sales)+'</td>' +
+      '<td style="text-align:right;color:'+( (k.roas||0) >= 2 ? 'var(--green)' : (k.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(k.roas||0).toFixed(2)+'x</td>' +
+      '<td style="text-align:right">'+fmtNum(k.atc)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(k.qty)+'</td>' +
+      '<td style="text-align:right">'+fmtNum(k.impr)+'</td>' +
+      '<td style="text-align:right">'+(k.cpa > 0 ? fmtINR(k.cpa) : '—')+'</td>' +
+    '</tr>';
+  });
+  if (kws.length > 500) {
+    body += '<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:12px;font-size:11px">' +
+      'Showing top 500 of '+kws.length+'. Use search or download CSV for full list.</td></tr>';
+  }
+  if (kws.length === 0) {
+    body = '<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:20px">No keywords match the current filter.</td></tr>';
+  }
+  document.getElementById('kw-body').innerHTML = body;
+}
+function exportKeywordsCsv() {
+  if (!D || !D.ads) return;
+  var brand = H.keywords.brand, match = H.keywords.match;
+  var search = ((document.getElementById('kw-search')||{}).value||'').toLowerCase();
+  var kws = (D.ads.keywords||[]).filter(function(k){
+    if (brand !== 'ALL' && k.brand !== brand) return false;
+    if (match !== 'ALL') {
+      var mt = (k.match_type || '').toUpperCase();
+      if (match === 'NA') { if (mt && mt !== 'NA') return false; }
+      else if (mt !== match) return false;
+    }
+    if (search) {
+      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')).toLowerCase();
+      if (hay.indexOf(search) < 0) return false;
+    }
+    return true;
+  });
+  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','CPA'];
+  var rows = kws.map(function(k){
+    var cpa = k.atc > 0 ? k.budget/k.atc : 0;
+    return [k.brand, k.campaign_name, k.cid, k.keyword, k.match_type,
+            k.budget, k.sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr, cpa];
+  });
+  _downloadCsv('keywords_all-history.csv', headers, rows);
+}
+
+// ═══ MISSING TABLE CSV EXPORTERS (Overview / POs / Stock / Cities) ═══
+function exportOvTopSkusCsv() {
+  if (!D || !D.historical) return;
+  var win = resolveWindow('ov');
+  var brand = H.ov.brand;
+  var ag = aggregateSales(win, brand);
+  var skus = Object.values(ag.skus).slice().sort(function(a,b){
+    return (b.real_rev||0) - (a.real_rev||0);
+  });
+  var headers = ['Rank','Item ID','Brand','Product','Clean Name','Units','MRP Revenue','Sales','Discount %','PO Value','Top City'];
+  var rows = skus.map(function(s, i){
+    var cat = getCatItem(s.item_id) || {};
+    var disc = s.mrp_rev > 0 ? ((s.mrp_rev - s.real_rev)/s.mrp_rev*100) : 0;
+    return [i+1, s.item_id, s.brand, s.name, cat.clean_name||'',
+            s.units, s.mrp_rev, s.real_rev, disc.toFixed(1), s.po_value||0, s.top_city||''];
+  });
+  _downloadCsv('overview_top_skus_'+(win.label||'all').replace(/[^A-Za-z0-9._-]/g,'_')+'.csv', headers, rows);
+}
+function exportPosCsv() {
+  if (!D || !D.pos) return;
+  var brand = H.pos.brand, state = H.pos.state;
+  var search = ((document.getElementById('pos-search')||{}).value||'').toLowerCase();
+  var rows = (D.pos.rows || []).filter(function(p){
+    if (brand !== 'ALL' && p.brand !== brand) return false;
+    if (state !== 'ALL' && p.state !== state) return false;
+    if (search) {
+      var hay = ((p.po_id||'')+' '+(p.city||'')+' '+(p.facility||'')+' '+(p.brand||'')).toLowerCase();
+      if (hay.indexOf(search) < 0) return false;
+    }
+    return true;
+  });
+  var headers = ['PO ID','Brand','State','Created','Expected','Delivered','City','Facility','Items','Qty','PO Value','Fulfilled Value'];
+  var csvRows = rows.map(function(p){
+    return [p.po_id, p.brand, p.state, p.created_date, p.expected_date, p.delivered_date,
+            p.city, p.facility, p.item_count, p.qty, p.po_value, p.fulfilled_value];
+  });
+  _downloadCsv('pos.csv', headers, csvRows);
+}
+function exportStockCsv() {
+  if (!D) return;
+  var brand = H.stock.brand;
+  var search = ((document.getElementById('stock-search')||{}).value||'').toLowerCase();
+  var rows = [];
+  var warehouses = (D.warehouses && D.warehouses.list) || [];
+  var skus = D.skus || [];
+  // Walk stock from skus[].stock or D.stock; whatever is exposed
+  // Defensive: handle either shape
+  var src = (D.stock && D.stock.rows) || [];
+  if (!src.length && skus.length) {
+    // synthesize from skus
+    skus.forEach(function(s){
+      if (!s.stock) return;
+      Object.keys(s.stock).forEach(function(wh){
+        src.push({item_id:s.item_id, brand:s.brand, name:s.name,
+                  warehouse:wh, qty:s.stock[wh]});
+      });
+    });
+  }
+  src.forEach(function(r){
+    if (brand !== 'ALL' && r.brand !== brand) return;
+    if (search) {
+      var hay = ((r.name||'')+' '+(r.warehouse||'')+' '+(r.item_id||'')).toLowerCase();
+      if (hay.indexOf(search) < 0) return;
+    }
+    rows.push([r.item_id, r.brand, r.name, r.warehouse, r.qty]);
+  });
+  var headers = ['Item ID','Brand','Product','Warehouse','Qty'];
+  _downloadCsv('stock.csv', headers, rows);
+}
+function exportCitiesCsv() {
+  if (!D || !D.geo || !D.geo.cities) return;
+  var search = ((document.getElementById('cities-search')||{}).value||'').toLowerCase();
+  var rows = D.geo.cities.filter(function(c){
+    if (!search) return true;
+    return (c.city||'').toLowerCase().indexOf(search) >= 0;
+  }).map(function(c){
+    return [c.city, c.units, c.mrp_rev, c.active_skus||c.sku_count, c.order_lines||c.lines];
+  });
+  var headers = ['City','Units','MRP Revenue','Active SKUs','Order Lines'];
+  _downloadCsv('cities.csv', headers, rows);
 }
 
 </script>
