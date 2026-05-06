@@ -1065,31 +1065,85 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="fbtn" id="kw-mt-phrase" onclick="setKwMatch('PHRASE',this)">PHRASE</button>
     <button class="fbtn" id="kw-mt-na" onclick="setKwMatch('NA',this)">NA</button>
     <div class="fsep"></div>
+    <span class="filter-label">Day</span>
+    <select class="fsel" id="kw-day-sel" onchange="setKwTime('day')" style="min-width:130px"><option value="">Pick day</option></select>
+    <span class="filter-label">Month</span>
+    <select class="fsel" id="kw-month-sel" onchange="setKwTime('month')" style="min-width:120px"><option value="">Pick month</option></select>
+    <span class="filter-label">Year</span>
+    <select class="fsel" id="kw-year-sel" onchange="setKwTime('year')" style="min-width:90px"><option value="">Pick year</option></select>
+    <div class="fsep"></div>
+    <span class="filter-label">Custom</span>
+    <input type="date" class="fsel" id="kw-from-sel" onchange="setKwTime('custom')" style="min-width:135px">
+    <span style="color:var(--text3);font-size:10px">→</span>
+    <input type="date" class="fsel" id="kw-to-sel" onchange="setKwTime('custom')" style="min-width:135px">
+    <button class="fbtn" onclick="clearKwTime()" style="font-size:10px;padding:4px 8px">Reset</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Compare</span>
+    <select class="fsel" id="kw-compare-sel" onchange="setCompareMode('keywords', this.value)" style="min-width:130px">
+      <option value="none">None</option>
+      <option value="prev">vs Prev period</option>
+      <option value="prev_month">vs Same period prev month</option>
+      <option value="prev_year">vs Same period prev year</option>
+    </select>
+    <div class="fsep"></div>
     <span class="filter-label">Category</span>
     <select class="fsel" id="kw-cat-sel" onchange="setKwCategory(this.value)" style="min-width:140px"><option value="">All</option></select>
     <div class="fsep"></div>
-    <input class="fsearch" placeholder="Search keyword / campaign / SKU / category..." id="kw-search" oninput="renderKeywords()">
-    <div class="fsep"></div>
-    <span style="font-size:10px;color:var(--text3)" id="kw-meta">—</span>
+    <input class="fsearch" placeholder="Search keyword / campaign..." id="kw-search" oninput="renderKeywords()">
+    <span id="kw-window-lbl" style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace"></span>
   </div>
 
-  <!-- KPI tiles for keywords -->
+  <!-- KPI tiles for keywords (window-aware + delta) -->
   <div class="stat-grid" id="kw-kpis"></div>
 
-  <!-- Keywords table -->
+  <!-- Intelligence: Top Movers + Wasted Spend -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+    <div class="card" style="border-left:4px solid var(--accent)">
+      <div class="card-hdr">
+        <span class="card-title">📈 Top Movers · Window vs Comparison</span>
+        <span class="card-sub" id="kw-movers-count"></span>
+      </div>
+      <div style="overflow:auto;max-height:280px" id="kw-movers-body"></div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red)">
+      <div class="card-hdr">
+        <span class="card-title">💸 Wasted Spend · Zero Sales</span>
+        <span class="card-sub" id="kw-waste-count"></span>
+      </div>
+      <div style="overflow:auto;max-height:280px" id="kw-waste-body"></div>
+    </div>
+  </div>
+
+  <!-- Trend chart: Top 20 keywords by spend in window, daily -->
   <div class="card" style="margin-top:14px">
     <div class="card-hdr">
-      <span class="card-title">🔑 Keywords · Product Listing</span>
+      <span class="card-title">📊 Top 20 Keywords · Daily Trend</span>
+      <span class="card-sub" id="kw-trend-meta"></span>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="fbtn active" id="kw-trend-metric-budget" onclick="setKwTrendMetric('budget',this)">Spend</button>
+        <button class="fbtn" id="kw-trend-metric-sales" onclick="setKwTrendMetric('sales',this)">Sales</button>
+        <button class="fbtn" id="kw-trend-metric-roas" onclick="setKwTrendMetric('roas',this)">RoAS</button>
+        <button class="fbtn" id="kw-trend-metric-impr" onclick="setKwTrendMetric('impr',this)">Impr</button>
+        <button class="fbtn" id="kw-trend-metric-atc" onclick="setKwTrendMetric('atc',this)">ATC</button>
+      </div>
+    </div>
+    <div style="position:relative;height:340px;padding:14px"><canvas id="ch-kw-trend"></canvas></div>
+  </div>
+
+  <!-- Keywords table — window-filtered -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🔑 Keywords · Click row to see daily trend</span>
       <span class="card-sub" id="kw-count"></span>
       <button class="btn-sm" style="margin-left:auto" onclick="exportKeywordsCsv()">⬇ CSV</button>
     </div>
     <div style="overflow-x:auto">
     <table>
       <thead><tr>
+        <th></th>
         <th>#</th>
         <th onclick="sortKw('brand')">Brand</th>
         <th style="min-width:200px" onclick="sortKw('campaign_name')">Campaign</th>
-        <th style="min-width:180px">Product / Category</th>
         <th onclick="sortKw('keyword')">Keyword</th>
         <th onclick="sortKw('match_type')">Match</th>
         <th style="text-align:right" onclick="sortKw('budget')">Spend ▼</th>
@@ -1101,6 +1155,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="text-align:right" onclick="sortKw('qty')">Qty</th>
         <th style="text-align:right" onclick="sortKw('impr')">Impr</th>
         <th style="text-align:right" onclick="sortKw('cpa')">CPA</th>
+        <th style="text-align:right">Δ Spend</th>
+        <th style="text-align:right">Δ RoAS</th>
       </tr></thead>
       <tbody id="kw-body"></tbody>
     </table>
@@ -1333,6 +1389,8 @@ var H = {           // per-tab filter state
           prodSortBy:'budget', prodSortDir:'desc',
           mm_metrics:{spend:true, sales:true, d_sales:false, impr:false, atc:false, qty:false, new_users:false, roas:false}},
   keywords: {brand:'ALL', match:'ALL', search:'', category:'',
+             mode:'all', day:'', month:'', year:'', from:'', to:'', compare:'none',
+             trendMetric:'budget',
              sortBy:'budget', sortDir:'desc'},
   cashflow: {status:'ALL', aging:'ALL', facility:'', search:''},
 };
@@ -1474,8 +1532,8 @@ function buildFilterOptions() {
 
   var years = Array.from(new Set(months.map(function(m){ return m.slice(0,4); }))).sort();
 
-  // Build month selectors (Overview + Sales + POs + Cities + Ads)
-  ['ov-month-sel','sales-month-sel','pos-month-sel','cities-month-sel','ads-month-sel'].forEach(function(id){
+  // Build month selectors (Overview + Sales + POs + Cities + Ads + Keywords)
+  ['ov-month-sel','sales-month-sel','pos-month-sel','cities-month-sel','ads-month-sel','kw-month-sel'].forEach(function(id){
     var el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = '<option value="">Pick month</option>';
@@ -1487,7 +1545,7 @@ function buildFilterOptions() {
   });
 
   // Year selectors
-  ['ov-year-sel','sales-year-sel','pos-year-sel','cities-year-sel','ads-year-sel'].forEach(function(id){
+  ['ov-year-sel','sales-year-sel','pos-year-sel','cities-year-sel','ads-year-sel','kw-year-sel'].forEach(function(id){
     var el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = '<option value="">Pick year</option>';
@@ -1499,7 +1557,7 @@ function buildFilterOptions() {
   });
 
   // Day selectors
-  ['ov-day-sel','sales-day-sel','pos-day-sel','cities-day-sel','ads-day-sel'].forEach(function(id){
+  ['ov-day-sel','sales-day-sel','pos-day-sel','cities-day-sel','ads-day-sel','kw-day-sel'].forEach(function(id){
     var el = document.getElementById(id);
     if (!el) return;
     el.innerHTML = '<option value="">Pick day</option>';
@@ -5453,6 +5511,137 @@ function sortKw(col) {
   }
   renderKeywords();
 }
+// ═══ KEYWORDS — windowed analytics ════════════════════════════════════
+function _kwResolveWindow() {
+  var H_ = H.keywords;
+  if (H_.mode === 'day' && H_.day) return {kind:'day', date:H_.day, label:fmtDate(H_.day)};
+  if (H_.mode === 'month' && H_.month) return {kind:'month', month:H_.month, label:fmtMonth(H_.month)};
+  if (H_.mode === 'year' && H_.year) return {kind:'year', year:H_.year, label:H_.year};
+  if (H_.mode === 'custom' && H_.from && H_.to)
+    return {kind:'custom', from:H_.from, to:H_.to, label:fmtDate(H_.from)+'→'+fmtDate(H_.to)};
+  return {kind:'all', label:'all-history'};
+}
+function _kwDateInWindow(dateStr, win) {
+  if (!win || win.kind === 'all') return true;
+  var d = String(dateStr).slice(0, 10);
+  if (win.kind === 'day')   return d === win.date;
+  if (win.kind === 'month') return d.slice(0,7) === win.month;
+  if (win.kind === 'year')  return d.slice(0,4) === win.year;
+  if (win.kind === 'custom') return win.from && win.to && d >= win.from && d <= win.to;
+  return true;
+}
+
+function _kwSumDaily(rows, win) {
+  var s = {budget:0, sales:0, atc:0, qty:0, impr:0, d_atc:0, d_qty:0, d_sales:0, new_users:0, days:0};
+  if (!rows) return s;
+  rows.forEach(function(r){
+    if (!_kwDateInWindow(r.date, win)) return;
+    s.budget    += r.budget    || 0;
+    s.sales     += r.sales     || 0;
+    s.atc       += r.atc       || 0;
+    s.qty       += r.qty       || 0;
+    s.impr      += r.impr      || 0;
+    s.d_atc     += r.d_atc     || 0;
+    s.d_qty     += r.d_qty     || 0;
+    s.d_sales   += r.d_sales   || 0;
+    s.new_users += r.new_users || 0;
+    s.days++;
+  });
+  s.roas        = s.budget > 0 ? s.sales / s.budget   : 0;
+  s.direct_roas = s.budget > 0 ? s.d_sales / s.budget : 0;
+  s.cpa         = s.atc > 0 ? s.budget / s.atc        : 0;
+  return s;
+}
+
+// Build keyword rows windowed (window-aware metrics) + optional comparison block
+function _kwBuildWindowed(brand, match, category, search, win, prevWin) {
+  if (!D || !D.ads) return [];
+  var keywords = D.ads.keywords || [];
+  var daily = D.ads.keywords_daily || {};
+  var camps = D.ads.campaigns || [];
+  var campByCid = {};
+  camps.forEach(function(c){ campByCid[c.cid] = c; });
+
+  function passFilter(k) {
+    if (brand !== 'ALL' && k.brand !== brand) return false;
+    if (match !== 'ALL') {
+      var mt = (k.match_type || '').toUpperCase();
+      if (match === 'NA') { if (mt && mt !== 'NA') return false; }
+      else if (mt !== match) return false;
+    }
+    if (category) {
+      var camp = campByCid[k.cid];
+      if (!camp) return false;
+      var pids = camp.pids || [];
+      var matched = false;
+      for (var ci=0; ci<pids.length; ci++) {
+        var sk = _adsSkuLookup(pids[ci]);
+        if (sk && (sk.m_category||'') === category) { matched = true; break; }
+      }
+      if (!matched) return false;
+    }
+    if (search) {
+      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')+' '+(k.brand||'')).toLowerCase();
+      if (hay.indexOf(search) < 0) {
+        var found = false;
+        var camp = campByCid[k.cid];
+        if (camp && camp.pids) {
+          for (var pi=0; pi<camp.pids.length; pi++) {
+            var sk = _adsSkuLookup(camp.pids[pi]);
+            if (!sk) continue;
+            var skHay = ((sk.clean_name||'')+' '+(sk.name||'')+' '+(sk.m_category||'')).toLowerCase();
+            if (skHay.indexOf(search) >= 0) { found = true; break; }
+          }
+        }
+        if (!found) return false;
+      }
+    }
+    return true;
+  }
+
+  var out = [];
+  for (var i = 0; i < keywords.length; i++) {
+    var k = keywords[i];
+    if (!passFilter(k)) continue;
+    var kid = (k.kid != null) ? k.kid : i;
+    var rows = daily[String(kid)];
+    var cur, prev;
+    if (rows) {
+      cur = _kwSumDaily(rows, win);
+      prev = prevWin ? _kwSumDaily(rows, prevWin) : null;
+    } else {
+      // Fallback: keywords_daily not present in this dataset (older bk_data)
+      // Use the all-history aggregate from k itself; comparison disabled.
+      cur = {
+        budget:k.budget||0, sales:k.sales||0, atc:k.atc||0, qty:k.qty||0, impr:k.impr||0,
+        d_atc:k.d_atc||0, d_qty:k.d_qty||0, d_sales:k.d_sales||0, new_users:k.new_users||0,
+        days:0,
+        roas:k.roas||0, direct_roas:k.direct_roas||0,
+        cpa:(k.atc>0)?(k.budget/k.atc):0,
+      };
+      prev = null;
+    }
+    out.push({
+      kid: kid,
+      cid: k.cid,
+      keyword: k.keyword,
+      match_type: k.match_type,
+      brand: k.brand,
+      campaign_name: k.campaign_name,
+      // Window-aware metrics:
+      budget:cur.budget, sales:cur.sales, atc:cur.atc, qty:cur.qty, impr:cur.impr,
+      d_sales:cur.d_sales, d_qty:cur.d_qty, d_atc:cur.d_atc, new_users:cur.new_users,
+      roas:cur.roas, direct_roas:cur.direct_roas, cpa:cur.cpa,
+      // Comparison
+      prev_budget: prev ? prev.budget : null,
+      prev_sales:  prev ? prev.sales  : null,
+      prev_roas:   prev ? prev.roas   : null,
+      prev_atc:    prev ? prev.atc    : null,
+    });
+  }
+  return out;
+}
+
 function renderKeywords() {
   if (!D || !D.ads) {
     var el = document.getElementById('kw-kpis');
@@ -5465,94 +5654,56 @@ function renderKeywords() {
   var search = (document.getElementById('kw-search').value || '').toLowerCase();
   H.keywords.search = search;
 
-  var lblEl = document.getElementById('kw-meta');
-  if (lblEl) lblEl.textContent = 'all-history' + (category ? ' · ' + category : '');
+  var win = _kwResolveWindow();
+  var prevWin = resolvePrev(win, 'keywords');
 
-  // Build cid → campaign map for category filtering
-  var _kwCampMap = {};
-  (D.ads.campaigns || []).forEach(function(c){ _kwCampMap[c.cid] = c; });
+  // Window label
+  var lblEl = document.getElementById('kw-window-lbl');
+  if (lblEl) {
+    lblEl.textContent = '· ' + win.label + (prevWin ? ' · ' + prevWin.label : '') + (category ? ' · ' + category : '');
+  }
 
-  // Filter
-  var kws = (D.ads.keywords || []).filter(function(k){
-    if (brand !== 'ALL' && k.brand !== brand) return false;
-    if (match !== 'ALL') {
-      var mt = (k.match_type || '').toUpperCase();
-      if (match === 'NA') {
-        if (mt && mt !== 'NA') return false;
-      } else {
-        if (mt !== match) return false;
-      }
-    }
-    // Category filter — keyword's campaign must have at least one PID in this category
-    if (category) {
-      var camp = _kwCampMap[k.cid];
-      if (!camp) return false;
-      var pids = camp.pids || [];
-      var matched = false;
-      for (var ci=0; ci<pids.length; ci++) {
-        var sk = _adsSkuLookup(pids[ci]);
-        if (sk && (sk.m_category||'') === category) { matched = true; break; }
-      }
-      if (!matched) return false;
-    }
-    if (search) {
-      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')+' '+(k.brand||'')).toLowerCase();
-      // Also search the linked campaign's products/categories
-      if (hay.indexOf(search) < 0) {
-        var found = false;
-        var camp = null;
-        if (D.ads.campaigns) {
-          for (var ci=0; ci<D.ads.campaigns.length; ci++) {
-            if (D.ads.campaigns[ci].cid === k.cid) { camp = D.ads.campaigns[ci]; break; }
-          }
-        }
-        if (camp && camp.pids) {
-          for (var pi=0; pi<camp.pids.length; pi++) {
-            var sk = _adsSkuLookup(camp.pids[pi]);
-            if (!sk) continue;
-            var skHay = ((sk.clean_name||'')+' '+(sk.name||'')+' '+(sk.m_category||'')+
-                         ' '+(sk.category_l1||'')+' '+(sk.category_l2||'')).toLowerCase();
-            if (skHay.indexOf(search) >= 0) { found = true; break; }
-          }
-        }
-        if (!found) return false;
-      }
-    }
-    return true;
-  });
-  // Compute CPA on the fly
-  kws = kws.map(function(k){
-    var copy = {};
-    for (var p in k) copy[p] = k[p];
-    copy.cpa = (k.atc > 0) ? (k.budget / k.atc) : 0;
-    return copy;
-  });
+  // Build windowed keyword rows
+  var kws = _kwBuildWindowed(brand, match, category, search, win, prevWin);
 
-  // KPI tiles
-  var t = {budget:0, sales:0, atc:0, qty:0, impr:0};
+  // KPI tiles (current window + delta vs comparison)
+  var t = {budget:0, sales:0, atc:0, qty:0, impr:0, d_sales:0, new_users:0};
+  var pt = {budget:0, sales:0, atc:0, qty:0, impr:0};
+  var hasPrev = false;
   kws.forEach(function(k){
-    t.budget += (k.budget||0);
-    t.sales  += (k.sales||0);
-    t.atc    += (k.atc||0);
-    t.qty    += (k.qty||0);
-    t.impr   += (k.impr||0);
+    t.budget += k.budget; t.sales += k.sales; t.atc += k.atc; t.qty += k.qty; t.impr += k.impr;
+    t.d_sales += k.d_sales; t.new_users += k.new_users;
+    if (k.prev_budget != null) {
+      hasPrev = true;
+      pt.budget += k.prev_budget || 0;
+      pt.sales  += k.prev_sales  || 0;
+      pt.atc    += k.prev_atc    || 0;
+    }
   });
   t.roas = t.budget > 0 ? t.sales / t.budget : 0;
   t.cpa  = t.atc > 0 ? t.budget / t.atc : 0;
-  function tile(label, value, sub, color) {
+  pt.roas = pt.budget > 0 ? pt.sales / pt.budget : 0;
+  function deltaStr(curV, prevV, fmt) {
+    if (!hasPrev || prevV == null || prevV === 0) return '';
+    var pct = ((curV - prevV) / prevV * 100);
+    var arrow = pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+    var color = (pct > 0 ? 'var(--green)' : pct < 0 ? 'var(--red)' : 'var(--text3)');
+    return '<span style="font-size:10px;color:'+color+';margin-left:4px">'+arrow+' '+(pct >= 0 ? '+' : '')+pct.toFixed(0)+'%</span>';
+  }
+  function tile(label, value, sub, color, deltaHtml) {
     return '<div class="stat-card">' +
       '<div class="stat-label">'+label+'</div>' +
-      '<div class="stat-value" style="color:'+color+';font-size:18px">'+value+'</div>' +
+      '<div class="stat-value" style="color:'+color+';font-size:18px">'+value+(deltaHtml||'')+'</div>' +
       '<div class="stat-sub">'+sub+'</div></div>';
   }
   var kpi = '';
-  kpi += tile('Spend',       fmtINR(t.budget),  kws.length+' keywords', 'var(--accent)');
-  kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',      'var(--green)');
-  kpi += tile('RoAS',        (t.roas||0).toFixed(2)+'x', 'sales / spend','var(--purple)');
-  kpi += tile('Impressions', fmtNum(t.impr),    '',                     'var(--text)');
-  kpi += tile('ATC',         fmtNum(t.atc),     'add-to-carts',         'var(--text)');
-  kpi += tile('Qty',         fmtNum(t.qty),     'units',                'var(--text)');
-  kpi += tile('CPA',         fmtINR(t.cpa),     'cost per ATC',         'var(--orange)');
+  kpi += tile('Spend',       fmtINR(t.budget),  kws.length+' keywords', 'var(--accent)', deltaStr(t.budget, pt.budget));
+  kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',      'var(--green)',  deltaStr(t.sales, pt.sales));
+  kpi += tile('RoAS',        (t.roas||0).toFixed(2)+'x', 'sales / spend','var(--purple)', hasPrev && pt.roas > 0 ? deltaStr(t.roas, pt.roas) : '');
+  kpi += tile('Impressions', fmtNum(t.impr),    '',                     'var(--text)',   '');
+  kpi += tile('ATC',         fmtNum(t.atc),     'add-to-carts',         'var(--text)',   deltaStr(t.atc, pt.atc));
+  kpi += tile('Qty',         fmtNum(t.qty),     'units',                'var(--text)',   '');
+  kpi += tile('CPA',         fmtINR(t.cpa),     'cost per ATC',         'var(--orange)', '');
   document.getElementById('kw-kpis').innerHTML = kpi;
 
   // Sort
@@ -5569,47 +5720,27 @@ function renderKeywords() {
   document.getElementById('kw-count').textContent =
     kws.length + ' keyword' + (kws.length === 1 ? '' : 's');
 
-  // Table body — show top 500, more available via search/CSV
-  // Build cid → campaign map for product lookup
-  var _kwCampByCid = {};
-  (D.ads.campaigns || []).forEach(function(c){ _kwCampByCid[c.cid] = c; });
+  // Render top movers + waste
+  renderKwIntel(kws, hasPrev);
 
+  // Trend chart
+  renderKwTrend(kws, win);
+
+  // Table body — show top 500
   var body = '';
   var displayKws = kws.slice(0, 500);
   displayKws.forEach(function(k, i){
-    var camp = _kwCampByCid[k.cid] || {};
-    var pids = camp.pids || [];
-    var prodCell = '';
-    if (pids.length === 0) {
-      prodCell = '<span style="color:var(--text3);font-size:10px">—</span>';
-    } else if (pids.length === 1) {
-      var sk = _adsSkuLookup(pids[0]);
-      if (sk) {
-        var nm = sk.clean_name || sk.name || ('pid '+pids[0]);
-        var cat = sk.m_category || '';
-        prodCell = '<div style="font-size:11px">'+escapeHtml(nm)+'</div>' +
-                   (cat ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(cat)+'</div>' : '');
-      } else {
-        prodCell = '<span style="color:var(--text3);font-size:10px">pid '+pids[0]+'</span>';
-      }
-    } else {
-      var sk0 = _adsSkuLookup(pids[0]);
-      var name0 = sk0 ? (sk0.clean_name || sk0.name) : ('pid '+pids[0]);
-      var cats = {};
-      pids.forEach(function(pid){
-        var sk = _adsSkuLookup(pid);
-        if (sk && sk.m_category) cats[sk.m_category] = true;
-      });
-      var catList = Object.keys(cats).join(', ');
-      prodCell = '<div style="font-size:11px">'+escapeHtml(name0||'?')+
-                 ' <span style="color:var(--accent);font-size:10px">+'+(pids.length-1)+'</span></div>' +
-                 (catList ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(catList)+'</div>' : '');
+    function deltaCell(curV, prevV, isRoas) {
+      if (!hasPrev || prevV == null || prevV === 0) return '<td style="text-align:right;color:var(--text3)">—</td>';
+      var pct = ((curV - prevV) / prevV * 100);
+      var color = pct > 0 ? 'var(--green)' : pct < 0 ? 'var(--red)' : 'var(--text3)';
+      return '<td style="text-align:right;color:'+color+'" class="mono">'+(pct >= 0 ? '+' : '')+pct.toFixed(0)+'%</td>';
     }
-    body += '<tr>' +
+    body += '<tr style="cursor:pointer" onclick="toggleKwDrilldown('+k.kid+', this)" data-kid="'+k.kid+'">' +
+      '<td><span class="kw-toggle-arrow" style="display:inline-block;color:var(--accent);font-size:12px;transition:transform 0.15s">▸</span></td>' +
       '<td>'+(i+1)+'</td>' +
       '<td><span class="tag '+brandTagClass(k.brand)+'">'+brandShort(k.brand)+'</span></td>' +
       '<td><div style="font-size:11px">'+escapeHtml(k.campaign_name||'')+'</div></td>' +
-      '<td>'+prodCell+'</td>' +
       '<td><span style="font-weight:500">'+escapeHtml(k.keyword||'')+'</span></td>' +
       '<td><span style="color:var(--text3);font-size:10px">'+(k.match_type||'NA')+'</span></td>' +
       '<td style="text-align:right">'+fmtINR(k.budget)+'</td>' +
@@ -5621,89 +5752,287 @@ function renderKeywords() {
       '<td style="text-align:right">'+fmtNum(k.qty)+'</td>' +
       '<td style="text-align:right">'+fmtNum(k.impr)+'</td>' +
       '<td style="text-align:right">'+(k.cpa > 0 ? fmtINR(k.cpa) : '—')+'</td>' +
+      deltaCell(k.budget, k.prev_budget) +
+      deltaCell(k.roas, k.prev_roas, true) +
     '</tr>';
   });
   if (kws.length > 500) {
-    body += '<tr><td colspan="15" style="text-align:center;color:var(--text3);padding:12px;font-size:11px">' +
-      'Showing top 500 of '+kws.length+'. Use search or download CSV for full list.</td></tr>';
+    body += '<tr><td colspan="17" style="text-align:center;color:var(--text3);padding:12px;font-size:11px">' +
+      'Showing top 500 of '+kws.length+'. Use search/filter or download CSV for full list.</td></tr>';
   }
   if (kws.length === 0) {
-    body = '<tr><td colspan="15" style="text-align:center;color:var(--text3);padding:20px">No keywords match the current filter.</td></tr>';
+    body = '<tr><td colspan="17" style="text-align:center;color:var(--text3);padding:20px">No keywords match the current filter.</td></tr>';
   }
   document.getElementById('kw-body').innerHTML = body;
 }
+
+// Top movers + Wasted spend cards
+function renderKwIntel(kws, hasPrev) {
+  // Top Movers: largest absolute change in spend (need previous window)
+  var moversBody = document.getElementById('kw-movers-body');
+  var wasteBody = document.getElementById('kw-waste-body');
+  if (!moversBody || !wasteBody) return;
+
+  if (!hasPrev) {
+    moversBody.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">Set Compare to see movers</div>';
+    document.getElementById('kw-movers-count').textContent = '';
+  } else {
+    var movers = kws.filter(function(k){ return k.prev_budget != null && (k.prev_budget > 0 || k.budget > 0); })
+      .map(function(k){
+        var prev = k.prev_budget || 0;
+        var pct = prev > 0 ? ((k.budget - prev) / prev * 100) : (k.budget > 0 ? 9999 : 0);
+        return Object.assign({}, k, {spend_change_pct: pct, spend_change_abs: k.budget - prev});
+      })
+      .filter(function(k){ return Math.abs(k.spend_change_pct) >= 50 && k.spend_change_pct < 9000 && (k.budget >= 1000 || (k.prev_budget||0) >= 1000); })
+      .sort(function(a,b){ return Math.abs(b.spend_change_abs) - Math.abs(a.spend_change_abs); })
+      .slice(0, 10);
+    document.getElementById('kw-movers-count').textContent = movers.length + ' kw';
+    var html = '';
+    movers.forEach(function(m){
+      var dir = m.spend_change_pct > 0 ? 'up' : 'down';
+      var color = m.spend_change_pct > 0 ? 'var(--green)' : 'var(--red)';
+      var arrow = m.spend_change_pct > 0 ? '↑' : '↓';
+      html += '<div style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;display:flex;align-items:center;gap:8px">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(m.keyword)+'</div>' +
+          '<div style="color:var(--text3);font-size:10px">'+brandShort(m.brand)+' · '+(m.match_type||'NA')+'</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="color:'+color+';font-weight:600">'+arrow+' '+(m.spend_change_pct >= 0 ? '+' : '')+m.spend_change_pct.toFixed(0)+'%</div>' +
+          '<div style="color:var(--text3);font-size:10px">'+fmtINR(m.prev_budget||0)+' → '+fmtINR(m.budget)+'</div>' +
+        '</div>' +
+        '</div>';
+    });
+    moversBody.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No major movers</div>';
+  }
+
+  // Wasted Spend: budget > ₹5000 in window, sales = 0
+  var waste = kws.filter(function(k){ return k.budget >= 5000 && k.sales === 0; })
+    .sort(function(a,b){ return b.budget - a.budget; })
+    .slice(0, 15);
+  document.getElementById('kw-waste-count').textContent = waste.length + ' kw · ' + fmtINR(waste.reduce(function(a,k){ return a + k.budget; }, 0));
+  var wHtml = '';
+  waste.forEach(function(k){
+    wHtml += '<div style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;display:flex;align-items:center;gap:8px">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(k.keyword)+'</div>' +
+        '<div style="color:var(--text3);font-size:10px">'+brandShort(k.brand)+' · '+(k.match_type||'NA')+' · '+escapeHtml(k.campaign_name||'')+'</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div style="color:var(--red);font-weight:600">'+fmtINR(k.budget)+'</div>' +
+        '<div style="color:var(--text3);font-size:10px">'+fmtNum(k.atc)+' atc · '+fmtNum(k.impr)+' impr</div>' +
+      '</div>' +
+      '</div>';
+  });
+  wasteBody.innerHTML = wHtml || '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No wasted spend (≥₹5k with zero sales) 🎉</div>';
+}
+
+// Top 20 keywords trend chart
+function setKwTrendMetric(metric, btn) {
+  H.keywords.trendMetric = metric;
+  document.querySelectorAll('#page-keywords .filters .fbtn, [id^="kw-trend-metric-"]').forEach(function(b){});
+  document.querySelectorAll('[id^="kw-trend-metric-"]').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  // Re-render keywords (cheap — just redraw chart)
+  renderKeywords();
+}
+
+function renderKwTrend(windowKws, win) {
+  destroyChart('ch-kw-trend');
+  var canvas = document.getElementById('ch-kw-trend');
+  if (!canvas || !D || !D.ads) return;
+  var daily = D.ads.keywords_daily || {};
+  if (!Object.keys(daily).length) {
+    canvas.parentElement.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:40px">⚠️ Keyword daily data not available. Re-run BK_Daily_Alert.py with the patched BK_Ads_Processor.py to enable this chart.</div>';
+    return;
+  }
+  var meta = document.getElementById('kw-trend-meta');
+  if (meta) meta.textContent = '· ' + win.label;
+
+  // Top 20 keywords by current-window spend
+  var top = windowKws.slice(0, 20);
+  if (!top.length) {
+    if (charts['ch-kw-trend']) charts['ch-kw-trend'].destroy();
+    return;
+  }
+
+  // Determine x-axis dates: union of dates in window across these top kws
+  var dateSet = {};
+  top.forEach(function(k){
+    var rows = daily[String(k.kid)] || [];
+    rows.forEach(function(r){ if (_kwDateInWindow(r.date, win)) dateSet[r.date] = true; });
+  });
+  var dates = Object.keys(dateSet).sort();
+  if (dates.length < 2) {
+    canvas.parentElement.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:40px">Need at least 2 days in window to show trend</div>';
+    return;
+  }
+
+  var metric = H.keywords.trendMetric || 'budget';
+  var palette = ['#3b82f6','#3ecf8e','#f59e0b','#a855f7','#ec4899','#06b6d4','#84cc16','#f97316',
+                 '#0ea5e9','#10b981','#eab308','#8b5cf6','#f43f5e','#14b8a6','#6366f1','#dc2626',
+                 '#22c55e','#facc15','#a78bfa','#fb7185'];
+
+  var datasets = top.map(function(k, idx){
+    var rows = daily[String(k.kid)] || [];
+    var byDate = {};
+    rows.forEach(function(r){ if (_kwDateInWindow(r.date, win)) byDate[r.date] = r; });
+    var data = dates.map(function(d){
+      var r = byDate[d]; if (!r) return null;
+      if (metric === 'budget')      return (r.budget || 0) / 1000;
+      if (metric === 'sales')       return (r.sales  || 0) / 1000;
+      if (metric === 'roas')        return r.roas || 0;
+      if (metric === 'impr')        return r.impr || 0;
+      if (metric === 'atc')         return r.atc || 0;
+      return 0;
+    });
+    return {
+      label: (k.keyword || '?').slice(0, 30) + ' [' + brandShort(k.brand) + ']',
+      data: data,
+      borderColor: palette[idx % palette.length],
+      backgroundColor: palette[idx % palette.length] + '22',
+      tension: 0.3, fill: false, pointRadius: 0, borderWidth: 1.5,
+      spanGaps: true,
+    };
+  });
+
+  var unit = (metric === 'budget' || metric === 'sales') ? '₹k' :
+             metric === 'roas' ? 'x' : '';
+  charts['ch-kw-trend'] = new Chart(canvas, {
+    type:'line',
+    data:{labels:dates, datasets:datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:'#8892a4',font:{size:9},boxWidth:8}, position:'right'},
+        tooltip:{
+          callbacks:{
+            label: function(ctx){
+              var v = ctx.parsed.y;
+              if (metric === 'budget' || metric === 'sales') return ctx.dataset.label + ': ₹' + (v*1000).toLocaleString('en-IN');
+              if (metric === 'roas') return ctx.dataset.label + ': ' + v.toFixed(2) + 'x';
+              return ctx.dataset.label + ': ' + Math.round(v).toLocaleString('en-IN');
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:9},maxTicksLimit:10}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10},
+            callback:function(v){
+              if (metric === 'budget' || metric === 'sales') return '₹'+(v).toFixed(0)+'k';
+              if (metric === 'roas') return v.toFixed(1)+'x';
+              return v.toLocaleString('en-IN');
+            }}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+// Click a row → expand inline showing daily trend
+function toggleKwDrilldown(kid, rowEl) {
+  if (!D || !D.ads || !rowEl) return;
+  var next = rowEl.nextElementSibling;
+  if (next && next.classList && next.classList.contains('kw-drill-row')) {
+    next.parentNode.removeChild(next);
+    var arr = rowEl.querySelector('.kw-toggle-arrow'); if (arr) arr.style.transform = '';
+    return;
+  }
+  var tbody = rowEl.parentNode;
+  if (tbody) {
+    Array.prototype.slice.call(tbody.querySelectorAll('.kw-drill-row')).forEach(function(r){
+      var pr = r.previousElementSibling;
+      if (pr) { var arr2 = pr.querySelector('.kw-toggle-arrow'); if (arr2) arr2.style.transform = ''; }
+      r.parentNode.removeChild(r);
+    });
+  }
+  var win = _kwResolveWindow();
+  var rows = (D.ads.keywords_daily || {})[String(kid)] || [];
+  var inWin = rows.filter(function(r){ return _kwDateInWindow(r.date, win); });
+  // Find the keyword meta
+  var k = (D.ads.keywords || []).find(function(x){ return (x.kid != null ? x.kid : -1) === kid; }) || {};
+  // Build sparkline bars (spend) and overlay (sales)
+  if (!inWin.length) {
+    var dr = document.createElement('tr'); dr.className = 'kw-drill-row';
+    dr.innerHTML = '<td colspan="'+rowEl.cells.length+'" style="background:var(--surf2);padding:14px 18px;color:var(--text3);font-size:11px;text-align:center">No daily data in current window</td>';
+    rowEl.parentNode.insertBefore(dr, rowEl.nextSibling);
+    return;
+  }
+  var maxBudget = Math.max.apply(null, inWin.map(function(r){return r.budget||0;}));
+  var bars = inWin.map(function(r){
+    var h = maxBudget > 0 ? Math.max(2, (r.budget||0) / maxBudget * 60) : 2;
+    var color = r.budget > 0 ? '#3b82f6' : 'transparent';
+    return '<div title="'+r.date+': spend '+fmtINR(r.budget||0)+', sales '+fmtINR(r.sales||0)+', roas '+(r.roas||0).toFixed(2)+'x" '+
+           'style="flex:1;background:'+color+';height:'+h+'px;min-height:2px;border-radius:2px 2px 0 0;margin:0 1px"></div>';
+  }).join('');
+  var totalSpend = inWin.reduce(function(a,b){ return a + (b.budget||0); }, 0);
+  var totalSales = inWin.reduce(function(a,b){ return a + (b.sales||0); }, 0);
+  var totalImpr  = inWin.reduce(function(a,b){ return a + (b.impr||0); }, 0);
+  var totalAtc   = inWin.reduce(function(a,b){ return a + (b.atc||0); }, 0);
+  var roas = totalSpend > 0 ? totalSales / totalSpend : 0;
+  var info =
+    _drillCell('Keyword', '<strong>'+escapeHtml(k.keyword||'')+'</strong> <span class="tag '+brandTagClass(k.brand)+'">'+brandShort(k.brand)+'</span>') +
+    _drillCell('Campaign', escapeHtml(k.campaign_name||'')) +
+    _drillCell('Match Type', k.match_type || 'NA') +
+    _drillCell('Window Spend', fmtINR(totalSpend)) +
+    _drillCell('Window Sales', fmtINR(totalSales) + ' (' + roas.toFixed(2) + 'x)') +
+    _drillCell('Active Days', inWin.length + ' days');
+  var dr = document.createElement('tr');
+  dr.className = 'kw-drill-row';
+  dr.innerHTML = '<td colspan="'+rowEl.cells.length+'" style="background:var(--surf2);padding:14px 18px">' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;font-size:11px;margin-bottom:14px">'+info+'</div>' +
+    '<div style="font-weight:600;font-size:11px;margin-bottom:6px">Daily Spend (' + inWin.length + ' days)</div>' +
+    '<div style="display:flex;align-items:flex-end;height:64px;margin-bottom:8px">'+bars+'</div>' +
+    '<div style="font-size:10px;color:var(--text3)">Hover bars to see exact values per day</div>' +
+    '</td>';
+  rowEl.parentNode.insertBefore(dr, rowEl.nextSibling);
+  var arr = rowEl.querySelector('.kw-toggle-arrow');
+  if (arr) arr.style.transform = 'rotate(90deg)';
+}
+
+function setKwTime(mode) {
+  H.keywords.mode = mode;
+  if (mode === 'day')   H.keywords.day   = document.getElementById('kw-day-sel').value;
+  if (mode === 'month') H.keywords.month = document.getElementById('kw-month-sel').value;
+  if (mode === 'year')  H.keywords.year  = document.getElementById('kw-year-sel').value;
+  if (mode === 'custom') {
+    H.keywords.from = document.getElementById('kw-from-sel').value;
+    H.keywords.to   = document.getElementById('kw-to-sel').value;
+  }
+  renderKeywords();
+}
+function clearKwTime() {
+  H.keywords.mode = 'all';
+  H.keywords.day = ''; H.keywords.month = ''; H.keywords.year = '';
+  H.keywords.from = ''; H.keywords.to = '';
+  ['kw-day-sel','kw-month-sel','kw-year-sel','kw-from-sel','kw-to-sel'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  renderKeywords();
+}
+
 function exportKeywordsCsv() {
   if (!D || !D.ads) return;
   var brand = H.keywords.brand, match = H.keywords.match;
   var category = H.keywords.category;
   var search = ((document.getElementById('kw-search')||{}).value||'').toLowerCase();
-  var _kwCampMap2 = {};
-  (D.ads.campaigns || []).forEach(function(c){ _kwCampMap2[c.cid] = c; });
-  var kws = (D.ads.keywords||[]).filter(function(k){
-    if (brand !== 'ALL' && k.brand !== brand) return false;
-    if (match !== 'ALL') {
-      var mt = (k.match_type || '').toUpperCase();
-      if (match === 'NA') { if (mt && mt !== 'NA') return false; }
-      else if (mt !== match) return false;
-    }
-    if (category) {
-      var camp = _kwCampMap2[k.cid];
-      if (!camp) return false;
-      var pids = camp.pids || [];
-      var matchCat = false;
-      for (var ki=0; ki<pids.length; ki++) {
-        var sk = _adsSkuLookup(pids[ki]);
-        if (sk && (sk.m_category||'') === category) { matchCat = true; break; }
-      }
-      if (!matchCat) return false;
-    }
-    if (search) {
-      var hay = ((k.keyword||'')+' '+(k.campaign_name||'')+' '+(k.match_type||'')+' '+(k.brand||'')).toLowerCase();
-      if (hay.indexOf(search) < 0) {
-        var found = false;
-        var camp = null;
-        if (D.ads.campaigns) {
-          for (var ci=0; ci<D.ads.campaigns.length; ci++) {
-            if (D.ads.campaigns[ci].cid === k.cid) { camp = D.ads.campaigns[ci]; break; }
-          }
-        }
-        if (camp && camp.pids) {
-          for (var pi=0; pi<camp.pids.length; pi++) {
-            var sk = _adsSkuLookup(camp.pids[pi]);
-            if (!sk) continue;
-            var skHay = ((sk.clean_name||'')+' '+(sk.name||'')+' '+(sk.m_category||'')+
-                         ' '+(sk.category_l1||'')+' '+(sk.category_l2||'')).toLowerCase();
-            if (skHay.indexOf(search) >= 0) { found = true; break; }
-          }
-        }
-        if (!found) return false;
-      }
-    }
-    return true;
-  });
-  var campByCid = {};
-  (D.ads.campaigns || []).forEach(function(c){ campByCid[c.cid] = c; });
-  var headers = ['Brand','Campaign','Campaign ID','Products','Categories','Keyword','Match','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','CPA'];
+  var win = _kwResolveWindow();
+  var prevWin = resolvePrev(win, 'keywords');
+  var kws = _kwBuildWindowed(brand, match, category, search, win, prevWin);
+  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Window','Spend','Sales','D Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','New Users','CPA',
+                 'Prev Spend','Prev Sales','Prev RoAS','Spend Δ%','RoAS Δ%'];
   var rows = kws.map(function(k){
-    var cpa = k.atc > 0 ? k.budget/k.atc : 0;
-    var camp = campByCid[k.cid] || {};
-    var pids = camp.pids || [];
-    var prodNames = [], cats = {};
-    pids.forEach(function(pid){
-      var sk = _adsSkuLookup(pid);
-      if (sk) {
-        prodNames.push(sk.clean_name || sk.name || ('pid '+pid));
-        if (sk.m_category) cats[sk.m_category] = true;
-      } else {
-        prodNames.push('pid '+pid);
-      }
-    });
-    return [k.brand, k.campaign_name, k.cid,
-            prodNames.join(' | '), Object.keys(cats).join(' | '),
-            k.keyword, k.match_type,
-            k.budget, k.sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr, cpa];
+    var spendDelta = (k.prev_budget != null && k.prev_budget > 0) ? ((k.budget - k.prev_budget)/k.prev_budget*100).toFixed(1) : '';
+    var roasDelta  = (k.prev_roas   != null && k.prev_roas   > 0) ? ((k.roas   - k.prev_roas)  /k.prev_roas  *100).toFixed(1) : '';
+    return [k.brand, k.campaign_name, k.cid, k.keyword, k.match_type, win.label,
+            k.budget, k.sales, k.d_sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr, k.new_users, k.cpa,
+            k.prev_budget != null ? k.prev_budget : '',
+            k.prev_sales  != null ? k.prev_sales  : '',
+            k.prev_roas   != null ? k.prev_roas   : '',
+            spendDelta, roasDelta];
   });
-  _downloadCsv('keywords_all-history.csv', headers, rows);
+  _downloadCsv('keywords_'+win.label.replace(/[^a-z0-9]/gi,'_')+'.csv', headers, rows);
 }
 
 // ═══ CASHFLOW ══════════════════════════════════════════════════════
