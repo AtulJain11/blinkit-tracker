@@ -173,6 +173,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <button class="nav-tab" onclick="showPage('pos',this)">📋 POs</button>
   <button class="nav-tab" onclick="showPage('cities',this)">🌆 Cities</button>
   <button class="nav-tab" onclick="showPage('cashflow',this)">💰 Cashflow</button>
+  <button class="nav-tab" onclick="showPage('deepdive',this)">🔬 Deep Dive</button>
   <div class="nav-right">
     <span class="nav-meta" id="nav-meta">—</span>
     <button class="btn-sm" onclick="location.reload()" title="Refresh">⟲ Refresh</button>
@@ -381,6 +382,48 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
   </div>
 
+  <!-- ═══ GOD-LEVEL SALES INTELLIGENCE ═══════════════════════════ -->
+
+  <!-- Rising Stars / Decliners / Dormant — 3-up grid -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:14px">
+    <div class="card" style="border-left:4px solid var(--green)">
+      <div class="card-hdr">
+        <span class="card-title">🚀 Rising Stars</span>
+        <span class="card-sub" id="sales-rising-count"></span>
+      </div>
+      <div style="max-height:280px;overflow:auto" id="sales-rising-body"></div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--red)">
+      <div class="card-hdr">
+        <span class="card-title">📉 Decliners</span>
+        <span class="card-sub" id="sales-declining-count"></span>
+      </div>
+      <div style="max-height:280px;overflow:auto" id="sales-declining-body"></div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--orange)">
+      <div class="card-hdr">
+        <span class="card-title">💤 Dormant</span>
+        <span class="card-sub" id="sales-dormant-count"></span>
+      </div>
+      <div style="max-height:280px;overflow:auto" id="sales-dormant-body"></div>
+    </div>
+  </div>
+
+  <!-- Day-of-week sales pattern + Daily sales heatmap -->
+  <div class="chart-grid" style="grid-template-columns:1fr 2fr;margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title">📅 Day-of-Week Sales</div>
+      <div style="position:relative;height:280px;padding:10px"><canvas id="ch-sales-dow"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">🗓️ Daily Sales Calendar Heatmap</span>
+        <span class="card-sub">last 16 months</span>
+      </div>
+      <div style="overflow:auto;max-height:340px;padding:10px" id="sales-cal-heatmap"></div>
+    </div>
+  </div>
+
   <!-- SKU table -->
   <div class="card">
     <div class="card-hdr">
@@ -556,6 +599,51 @@ tr:hover td{background:rgba(255,255,255,.02)}
       </div>
     </div>
   </div>
+
+  <!-- ═══ GOD-LEVEL PO INTELLIGENCE ═══════════════════════════════ -->
+
+  <!-- Lead time + DoW + cancellation trend — 3 chart row -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title">⏱️ PO Lead Time</div>
+      <div id="pos-leadtime" style="padding:14px"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📅 PO Day-of-Week Pattern</div>
+      <div style="position:relative;height:240px;padding:10px"><canvas id="ch-pos-dow"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">⚠️ PO Status Trend (90d)</div>
+      <div style="position:relative;height:240px;padding:10px"><canvas id="ch-pos-status-trend"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Surge detection + Vendor concentration -->
+  <div class="chart-grid" style="grid-template-columns:2fr 1fr;margin-top:14px">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">📊 PO Daily Trend with Surge Detection</span>
+        <span class="card-sub">spikes &gt;2× rolling avg highlighted</span>
+      </div>
+      <div style="position:relative;height:280px;padding:14px"><canvas id="ch-pos-surge"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">🏢 Vendor Concentration</span>
+        <span class="card-sub" id="pos-vendor-count"></span>
+      </div>
+      <div style="overflow:auto;max-height:280px" id="pos-vendor-body"></div>
+    </div>
+  </div>
+
+  <!-- Velocity by Facility -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🏬 PO Velocity by Facility (last 30d)</span>
+      <span class="card-sub">POs per week · sorted by activity</span>
+    </div>
+    <div style="overflow:auto;max-height:340px" id="pos-velocity-body"></div>
+  </div>
 </div>
 
 <!-- ═══ STOCK PAGE ═══════════════════════════════════════════════════ -->
@@ -635,6 +723,38 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div style="overflow:auto;max-height:600px">
       <div id="stock-matrix"></div>
     </div>
+  </div>
+
+  <!-- ═══ GOD-LEVEL STOCK INTELLIGENCE ═══════════════════════════ -->
+
+  <!-- OOS Risk + Replenishment Priority -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+    <div class="card" style="border-left:4px solid var(--red)">
+      <div class="card-hdr">
+        <span class="card-title">🚨 OOS Risk · Will run out within 7 days</span>
+        <span class="card-sub" id="stock-risk-count"></span>
+        <button class="btn-sm" style="margin-left:auto" onclick="exportOosRiskCsv()">⬇ CSV</button>
+      </div>
+      <div style="overflow:auto;max-height:400px" id="stock-risk-body"></div>
+    </div>
+    <div class="card" style="border-left:4px solid var(--orange)">
+      <div class="card-hdr">
+        <span class="card-title">⚡ Replenishment Priority</span>
+        <span class="card-sub" id="stock-replen-count"></span>
+        <button class="btn-sm" style="margin-left:auto" onclick="exportReplenPriorityCsv()">⬇ CSV</button>
+      </div>
+      <div style="overflow:auto;max-height:400px" id="stock-replen-body"></div>
+    </div>
+  </div>
+
+  <!-- Coverage gaps -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🗺️ Coverage Gaps</span>
+      <span class="card-sub">selling SKUs with low warehouse coverage</span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportCoverageGapsCsv()">⬇ CSV</button>
+    </div>
+    <div style="overflow:auto;max-height:340px" id="stock-coverage-body"></div>
   </div>
 </div>
 
@@ -884,6 +1004,48 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </table>
     </div>
   </div>
+
+  <!-- ═══ GOD-LEVEL ADS INTELLIGENCE ════════════════════════════════ -->
+
+  <!-- DoW RoAS heatmap + Burn Rate alert + CAC trend -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title">📅 Day-of-Week RoAS</div>
+      <div style="position:relative;height:240px;padding:10px"><canvas id="ch-ads-dow"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">🔥 Burn Rate Alert</div>
+      <div id="ads-burn-body" style="padding:14px"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">👥 CAC Trend</div>
+      <div style="position:relative;height:240px;padding:10px"><canvas id="ch-ads-cac"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Spend Efficiency Curve + Brand Head-to-Head -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title">💎 Spend Efficiency Curve · Daily</div>
+      <div style="position:relative;height:300px;padding:10px"><canvas id="ch-ads-efficiency"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">⚔️ Brand Head-to-Head</span>
+        <span class="card-sub">all-history</span>
+      </div>
+      <div style="overflow:auto;max-height:300px;padding:8px" id="ads-brand-h2h"></div>
+    </div>
+  </div>
+
+  <!-- Campaign Lifecycle -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🗓️ Campaign Lifecycle</span>
+      <span class="card-sub" id="ads-lifecycle-count"></span>
+    </div>
+    <div style="overflow:auto;max-height:400px" id="ads-lifecycle-body"></div>
+  </div>
 </div>
 
 <!-- ═══ KEYWORDS PAGE ════════════════════════════════════════════════ -->
@@ -1042,6 +1204,89 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <tbody id="cf-all-body"></tbody>
     </table>
     </div>
+  </div>
+
+  <!-- ═══ GOD-LEVEL CASHFLOW INTELLIGENCE ═══════════════════════════ -->
+
+  <!-- Cash-In Forecast + Payment Velocity -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title">💰 Cash-In Forecast · Next 60 days</div>
+      <div style="position:relative;height:280px;padding:10px"><canvas id="ch-cf-forecast"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">⚡ Payment Velocity · last 90d</div>
+      <div style="position:relative;height:280px;padding:10px"><canvas id="ch-cf-velocity"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Avg Payment Lag by Facility + Vendor Concentration of Outstanding -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">⏱️ Avg Payment Lag by Facility</span>
+        <span class="card-sub">paid invoices only</span>
+      </div>
+      <div style="overflow:auto;max-height:340px" id="cf-lag-body"></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">🏢 Outstanding by Vendor Legal Entity</span>
+        <span class="card-sub" id="cf-vendor-count"></span>
+      </div>
+      <div style="overflow:auto;max-height:340px" id="cf-vendor-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEEP DIVE PAGE ═══════════════════════════════════════════════ -->
+<div class="page" id="page-deepdive">
+  <div style="margin-bottom:14px;padding:14px 18px;background:linear-gradient(135deg,#1e3a8a,#4338ca);border-radius:8px;color:#fff">
+    <div style="font-size:18px;font-weight:600;margin-bottom:4px">🔬 Cross-Section Analysis</div>
+    <div style="font-size:12px;opacity:0.85">How sales, ads, POs, and stock interact daily — find the true levers</div>
+  </div>
+
+  <!-- Sales vs Ads correlation + Stock Health vs Sales -->
+  <div class="chart-grid" style="grid-template-columns:1fr 1fr">
+    <div class="chart-card">
+      <div class="chart-title">📈 Sales vs Ads Spend · Daily</div>
+      <div style="position:relative;height:320px;padding:10px"><canvas id="ch-dd-sales-ads"></canvas></div>
+      <div style="font-size:10px;color:var(--text3);padding:0 14px 10px" id="dd-sales-ads-stat"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">📊 PO Velocity vs Sales · Daily</div>
+      <div style="position:relative;height:320px;padding:10px"><canvas id="ch-dd-po-sales"></canvas></div>
+      <div style="font-size:10px;color:var(--text3);padding:0 14px 10px" id="dd-po-sales-stat"></div>
+    </div>
+  </div>
+
+  <!-- 7-day rolling: Spend → Sales lag analysis -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">⏳ Ad Spend → Sales Lag Analysis</span>
+      <span class="card-sub">does spend day N drive sales day N+lag?</span>
+    </div>
+    <div style="position:relative;height:240px;padding:14px"><canvas id="ch-dd-lag"></canvas></div>
+    <div style="font-size:11px;color:var(--text3);padding:0 14px 14px" id="dd-lag-insight"></div>
+  </div>
+
+  <!-- Brand performance composite score -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">🏆 Brand Health Scorecard</span>
+      <span class="card-sub">composite metric across sales/ads/inventory</span>
+    </div>
+    <div style="overflow:auto" id="dd-brand-scorecard"></div>
+  </div>
+
+  <!-- Top SKUs by composite "Impact Score" -->
+  <div class="card" style="margin-top:14px">
+    <div class="card-hdr">
+      <span class="card-title">⭐ Top 20 SKUs · Composite Impact Score</span>
+      <span class="card-sub">revenue × velocity × coverage × ad efficiency</span>
+      <button class="btn-sm" style="margin-left:auto" onclick="exportImpactScoreCsv()">⬇ CSV</button>
+    </div>
+    <div style="overflow:auto;max-height:500px" id="dd-impact-body"></div>
   </div>
 </div>
 
@@ -1299,6 +1544,7 @@ function showPage(name, btn) {
   if (btn) btn.classList.add('active');
   // Lazy-render tabs that don't auto-refresh on data load
   if (name === 'cashflow') renderCashflow();
+  if (name === 'deepdive') renderDeepDive();
 }
 
 // ═══ FILTER HANDLERS ═══════════════════════════════════════════════
@@ -2266,6 +2512,267 @@ function renderSales() {
       '</tr>';
   });
   document.getElementById('sales-sku-body').innerHTML = rowsHtml || '<tr><td colspan="19" style="text-align:center;padding:30px;color:var(--text3)">No SKUs match these filters</td></tr>';
+
+  // ── God-level: Rising Stars / Decliners / Dormant ─────────────────
+  renderSalesIntel(brand, category);
+  // ── God-level: Day-of-week + heatmap ──────────────────────────────
+  renderSalesDoW();
+  renderSalesCalendarHeatmap();
+}
+
+// Compute per-SKU rolling weekly sales for "rising stars" / "decliners" / "dormant"
+function _skuWeeklyDelta() {
+  if (!D || !D.historical || !D.historical.sales_sku_daily) return [];
+  var rows = D.historical.sales_sku_daily;
+  // Last date in data
+  var maxDate = '';
+  rows.forEach(function(r){ if (r.date > maxDate) maxDate = r.date; });
+  if (!maxDate) return [];
+  // Compute boundaries
+  function shift(date, days) {
+    var d = new Date(date); d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+  var d0  = shift(maxDate, -27);  // 28 days back (start of "prior 14d")
+  var d14 = shift(maxDate, -13);  // 14 days back (start of "last 14d")
+  // Build per-SKU sums
+  var bySku = {};
+  rows.forEach(function(r){
+    if (r.date < d0) return;
+    var sk = bySku[r.item_id] || (bySku[r.item_id] = {prior:{u:0,r:0}, recent:{u:0,r:0}, lastSale:''});
+    if (r.date >= d14) {
+      sk.recent.u += r.units || 0;
+      sk.recent.r += r.realized_rev || 0;
+    } else {
+      sk.prior.u += r.units || 0;
+      sk.prior.r += r.realized_rev || 0;
+    }
+    if (r.date > sk.lastSale) sk.lastSale = r.date;
+  });
+  // Also compute "first sale date" — needed for new SKUs
+  var firstSale = {};
+  rows.forEach(function(r){
+    if (!firstSale[r.item_id] || r.date < firstSale[r.item_id]) firstSale[r.item_id] = r.date;
+  });
+  // Build output array
+  var out = [];
+  Object.keys(bySku).forEach(function(pid){
+    var sk = bySku[pid];
+    var growthU = sk.prior.u > 0 ? ((sk.recent.u - sk.prior.u) / sk.prior.u * 100) : (sk.recent.u > 0 ? 9999 : 0);
+    var growthR = sk.prior.r > 0 ? ((sk.recent.r - sk.prior.r) / sk.prior.r * 100) : (sk.recent.r > 0 ? 9999 : 0);
+    out.push({
+      item_id: parseInt(pid, 10),
+      prior_units: sk.prior.u,
+      prior_rev: sk.prior.r,
+      recent_units: sk.recent.u,
+      recent_rev: sk.recent.r,
+      growth_units_pct: growthU,
+      growth_rev_pct: growthR,
+      last_sale: sk.lastSale,
+      first_sale: firstSale[pid],
+      max_date: maxDate,
+    });
+  });
+  return out;
+}
+
+function renderSalesIntel(brandFilter, categoryFilter) {
+  var deltas = _skuWeeklyDelta();
+  if (!deltas.length) {
+    document.getElementById('sales-rising-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No daily SKU data available</div>';
+    document.getElementById('sales-declining-body').innerHTML = '';
+    document.getElementById('sales-dormant-body').innerHTML = '';
+    return;
+  }
+
+  // Apply brand + category filter
+  function passFilter(item_id) {
+    var sk = (D.skus || []).find(function(x){ return x.item_id === item_id; });
+    if (!sk) return false;
+    if (brandFilter && brandFilter !== 'ALL' && sk.brand !== brandFilter) return false;
+    if (categoryFilter) {
+      var cat = (getCatItem(item_id) || {}).m_category || '';
+      if (cat !== categoryFilter) return false;
+    }
+    return true;
+  }
+  var maxDate = deltas[0].max_date;
+
+  // Rising = recent_units >= 30 (filter noise) AND growth >= 50%
+  var rising = deltas
+    .filter(function(d){ return passFilter(d.item_id) && d.recent_units >= 30 && d.growth_units_pct >= 50 && d.growth_units_pct < 9000; })
+    .sort(function(a,b){ return b.growth_rev_pct - a.growth_rev_pct; })
+    .slice(0, 10);
+
+  // Decliners = prior_units >= 30 AND growth <= -30%
+  var declining = deltas
+    .filter(function(d){ return passFilter(d.item_id) && d.prior_units >= 30 && d.growth_units_pct <= -30; })
+    .sort(function(a,b){ return a.growth_rev_pct - b.growth_rev_pct; })
+    .slice(0, 10);
+
+  // Dormant = had >= 50 prior_units, ZERO recent_units (truly silent)
+  var dormant = deltas
+    .filter(function(d){ return passFilter(d.item_id) && d.recent_units === 0 && d.prior_units >= 30; })
+    .sort(function(a,b){ return b.prior_rev - a.prior_rev; })
+    .slice(0, 10);
+
+  function intelRow(d, mode) {
+    var sk = (D.skus || []).find(function(x){ return x.item_id === d.item_id; }) || {};
+    var name = displayName(getCatItem(d.item_id) || sk).slice(0, 36);
+    var brand = sk.brand || '—';
+    if (mode === 'rising') {
+      return '<div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(name)+'</div>' +
+          '<div style="color:var(--text3);font-size:10px">'+brandShort(brand)+' · '+d.recent_units+' u / '+fmtINR(d.recent_rev)+'</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="color:var(--green);font-weight:600">+'+d.growth_units_pct.toFixed(0)+'%</div>' +
+          '<div style="color:var(--text3);font-size:9px">vs prior 2w</div>' +
+        '</div>' +
+        '</div>';
+    } else if (mode === 'declining') {
+      return '<div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(name)+'</div>' +
+          '<div style="color:var(--text3);font-size:10px">'+brandShort(brand)+' · '+d.recent_units+' u (was '+d.prior_units+')</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="color:var(--red);font-weight:600">'+d.growth_units_pct.toFixed(0)+'%</div>' +
+          '<div style="color:var(--text3);font-size:9px">vs prior 2w</div>' +
+        '</div>' +
+        '</div>';
+    } else { // dormant
+      var daysSilent = d.last_sale ? Math.floor((new Date(d.max_date) - new Date(d.last_sale))/86400000) : 14;
+      return '<div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(name)+'</div>' +
+          '<div style="color:var(--text3);font-size:10px">'+brandShort(brand)+' · was '+d.prior_units+' u · '+fmtINR(d.prior_rev)+'</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="color:var(--orange);font-weight:600">'+daysSilent+'d silent</div>' +
+          '<div style="color:var(--text3);font-size:9px">last: '+(d.last_sale ? fmtDate(d.last_sale) : '—')+'</div>' +
+        '</div>' +
+        '</div>';
+    }
+  }
+
+  document.getElementById('sales-rising-count').textContent = rising.length + ' SKUs';
+  document.getElementById('sales-declining-count').textContent = declining.length + ' SKUs';
+  document.getElementById('sales-dormant-count').textContent = dormant.length + ' SKUs';
+
+  document.getElementById('sales-rising-body').innerHTML =
+    rising.map(function(d){ return intelRow(d, 'rising'); }).join('') ||
+    '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No rising stars in last 2 weeks</div>';
+
+  document.getElementById('sales-declining-body').innerHTML =
+    declining.map(function(d){ return intelRow(d, 'declining'); }).join('') ||
+    '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No decliners — healthy! 🎉</div>';
+
+  document.getElementById('sales-dormant-body').innerHTML =
+    dormant.map(function(d){ return intelRow(d, 'dormant'); }).join('') ||
+    '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No dormant SKUs</div>';
+}
+
+function renderSalesDoW() {
+  if (!D || !D.historical || !D.historical.sales_daily) return;
+  var dowSums = [0,0,0,0,0,0,0]; // Sun..Sat
+  var dowCounts = [0,0,0,0,0,0,0];
+  D.historical.sales_daily.forEach(function(r){
+    var dow = new Date(r.date).getDay();
+    dowSums[dow] += r.realized_rev || 0;
+    dowCounts[dow]++;
+  });
+  var avg = dowSums.map(function(s, i){ return dowCounts[i] > 0 ? s / dowCounts[i] : 0; });
+  // Reorder Mon..Sun (Indian week starts Monday)
+  var labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var values = [avg[1], avg[2], avg[3], avg[4], avg[5], avg[6], avg[0]];
+  destroyChart('ch-sales-dow');
+  var canvas = document.getElementById('ch-sales-dow');
+  if (!canvas) return;
+  // Color: best day green, worst day red
+  var maxV = Math.max.apply(null, values);
+  var minV = Math.min.apply(null, values);
+  var colors = values.map(function(v){
+    if (v === maxV) return '#3ecf8e';
+    if (v === minV) return '#e53e3e';
+    return '#3b82f6';
+  });
+  charts['ch-sales-dow'] = new Chart(canvas, {
+    type:'bar',
+    data:{labels:labels, datasets:[{label:'Avg ₹/day', data:values.map(function(v){ return v/1e5; }), backgroundColor:colors, borderRadius:4}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+               tooltip:{callbacks:{label:function(ctx){ return '₹'+ctx.parsed.y.toFixed(2)+'L avg'; }}}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:11}}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10},callback:function(v){return '₹'+v.toFixed(0)+'L';}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderSalesCalendarHeatmap() {
+  if (!D || !D.historical || !D.historical.sales_daily) return;
+  var rows = D.historical.sales_daily;
+  // Build map: date -> revenue
+  var byDate = {};
+  var maxRev = 0;
+  rows.forEach(function(r){
+    byDate[r.date] = r.realized_rev || 0;
+    if (r.realized_rev > maxRev) maxRev = r.realized_rev;
+  });
+  if (!rows.length) return;
+
+  // Build month columns for last 16 months, each as a 7-row grid
+  var dates = rows.map(function(r){ return r.date; }).sort();
+  var firstDate = new Date(dates[0]);
+  var lastDate = new Date(dates[dates.length-1]);
+  // Iterate months
+  var months = [];
+  var cur = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  while (cur <= lastDate) {
+    months.push({y: cur.getFullYear(), m: cur.getMonth()});
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  function colorFor(rev) {
+    if (!rev) return 'rgba(140,150,170,0.06)';
+    var pct = rev / maxRev;
+    if (pct < 0.20) return 'rgba(62,207,142,0.15)';
+    if (pct < 0.40) return 'rgba(62,207,142,0.30)';
+    if (pct < 0.60) return 'rgba(62,207,142,0.50)';
+    if (pct < 0.80) return 'rgba(62,207,142,0.70)';
+    return 'rgba(62,207,142,0.95)';
+  }
+
+  // Build HTML — months as columns, each column is a vertical mini-calendar (28-31 cells)
+  var html = '<div style="display:flex;gap:6px;font-size:10px">';
+  months.forEach(function(mo){
+    var monthLabel = new Date(mo.y, mo.m, 1).toLocaleString('en', {month:'short', year:'2-digit'});
+    var daysInMonth = new Date(mo.y, mo.m + 1, 0).getDate();
+    var cells = '';
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dateStr = mo.y + '-' + String(mo.m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      var rev = byDate[dateStr] || 0;
+      var bg = colorFor(rev);
+      var title = dateStr + ' · ' + (rev > 0 ? fmtINR(rev) : 'no data');
+      cells += '<div title="'+title+'" style="width:14px;height:14px;background:'+bg+';border-radius:2px;margin:1px 0"></div>';
+    }
+    html += '<div style="display:flex;flex-direction:column;align-items:center">' +
+      '<div style="color:var(--text3);font-size:9px;margin-bottom:4px;writing-mode:horizontal-tb">'+monthLabel+'</div>' +
+      cells +
+      '</div>';
+  });
+  html += '</div>';
+  html += '<div style="margin-top:10px;font-size:10px;color:var(--text3)">' +
+    'Daily realized revenue · ' +
+    '<span style="display:inline-block;width:10px;height:10px;background:rgba(62,207,142,0.15);margin:0 3px"></span>low ' +
+    '<span style="display:inline-block;width:10px;height:10px;background:rgba(62,207,142,0.50);margin:0 3px"></span>mid ' +
+    '<span style="display:inline-block;width:10px;height:10px;background:rgba(62,207,142,0.95);margin:0 3px"></span>high' +
+    '</div>';
+  document.getElementById('sales-cal-heatmap').innerHTML = html;
 }
 
 // ── Per-SKU 16-month history — inline expandable ──────────────────
@@ -2317,6 +2824,29 @@ function toggleSkuHistory(itemId, rowEl) {
   var sk = (D.skus || []).find(function(x){ return x.item_id === itemId; });
   var cat = getCatItem(itemId) || {};
   var info = '';
+
+  // Compute velocity stats from sales_sku_daily
+  var sd = (D.historical && D.historical.sales_sku_daily) || [];
+  var skuDailyRows = [];
+  sd.forEach(function(r){ if (r.item_id === itemId) skuDailyRows.push(r); });
+  skuDailyRows.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var firstSaleDate = skuDailyRows.length ? skuDailyRows[0].date : '';
+  var lastSaleDate  = skuDailyRows.length ? skuDailyRows[skuDailyRows.length-1].date : '';
+  // Last 7d / prior 7d
+  var maxD = '';
+  sd.forEach(function(r){ if (r.date > maxD) maxD = r.date; });
+  function offsetDate(s, n){ var d=new Date(s); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+  var d_7  = maxD ? offsetDate(maxD, -6)  : '';
+  var d_14 = maxD ? offsetDate(maxD, -13) : '';
+  var u7 = 0, r7 = 0, u14 = 0, r14 = 0;
+  skuDailyRows.forEach(function(r){
+    if (r.date >= d_7) { u7 += r.units||0; r7 += r.realized_rev||0; }
+    else if (r.date >= d_14) { u14 += r.units||0; r14 += r.realized_rev||0; }
+  });
+  var velChange = u14 > 0 ? ((u7 - u14) / u14 * 100) : (u7 > 0 ? 100 : 0);
+  var velColor = velChange > 10 ? 'var(--green)' : velChange < -10 ? 'var(--red)' : 'var(--text)';
+  var velArrow = velChange > 10 ? '↑' : velChange < -10 ? '↓' : '→';
+
   if (sk) {
     info =
       _drillCell('Top City', escapeHtml(sk.top_city||'—') + (sk.top_city_units_30d ? ' <span style="color:var(--text3)">('+fmtNum(sk.top_city_units_30d)+' units)</span>' : '')) +
@@ -2324,7 +2854,23 @@ function toggleSkuHistory(itemId, rowEl) {
       _drillCell('Inventory Total', fmtNum(sk.inventory_total||0)) +
       _drillCell('Warehouses', (sk.warehouses_stocked||0)+' stocked, '+(sk.warehouses_oos||0)+' OOS') +
       _drillCell('PO 30d', (sk.po_count_30d||0)+' POs · '+fmtNum(sk.po_units_30d||0)+' units · '+fmtINR(sk.po_value_30d||0)) +
-      _drillCell('Realized SP / Disc%', fmtINR(sk.realized_sp_avg_30d||0) + ' · ' + fmtPct(sk.realized_discount_avg_30d||0));
+      _drillCell('Realized SP / Disc%', fmtINR(sk.realized_sp_avg_30d||0) + ' · ' + fmtPct(sk.realized_discount_avg_30d||0)) +
+      _drillCell('First Sale', firstSaleDate ? fmtDate(firstSaleDate) + ' <span style="color:var(--text3)">('+Math.floor((new Date(maxD) - new Date(firstSaleDate))/86400000)+'d on platform)</span>' : '—') +
+      _drillCell('Last Sale', lastSaleDate ? fmtDate(lastSaleDate) : '—') +
+      _drillCell('Velocity 7d vs prior 7d',
+        '<span style="color:'+velColor+';font-weight:600">'+velArrow+' ' + fmtNum(u7) + ' u</span>' +
+        ' <span style="color:var(--text3)">vs '+fmtNum(u14)+' u (' + (velChange >= 0 ? '+' : '') + velChange.toFixed(0) + '%)</span>');
+  }
+
+  // Build daily 30d sparkline
+  var sparkBars = '';
+  if (skuDailyRows.length) {
+    var last30 = skuDailyRows.slice(-30);
+    var maxU = Math.max.apply(null, last30.map(function(r){ return r.units||0; }));
+    sparkBars = last30.map(function(r){
+      var h = maxU > 0 ? Math.max(2, (r.units||0) / maxU * 60) : 2;
+      return '<div title="'+r.date+': '+(r.units||0)+' u, '+fmtINR(r.realized_rev)+'" style="flex:1;background:#3ecf8e;height:'+h+'px;min-height:2px;border-radius:2px 2px 0 0;margin:0 1px"></div>';
+    }).join('');
   }
 
   var colspan = rowEl.cells.length;
@@ -2333,6 +2879,8 @@ function toggleSkuHistory(itemId, rowEl) {
   dr.innerHTML =
     '<td colspan="'+colspan+'" style="background:var(--surf2);padding:14px 18px">' +
     (info ? '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;font-size:11px;margin-bottom:14px">'+info+'</div>' : '') +
+    (sparkBars ? '<div style="font-weight:600;font-size:12px;margin-bottom:6px">📊 Last 30 Days · Daily Velocity</div>' +
+      '<div style="display:flex;align-items:flex-end;height:64px;margin-bottom:18px">'+sparkBars+'</div>' : '') +
     '<div style="font-weight:600;font-size:12px;margin-bottom:10px">📅 16-Month Sales History</div>' +
     '<div style="display:flex;align-items:flex-end;gap:6px;height:160px;padding-bottom:18px">' + bars + '</div>' +
     '</td>';
@@ -2567,6 +3115,290 @@ function renderPos() {
   document.getElementById('pos-city-body').innerHTML = aggHtml(cityList) || '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">No data</td></tr>';
   document.getElementById('pos-fac-count').textContent = facList.length + ' facilities';
   document.getElementById('pos-city-count').textContent = cityList.length + ' cities';
+
+  // ── God-level: lead time, surge, DoW, cancellation, vendor, velocity ──
+  renderPosLeadTime(filtered);
+  renderPosDoW(filtered);
+  renderPosStatusTrend(filtered);
+  renderPosSurge();
+  renderPosVendorConcentration(filtered);
+  renderPosVelocityByFacility(filtered);
+}
+
+function _parseDate(s){ if(!s) return null; try { return new Date(s); } catch(e){ return null; } }
+function _diffDays(a, b){ var ms = b - a; return ms >= 0 ? ms/86400000 : NaN; }
+
+function renderPosLeadTime(pos) {
+  // Lead time: order_date → delivery_date (when both present)
+  var leadTimes = [];
+  pos.forEach(function(p){
+    var od = _parseDate(p.order_date), dd = _parseDate(p.delivery_date);
+    if (od && dd) {
+      var d = _diffDays(od, dd);
+      if (!isNaN(d) && d >= 0 && d <= 60) leadTimes.push(d);
+    }
+  });
+  if (!leadTimes.length) {
+    document.getElementById('pos-leadtime').innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:30px">No delivery data yet</div>';
+    return;
+  }
+  leadTimes.sort(function(a,b){ return a-b; });
+  var avg = leadTimes.reduce(function(a,b){return a+b;},0) / leadTimes.length;
+  var mid = leadTimes[Math.floor(leadTimes.length/2)];
+  var minV = leadTimes[0], maxV = leadTimes[leadTimes.length-1];
+
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">' +
+    _drillCell('Avg Days', '<span style="font-size:18px;font-weight:600;color:var(--text)">'+avg.toFixed(1)+' d</span>') +
+    _drillCell('Median', '<span style="font-size:18px;font-weight:600;color:var(--text)">'+mid+' d</span>') +
+    _drillCell('Fastest', '<span style="color:var(--green);font-weight:600">'+minV.toFixed(0)+' d</span>') +
+    _drillCell('Slowest', '<span style="color:var(--red);font-weight:600">'+maxV.toFixed(0)+' d</span>') +
+    '</div>';
+
+  // Mini histogram (0-7d, 8-14d, 15-21d, 22+)
+  var buckets = [0, 0, 0, 0];
+  leadTimes.forEach(function(d){
+    if (d <= 7) buckets[0]++;
+    else if (d <= 14) buckets[1]++;
+    else if (d <= 21) buckets[2]++;
+    else buckets[3]++;
+  });
+  var total = leadTimes.length;
+  var labels = ['0-7d','8-14d','15-21d','22+d'];
+  var colors = ['#3ecf8e','#84cc16','#f5a524','#e53e3e'];
+  html += '<div style="font-size:10px;color:var(--text3);margin-bottom:6px">Distribution ('+total+' POs)</div>';
+  buckets.forEach(function(b, i){
+    var pct = (b / total * 100);
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:10px">' +
+      '<div style="width:50px;color:var(--text3)">'+labels[i]+'</div>' +
+      '<div style="flex:1;background:var(--surf2);height:14px;border-radius:3px;overflow:hidden">' +
+        '<div style="height:100%;width:'+pct.toFixed(1)+'%;background:'+colors[i]+'"></div>' +
+      '</div>' +
+      '<div style="width:50px;text-align:right;color:var(--text2)">'+b+' ('+pct.toFixed(0)+'%)</div>' +
+      '</div>';
+  });
+  document.getElementById('pos-leadtime').innerHTML = html;
+}
+
+function renderPosDoW(pos) {
+  destroyChart('ch-pos-dow');
+  var canvas = document.getElementById('ch-pos-dow');
+  if (!canvas) return;
+  var dowSums = [0,0,0,0,0,0,0];
+  pos.forEach(function(p){
+    var od = _parseDate(p.order_date);
+    if (od) dowSums[od.getDay()]++;
+  });
+  var labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var values = [dowSums[1], dowSums[2], dowSums[3], dowSums[4], dowSums[5], dowSums[6], dowSums[0]];
+  var maxV = Math.max.apply(null, values);
+  var colors = values.map(function(v){
+    if (v === maxV && v > 0) return '#3b82f6';
+    return 'rgba(59,130,246,0.4)';
+  });
+  charts['ch-pos-dow'] = new Chart(canvas, {
+    type:'bar',
+    data:{labels:labels, datasets:[{label:'POs', data:values, backgroundColor:colors, borderRadius:4}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:11}}, grid:{display:false}},
+        y:{beginAtZero:true, ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderPosStatusTrend(pos) {
+  destroyChart('ch-pos-status-trend');
+  var canvas = document.getElementById('ch-pos-status-trend');
+  if (!canvas) return;
+  // Group by date, count by state
+  var byDate = {};
+  pos.forEach(function(p){
+    var od = p.order_date ? p.order_date.slice(0, 10) : null;
+    if (!od) return;
+    if (!byDate[od]) byDate[od] = {};
+    var s = p.po_state || 'Unknown';
+    byDate[od][s] = (byDate[od][s] || 0) + 1;
+  });
+  var dates = Object.keys(byDate).sort();
+  if (!dates.length) {
+    canvas.parentElement.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:30px">No data</div>';
+    return;
+  }
+  // Take last 90 dates (or all if less)
+  dates = dates.slice(-90);
+  var states = ['Unscheduled','Scheduled','Fulfilled','Expired'];
+  var stateColors = {'Unscheduled':'#f5a524','Scheduled':'#3b82f6','Fulfilled':'#3ecf8e','Expired':'#e53e3e'};
+  var datasets = states.map(function(s){
+    return {
+      label: s,
+      data: dates.map(function(d){ return (byDate[d]||{})[s] || 0; }),
+      borderColor: stateColors[s],
+      backgroundColor: stateColors[s] + '22',
+      tension: 0.3,
+      pointRadius: 0,
+      borderWidth: 1.5,
+      fill: false,
+    };
+  });
+  charts['ch-pos-status-trend'] = new Chart(canvas, {
+    type:'line',
+    data:{labels:dates, datasets:datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#8892a4',font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:9},maxTicksLimit:8}, grid:{display:false}},
+        y:{beginAtZero:true, ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderPosSurge() {
+  destroyChart('ch-pos-surge');
+  var canvas = document.getElementById('ch-pos-surge');
+  if (!canvas) return;
+  if (!D || !D.historical || !D.historical.po_daily) return;
+  var pd = D.historical.po_daily.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  if (!pd.length) return;
+  // Use last 90 days
+  var recent = pd.slice(-90);
+  var counts = recent.map(function(r){ return r.po_count || 0; });
+  // Rolling 7-day avg
+  var rolling = counts.map(function(_, i){
+    var lo = Math.max(0, i - 6);
+    var slice = counts.slice(lo, i + 1);
+    return slice.reduce(function(a,b){return a+b;}, 0) / slice.length;
+  });
+  // Identify surges: count > 2× rolling
+  var surgeIdxs = {};
+  counts.forEach(function(v, i){
+    if (rolling[i] > 0 && v >= 2 * rolling[i] && v >= 5) surgeIdxs[i] = true;
+  });
+  var pointColors = counts.map(function(_, i){
+    return surgeIdxs[i] ? '#e53e3e' : 'rgba(59,130,246,0.5)';
+  });
+  var pointRadii = counts.map(function(_, i){
+    return surgeIdxs[i] ? 5 : 0;
+  });
+  charts['ch-pos-surge'] = new Chart(canvas, {
+    type:'line',
+    data:{
+      labels: recent.map(function(r){ return r.date; }),
+      datasets:[
+        {label:'PO Count', data:counts, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.10)',
+         tension:0.3, fill:true, pointRadius:pointRadii, pointBackgroundColor:pointColors,
+         pointBorderColor:pointColors, borderWidth:1.5},
+        {label:'7-day Avg', data:rolling, borderColor:'#f5a524', borderDash:[4,4],
+         backgroundColor:'transparent', tension:0.3, fill:false, pointRadius:0, borderWidth:1.5},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:'#8892a4',font:{size:11}}},
+        tooltip:{callbacks:{
+          afterBody:function(items){
+            var i = items[0].dataIndex;
+            return surgeIdxs[i] ? '🚨 SURGE — '+(counts[i]/rolling[i]).toFixed(1)+'× rolling avg' : '';
+          }
+        }}
+      },
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:9},maxTicksLimit:10}, grid:{display:false}},
+        y:{beginAtZero:true, ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderPosVendorConcentration(pos) {
+  var byVendor = {};
+  pos.forEach(function(p){
+    var v = p.vendor_legal_name || p.vendor_name || 'Unknown';
+    if (!byVendor[v]) byVendor[v] = {name:v, count:0, value:0, units:0};
+    byVendor[v].count++;
+    byVendor[v].value += p.total_amount || 0;
+    byVendor[v].units += p.total_units_ordered || 0;
+  });
+  var arr = Object.values(byVendor).sort(function(a,b){ return b.value - a.value; });
+  var totalVal = arr.reduce(function(a,b){ return a+b.value; }, 0);
+  document.getElementById('pos-vendor-count').textContent = arr.length + ' vendors';
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Vendor</th>' +
+    '<th style="text-align:right">POs</th>' +
+    '<th style="text-align:right">Value</th>' +
+    '<th style="text-align:right">% of Total</th>' +
+    '</tr></thead><tbody>';
+  arr.slice(0, 10).forEach(function(v){
+    var pct = totalVal > 0 ? (v.value / totalVal * 100) : 0;
+    html += '<tr>' +
+      '<td style="font-size:10px">'+escapeHtml(v.name.slice(0, 35))+'</td>' +
+      '<td style="text-align:right">'+v.count+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(v.value)+'</td>' +
+      '<td style="text-align:right" class="mono">'+pct.toFixed(1)+'%</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('pos-vendor-body').innerHTML = html;
+}
+
+function renderPosVelocityByFacility(pos) {
+  // Last 30 days
+  var maxDate = '';
+  pos.forEach(function(p){ if (p.order_date && p.order_date > maxDate) maxDate = p.order_date; });
+  if (!maxDate) {
+    document.getElementById('pos-velocity-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No data</div>';
+    return;
+  }
+  var cutoff30 = new Date(maxDate); cutoff30.setDate(cutoff30.getDate() - 30);
+  var cutoff7 = new Date(maxDate); cutoff7.setDate(cutoff7.getDate() - 7);
+
+  var byFac = {};
+  pos.forEach(function(p){
+    var od = _parseDate(p.order_date); if (!od) return;
+    if (od < cutoff30) return;
+    var f = p.facility_name || 'Unknown';
+    if (!byFac[f]) byFac[f] = {name:f, count30:0, count7:0, value30:0, units30:0};
+    byFac[f].count30++;
+    byFac[f].value30 += p.total_amount || 0;
+    byFac[f].units30 += p.total_units_ordered || 0;
+    if (od >= cutoff7) byFac[f].count7++;
+  });
+  var arr = Object.values(byFac).sort(function(a,b){ return b.count30 - a.count30; });
+
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Facility</th>' +
+    '<th style="text-align:right">POs/30d</th>' +
+    '<th style="text-align:right">POs/7d</th>' +
+    '<th style="text-align:right">POs/week</th>' +
+    '<th style="text-align:right">Value 30d</th>' +
+    '<th style="text-align:right">Trend</th>' +
+    '</tr></thead><tbody>';
+  arr.forEach(function(f){
+    var perWeek = (f.count30 / 30 * 7).toFixed(1);
+    var prior21 = f.count30 - f.count7;
+    var rateRecent = f.count7 / 7;
+    var ratePrior = prior21 / 23;
+    var trend = ratePrior > 0 ? ((rateRecent - ratePrior) / ratePrior * 100) : 0;
+    var trendColor = trend > 20 ? 'var(--green)' : trend < -20 ? 'var(--red)' : 'var(--text2)';
+    var trendIcon = trend > 20 ? '↑' : trend < -20 ? '↓' : '→';
+    html += '<tr>' +
+      '<td>'+escapeHtml(f.name.replace(' - Feeder Warehouse',''))+'</td>' +
+      '<td style="text-align:right" class="mono">'+f.count30+'</td>' +
+      '<td style="text-align:right" class="mono">'+f.count7+'</td>' +
+      '<td style="text-align:right" class="mono">'+perWeek+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(f.value30)+'</td>' +
+      '<td style="text-align:right;color:'+trendColor+'" class="mono">'+trendIcon+' '+(trend > 0 ? '+' : '')+trend.toFixed(0)+'%</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('pos-velocity-body').innerHTML = html;
 }
 
 // ── PO drilldown — inline expandable row ──────────────────────────
@@ -2757,6 +3589,225 @@ function renderStock() {
 
   // ── SKU × Warehouse matrix ────────────────────────────────────────
   renderStockMatrix();
+
+  // ── God-level: OOS Risk + Replenishment Priority + Coverage Gaps ──
+  renderOosRisk(brand, category);
+  renderReplenishmentPriority(brand, category);
+  renderCoverageGaps(brand, category);
+}
+
+// Days-of-Cover and OOS Risk
+function _computeOosRisk(brandFilter, categoryFilter) {
+  if (!D || !D.skus) return [];
+  var out = [];
+  D.skus.forEach(function(s){
+    if (brandFilter && brandFilter !== 'ALL' && s.brand !== brandFilter) return;
+    var cat = (getCatItem(s.item_id) || {}).m_category || '';
+    if (categoryFilter && cat !== categoryFilter) return;
+    var dailyVel = (s.units_sold_30d || 0) / 30;
+    var inv = s.inventory_total || 0;
+    if (dailyVel <= 0) return;
+    var doc = inv / dailyVel; // days of cover
+    out.push({
+      item_id: s.item_id,
+      name: displayName(getCatItem(s.item_id) || s),
+      brand: s.brand,
+      category: cat,
+      inventory: inv,
+      daily_velocity: dailyVel,
+      doc: doc,
+      sales_30d: s.units_sold_30d || 0,
+      revenue_30d: s.realized_revenue_30d || 0,
+      sp: s.realized_sp_avg_30d || s.mrp || 0,
+      warehouses_oos: s.warehouses_oos || 0,
+      warehouses_stocked: s.warehouses_stocked || 0,
+    });
+  });
+  return out;
+}
+
+function renderOosRisk(brand, category) {
+  var risks = _computeOosRisk(brand, category)
+    .filter(function(r){ return r.doc > 0 && r.doc <= 7; })
+    .sort(function(a,b){ return a.doc - b.doc; });
+  document.getElementById('stock-risk-count').textContent = risks.length + ' SKUs at risk';
+  if (!risks.length) {
+    document.getElementById('stock-risk-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No imminent OOS risk 🎉</div>';
+    return;
+  }
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Product</th>' +
+    '<th>Brand</th>' +
+    '<th style="text-align:right">Inventory</th>' +
+    '<th style="text-align:right">DRR</th>' +
+    '<th style="text-align:right">Days of Cover</th>' +
+    '<th style="text-align:right">Risk ₹</th>' +
+    '</tr></thead><tbody>';
+  risks.forEach(function(r){
+    var docColor = r.doc < 3 ? 'var(--red)' : r.doc < 5 ? 'var(--orange)' : 'var(--text2)';
+    var lostRev = r.daily_velocity * 7 * (r.sp || 0); // 7d projected revenue
+    html += '<tr>' +
+      '<td><div style="font-weight:500">'+escapeHtml(r.name.slice(0, 40))+'</div>' +
+        '<div class="pid">'+r.item_id+'</div></td>' +
+      '<td><span class="tag '+brandTagClass(r.brand)+'">'+brandShort(r.brand)+'</span></td>' +
+      '<td style="text-align:right" class="mono">'+fmtNum(r.inventory)+'</td>' +
+      '<td style="text-align:right" class="mono">'+r.daily_velocity.toFixed(1)+'</td>' +
+      '<td style="text-align:right;color:'+docColor+';font-weight:600" class="mono">'+r.doc.toFixed(1)+' d</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(lostRev)+'</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('stock-risk-body').innerHTML = html;
+}
+
+function renderReplenishmentPriority(brand, category) {
+  // Score = daily_velocity * sp * (max(7 - doc, 0))  — financial impact if OOS in 7d
+  var all = _computeOosRisk(brand, category);
+  all.forEach(function(r){
+    var urgency = Math.max(7 - r.doc, 0); // 0 if doc >= 7
+    var lostPerDay = r.daily_velocity * (r.sp || 0);
+    r.priority_score = lostPerDay * urgency;
+  });
+  var prio = all.filter(function(r){ return r.priority_score > 0; })
+                .sort(function(a,b){ return b.priority_score - a.priority_score; })
+                .slice(0, 20);
+
+  document.getElementById('stock-replen-count').textContent = prio.length + ' SKUs';
+  if (!prio.length) {
+    document.getElementById('stock-replen-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No urgent replenishments</div>';
+    return;
+  }
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Product</th>' +
+    '<th>Brand</th>' +
+    '<th style="text-align:right">Inv</th>' +
+    '<th style="text-align:right">DOC</th>' +
+    '<th style="text-align:right">Lost ₹/day</th>' +
+    '<th style="text-align:right">Priority Score</th>' +
+    '</tr></thead><tbody>';
+  prio.forEach(function(r, i){
+    var lostPerDay = r.daily_velocity * (r.sp || 0);
+    html += '<tr>' +
+      '<td><div style="display:flex;align-items:center;gap:6px">' +
+        '<span style="color:var(--text3);font-size:10px">#'+(i+1)+'</span>' +
+        '<div><div style="font-weight:500">'+escapeHtml(r.name.slice(0, 35))+'</div>' +
+        '<div class="pid">'+r.item_id+'</div></div></div></td>' +
+      '<td><span class="tag '+brandTagClass(r.brand)+'">'+brandShort(r.brand)+'</span></td>' +
+      '<td style="text-align:right" class="mono">'+fmtNum(r.inventory)+'</td>' +
+      '<td style="text-align:right" class="mono">'+r.doc.toFixed(1)+'d</td>' +
+      '<td style="text-align:right;color:var(--orange)" class="mono">'+fmtINR(lostPerDay)+'</td>' +
+      '<td style="text-align:right;color:var(--red);font-weight:600" class="mono">'+fmtINR(r.priority_score)+'</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('stock-replen-body').innerHTML = html;
+}
+
+function renderCoverageGaps(brand, category) {
+  if (!D || !D.skus || !D.warehouses) return;
+  var totalWh = D.warehouses.length;
+  var skus = D.skus.filter(function(s){
+    if (brand && brand !== 'ALL' && s.brand !== brand) return false;
+    var cat = (getCatItem(s.item_id) || {}).m_category || '';
+    if (category && cat !== category) return false;
+    return (s.units_sold_30d || 0) > 0; // only selling SKUs
+  });
+  // Coverage gap: stocked in <50% of total warehouses but selling
+  var gaps = skus.filter(function(s){
+    var stocked = s.warehouses_stocked || 0;
+    return totalWh > 0 && (stocked / totalWh) < 0.5;
+  }).map(function(s){
+    var cov = (s.warehouses_stocked || 0) / totalWh * 100;
+    var dailyVel = (s.units_sold_30d || 0) / 30;
+    var sp = s.realized_sp_avg_30d || s.mrp || 0;
+    // Potential upside: if coverage went from current to 100%, sales scales linearly (rough)
+    var upside = totalWh > 0 ? ((s.realized_revenue_30d || 0) * (totalWh - (s.warehouses_stocked||0)) / Math.max(s.warehouses_stocked||1, 1)) : 0;
+    return {
+      item_id: s.item_id,
+      name: displayName(getCatItem(s.item_id) || s),
+      brand: s.brand,
+      cov_pct: cov,
+      stocked: s.warehouses_stocked || 0,
+      total_wh: totalWh,
+      daily_velocity: dailyVel,
+      revenue_30d: s.realized_revenue_30d || 0,
+      upside_30d: upside,
+    };
+  }).sort(function(a,b){ return b.upside_30d - a.upside_30d; }).slice(0, 30);
+
+  if (!gaps.length) {
+    document.getElementById('stock-coverage-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No coverage gaps — all selling SKUs are well-distributed.</div>';
+    return;
+  }
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Product</th>' +
+    '<th>Brand</th>' +
+    '<th style="text-align:right">Coverage</th>' +
+    '<th style="text-align:right">DRR</th>' +
+    '<th style="text-align:right">30d Sales</th>' +
+    '<th style="text-align:right">Est. 30d Upside</th>' +
+    '</tr></thead><tbody>';
+  gaps.forEach(function(g){
+    var covColor = g.cov_pct < 25 ? 'var(--red)' : g.cov_pct < 40 ? 'var(--orange)' : 'var(--text2)';
+    html += '<tr>' +
+      '<td><div style="font-weight:500">'+escapeHtml(g.name.slice(0, 40))+'</div>' +
+        '<div class="pid">'+g.item_id+'</div></td>' +
+      '<td><span class="tag '+brandTagClass(g.brand)+'">'+brandShort(g.brand)+'</span></td>' +
+      '<td style="text-align:right;color:'+covColor+';font-weight:600" class="mono">'+g.stocked+'/'+g.total_wh+' ('+g.cov_pct.toFixed(0)+'%)</td>' +
+      '<td style="text-align:right" class="mono">'+g.daily_velocity.toFixed(1)+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(g.revenue_30d)+'</td>' +
+      '<td style="text-align:right;color:var(--green)" class="mono">+'+fmtINR(g.upside_30d)+'</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('stock-coverage-body').innerHTML = html;
+}
+
+function exportOosRiskCsv() {
+  var brand = H.stock.brand, cat = H.stock.category;
+  var risks = _computeOosRisk(brand, cat).filter(function(r){ return r.doc > 0 && r.doc <= 7; })
+    .sort(function(a,b){ return a.doc - b.doc; });
+  var headers = ['Item ID','Product','Brand','Category','Inventory','Daily Velocity','Days of Cover','30d Sales','30d Revenue','SP'];
+  var rows = risks.map(function(r){
+    return [r.item_id, r.name, r.brand, r.category, r.inventory, r.daily_velocity.toFixed(2), r.doc.toFixed(2), r.sales_30d, r.revenue_30d, r.sp];
+  });
+  _downloadCsv('stock_oos_risk.csv', headers, rows);
+}
+
+function exportReplenPriorityCsv() {
+  var brand = H.stock.brand, cat = H.stock.category;
+  var all = _computeOosRisk(brand, cat);
+  all.forEach(function(r){
+    var urgency = Math.max(7 - r.doc, 0);
+    r.priority_score = r.daily_velocity * (r.sp || 0) * urgency;
+  });
+  var rows = all.filter(function(r){ return r.priority_score > 0; })
+                .sort(function(a,b){ return b.priority_score - a.priority_score; });
+  var headers = ['Item ID','Product','Brand','Category','Inventory','Daily Velocity','Days of Cover','SP','Lost ₹/day','Priority Score'];
+  var data = rows.map(function(r){
+    return [r.item_id, r.name, r.brand, r.category, r.inventory, r.daily_velocity.toFixed(2), r.doc.toFixed(2), r.sp, (r.daily_velocity * r.sp).toFixed(0), r.priority_score.toFixed(0)];
+  });
+  _downloadCsv('stock_replenishment_priority.csv', headers, data);
+}
+
+function exportCoverageGapsCsv() {
+  var brand = H.stock.brand, cat = H.stock.category;
+  if (!D.skus || !D.warehouses) return;
+  var totalWh = D.warehouses.length;
+  var skus = D.skus.filter(function(s){
+    if (brand && brand !== 'ALL' && s.brand !== brand) return false;
+    var c = (getCatItem(s.item_id) || {}).m_category || '';
+    if (cat && c !== cat) return false;
+    return (s.units_sold_30d || 0) > 0;
+  });
+  var headers = ['Item ID','Product','Brand','Coverage %','Stocked Warehouses','Total Warehouses','Daily Velocity','30d Sales','30d Revenue','Est. 30d Upside'];
+  var rows = skus.map(function(s){
+    var cov = (s.warehouses_stocked || 0) / totalWh * 100;
+    var upside = totalWh > 0 ? ((s.realized_revenue_30d || 0) * (totalWh - (s.warehouses_stocked||0)) / Math.max(s.warehouses_stocked||1, 1)) : 0;
+    return [s.item_id, displayName(s), s.brand, cov.toFixed(1), s.warehouses_stocked||0, totalWh,
+      ((s.units_sold_30d||0)/30).toFixed(2), s.units_sold_30d||0, s.realized_revenue_30d||0, upside.toFixed(0)];
+  }).sort(function(a,b){ return b[9] - a[9]; });
+  _downloadCsv('stock_coverage_gaps.csv', headers, rows);
 }
 
 function renderWarehousesTable() {
@@ -3847,6 +4898,309 @@ function renderAds() {
     pBody = '<tr><td colspan="14" style="text-align:center;color:var(--text3);padding:20px">No products match the current filter.</td></tr>';
   }
   document.getElementById('ads-products-body').innerHTML = pBody;
+
+  // ── God-level: DoW RoAS, Burn Rate, CAC trend, Efficiency, H2H, Lifecycle ──
+  renderAdsDoW();
+  renderAdsBurnRate();
+  renderAdsCacTrend();
+  renderAdsEfficiency();
+  renderAdsBrandH2H();
+  renderAdsLifecycle();
+}
+
+function renderAdsDoW() {
+  destroyChart('ch-ads-dow');
+  var canvas = document.getElementById('ch-ads-dow');
+  if (!canvas || !D || !D.ads || !D.ads.daily) return;
+  var dowSpend = [0,0,0,0,0,0,0], dowSales = [0,0,0,0,0,0,0];
+  D.ads.daily.forEach(function(r){
+    var dow = new Date(r.date).getDay();
+    dowSpend[dow] += r.budget || 0;
+    dowSales[dow] += r.sales || 0;
+  });
+  var roasByDow = dowSpend.map(function(s, i){ return s > 0 ? (dowSales[i] / s) : 0; });
+  var labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var values = [roasByDow[1], roasByDow[2], roasByDow[3], roasByDow[4], roasByDow[5], roasByDow[6], roasByDow[0]];
+  var maxV = Math.max.apply(null, values), minV = Math.min.apply(null, values);
+  var colors = values.map(function(v){
+    if (v === maxV) return '#3ecf8e';
+    if (v === minV) return '#e53e3e';
+    return '#3b82f6';
+  });
+  charts['ch-ads-dow'] = new Chart(canvas, {
+    type:'bar',
+    data:{labels:labels, datasets:[{label:'RoAS', data:values, backgroundColor:colors, borderRadius:4}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+               tooltip:{callbacks:{label:function(ctx){ return 'RoAS: '+ctx.parsed.y.toFixed(2)+'x'; }}}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:11}}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10},callback:function(v){return v.toFixed(1)+'x';}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderAdsBurnRate() {
+  if (!D || !D.ads || !D.ads.daily) {
+    document.getElementById('ads-burn-body').innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">No daily ads data</div>';
+    return;
+  }
+  var daily = D.ads.daily.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  if (daily.length < 14) {
+    document.getElementById('ads-burn-body').innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:20px">Need 14+ days of data</div>';
+    return;
+  }
+  // Last 30 days vs prior 30
+  var last30 = daily.slice(-30);
+  var prior30 = daily.slice(-60, -30);
+  var spendLast30 = last30.reduce(function(a,b){return a+(b.budget||0);}, 0);
+  var spendPrior30 = prior30.reduce(function(a,b){return a+(b.budget||0);}, 0);
+  var avgLast = spendLast30 / 30;
+  var avgPrior = spendPrior30 / 30;
+  var change = avgPrior > 0 ? ((avgLast - avgPrior) / avgPrior * 100) : 0;
+  // Today's spend vs rolling
+  var lastN = daily.slice(-7);
+  var avgLast7 = lastN.reduce(function(a,b){return a+(b.budget||0);}, 0) / 7;
+  // Days where spend > 1.5x avg
+  var rolling = daily.slice(-30).map(function(_, i, arr){
+    var lo = Math.max(0, i - 6);
+    var slc = arr.slice(lo, i + 1);
+    return slc.reduce(function(a,b){return a+(b.budget||0);}, 0) / slc.length;
+  });
+  var burnDays = 0;
+  daily.slice(-30).forEach(function(r, i){
+    if (rolling[i] > 0 && r.budget >= 1.5 * rolling[i]) burnDays++;
+  });
+  var changeColor = Math.abs(change) > 30 ? 'var(--red)' : Math.abs(change) > 10 ? 'var(--orange)' : 'var(--text2)';
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px">' +
+    '<div><div style="color:var(--text3);font-size:10px">Avg Spend / day (30d)</div>' +
+      '<div style="font-size:18px;font-weight:600;color:var(--text);margin-top:4px">'+fmtINR(avgLast)+'</div></div>' +
+    '<div><div style="color:var(--text3);font-size:10px">vs Prior 30d</div>' +
+      '<div style="font-size:18px;font-weight:600;color:'+changeColor+';margin-top:4px">'+(change >= 0 ? '+' : '')+change.toFixed(0)+'%</div></div>' +
+    '<div><div style="color:var(--text3);font-size:10px">Last 7d avg</div>' +
+      '<div style="font-size:14px;font-weight:600;margin-top:4px">'+fmtINR(avgLast7)+'</div></div>' +
+    '<div><div style="color:var(--text3);font-size:10px">High-burn days</div>' +
+      '<div style="font-size:14px;font-weight:600;color:'+(burnDays > 5 ? 'var(--red)' : burnDays > 2 ? 'var(--orange)' : 'var(--green)')+';margin-top:4px">'+burnDays+' / 30</div></div>' +
+    '</div>';
+  if (burnDays > 5) {
+    html += '<div style="margin-top:10px;padding:8px 10px;background:rgba(229,62,62,0.10);border-radius:4px;font-size:10px;color:var(--red)">⚠️ '+burnDays+' high-burn days in last 30. Review pacing.</div>';
+  }
+  document.getElementById('ads-burn-body').innerHTML = html;
+}
+
+function renderAdsCacTrend() {
+  destroyChart('ch-ads-cac');
+  var canvas = document.getElementById('ch-ads-cac');
+  if (!canvas || !D || !D.ads || !D.ads.daily) return;
+  var daily = D.ads.daily.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  // Last 90 days
+  var recent = daily.slice(-90);
+  var labels = recent.map(function(r){ return r.date; });
+  var cac = recent.map(function(r){ return (r.new_users > 0) ? (r.budget / r.new_users) : 0; });
+  // Rolling 7d avg
+  var rolling = cac.map(function(_, i){
+    var lo = Math.max(0, i - 6);
+    var slc = cac.slice(lo, i + 1).filter(function(x){ return x > 0; });
+    return slc.length ? slc.reduce(function(a,b){return a+b;}, 0) / slc.length : 0;
+  });
+  charts['ch-ads-cac'] = new Chart(canvas, {
+    type:'line',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'Daily CAC', data:cac, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.10)',
+         tension:0.3, fill:false, pointRadius:0, borderWidth:1},
+        {label:'7d Avg', data:rolling, borderColor:'#f5a524', backgroundColor:'transparent',
+         tension:0.3, fill:false, pointRadius:0, borderWidth:2},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:'#8892a4',font:{size:10},boxWidth:10}},
+        tooltip:{callbacks:{label:function(ctx){ return ctx.dataset.label+': '+fmtINR(ctx.parsed.y); }}}
+      },
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:9},maxTicksLimit:8}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10},callback:function(v){return '₹'+v.toFixed(0);}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderAdsEfficiency() {
+  destroyChart('ch-ads-efficiency');
+  var canvas = document.getElementById('ch-ads-efficiency');
+  if (!canvas || !D || !D.ads || !D.ads.daily) return;
+  // Scatter: x = daily spend (₹L), y = daily sales (₹L), color by RoAS
+  var pts = D.ads.daily.filter(function(r){ return r.budget > 0; })
+    .map(function(r){
+      return {
+        x: r.budget / 1e5,
+        y: r.sales / 1e5,
+        roas: r.budget > 0 ? r.sales / r.budget : 0,
+      };
+    });
+  // Color by RoAS bucket
+  var colors = pts.map(function(p){
+    if (p.roas >= 4) return '#3ecf8e';
+    if (p.roas >= 2) return '#84cc16';
+    if (p.roas >= 1) return '#f5a524';
+    return '#e53e3e';
+  });
+  charts['ch-ads-efficiency'] = new Chart(canvas, {
+    type:'scatter',
+    data:{
+      datasets:[{
+        label:'Daily',
+        data:pts.map(function(p){ return {x:p.x, y:p.y}; }),
+        backgroundColor:colors,
+        borderColor:colors,
+        pointRadius:3,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(ctx){
+          var p = pts[ctx.dataIndex];
+          return 'Spend ₹'+p.x.toFixed(2)+'L → Sales ₹'+p.y.toFixed(2)+'L · '+p.roas.toFixed(2)+'x';
+        }}}
+      },
+      scales:{
+        x:{title:{display:true, text:'Daily Spend (₹L)', color:'#8892a4'},
+           ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+        y:{title:{display:true, text:'Daily Sales (₹L)', color:'#8892a4'},
+           ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderAdsBrandH2H() {
+  if (!D || !D.ads || !D.ads.by_brand) return;
+  var brands = D.ads.by_brand;
+  var rows = Object.keys(brands).map(function(b){
+    var br = brands[b];
+    return {
+      name: b,
+      spend: br.budget || 0,
+      sales: br.sales || 0,
+      roas: br.budget > 0 ? br.sales / br.budget : 0,
+      qty: br.qty || 0,
+      atc: br.atc || 0,
+      new_users: br.new_users || 0,
+      impr: br.impr || 0,
+      cac: br.new_users > 0 ? br.budget / br.new_users : 0,
+    };
+  }).sort(function(a,b){ return b.spend - a.spend; });
+  if (!rows.length) {
+    document.getElementById('ads-brand-h2h').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No brand data</div>';
+    return;
+  }
+  var maxSpend = Math.max.apply(null, rows.map(function(r){ return r.spend; }));
+  var maxSales = Math.max.apply(null, rows.map(function(r){ return r.sales; }));
+  var html = '';
+  rows.forEach(function(r){
+    var spendPct = maxSpend > 0 ? (r.spend / maxSpend * 100) : 0;
+    var salesPct = maxSales > 0 ? (r.sales / maxSales * 100) : 0;
+    var roasColor = r.roas >= 3 ? 'var(--green)' : r.roas >= 1.5 ? 'var(--orange)' : 'var(--red)';
+    html += '<div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+        '<span class="tag '+brandTagClass(r.name)+'">'+brandShort(r.name)+'</span>' +
+        '<span style="color:'+roasColor+';font-weight:600">'+r.roas.toFixed(2)+'x</span>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--text3);margin-bottom:2px">Spend</div>' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+        '<div style="flex:1;background:var(--surf2);height:6px;border-radius:3px;overflow:hidden">' +
+          '<div style="height:100%;width:'+spendPct+'%;background:#f5a524"></div>' +
+        '</div>' +
+        '<div style="font-size:10px;width:64px;text-align:right" class="mono">'+fmtINR(r.spend)+'</div>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--text3);margin-bottom:2px">Sales</div>' +
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+        '<div style="flex:1;background:var(--surf2);height:6px;border-radius:3px;overflow:hidden">' +
+          '<div style="height:100%;width:'+salesPct+'%;background:#3ecf8e"></div>' +
+        '</div>' +
+        '<div style="font-size:10px;width:64px;text-align:right" class="mono">'+fmtINR(r.sales)+'</div>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--text3);margin-top:4px">' +
+        fmtNum(r.qty)+' u · '+fmtNum(r.new_users)+' new users · CAC '+fmtINR(r.cac)+
+      '</div>' +
+      '</div>';
+  });
+  document.getElementById('ads-brand-h2h').innerHTML = html;
+}
+
+function renderAdsLifecycle() {
+  if (!D || !D.ads || !D.ads.campaigns_daily) {
+    document.getElementById('ads-lifecycle-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No campaign daily data</div>';
+    return;
+  }
+  var camps = D.ads.campaigns || [];
+  var cd = D.ads.campaigns_daily || {};
+  var rows = camps.map(function(c){
+    var d = cd[String(c.cid)] || [];
+    var firstActive = '', lastActive = '', peakDay = '', peakBudget = 0, activeDays = 0;
+    d.forEach(function(r){
+      if ((r.budget || 0) > 0) {
+        if (!firstActive || r.date < firstActive) firstActive = r.date;
+        if (!lastActive || r.date > lastActive) lastActive = r.date;
+        activeDays++;
+        if (r.budget > peakBudget) { peakBudget = r.budget; peakDay = r.date; }
+      }
+    });
+    var lifeDays = (firstActive && lastActive) ? Math.floor((new Date(lastActive) - new Date(firstActive))/86400000) + 1 : 0;
+    return {
+      cid: c.cid,
+      name: c.name,
+      brand: c.brand,
+      type: c.type,
+      first: firstActive,
+      last: lastActive,
+      peak: peakDay,
+      peak_budget: peakBudget,
+      active_days: activeDays,
+      life_days: lifeDays,
+      total_spend: c.budget || 0,
+      total_sales: c.sales || 0,
+      roas: c.roas || 0,
+    };
+  }).filter(function(r){ return r.first; })
+    .sort(function(a,b){ return b.total_spend - a.total_spend; });
+
+  document.getElementById('ads-lifecycle-count').textContent = rows.length + ' campaigns';
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Brand</th>' +
+    '<th style="min-width:200px;text-align:left">Campaign</th>' +
+    '<th>Type</th>' +
+    '<th style="text-align:left">First Active</th>' +
+    '<th style="text-align:left">Last Active</th>' +
+    '<th style="text-align:right">Active Days</th>' +
+    '<th style="text-align:left">Peak Day</th>' +
+    '<th style="text-align:right">Total Spend</th>' +
+    '<th style="text-align:right">RoAS</th>' +
+    '</tr></thead><tbody>';
+  rows.forEach(function(r){
+    var roasColor = r.roas >= 2 ? 'var(--green)' : r.roas >= 1 ? 'var(--orange)' : 'var(--red)';
+    html += '<tr>' +
+      '<td><span class="tag '+brandTagClass(r.brand)+'">'+brandShort(r.brand)+'</span></td>' +
+      '<td><div style="font-weight:500">'+escapeHtml(r.name)+'</div><div class="pid">cid '+r.cid+'</div></td>' +
+      '<td><span style="font-size:10px;color:var(--text3)">'+(r.type||'').replace('PRODUCT_','')+'</span></td>' +
+      '<td class="mono">'+(r.first ? fmtDate(r.first) : '—')+'</td>' +
+      '<td class="mono">'+(r.last ? fmtDate(r.last) : '—')+'</td>' +
+      '<td style="text-align:right" class="mono">'+r.active_days+'</td>' +
+      '<td class="mono">'+(r.peak ? fmtDate(r.peak)+' ('+fmtINR(r.peak_budget)+')' : '—')+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(r.total_spend)+'</td>' +
+      '<td style="text-align:right;color:'+roasColor+';font-weight:600">'+r.roas.toFixed(2)+'x</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('ads-lifecycle-body').innerHTML = html;
 }
 
 // Sales-vs-spend grouped bar chart for the Ads tab
@@ -4558,6 +5912,185 @@ function renderCashflow() {
       'Showing top 500 of '+rows.length+'. Use search/filters or download CSV for full list.</td></tr>';
   }
   document.getElementById('cf-all-body').innerHTML = ab || '<tr><td colspan="15" style="text-align:center;padding:20px;color:var(--text3)">No invoices match the current filter</td></tr>';
+
+  // ── God-level: forecast, velocity, lag, vendor concentration ──
+  renderCfForecast();
+  renderCfVelocity();
+  renderCfLagByFacility();
+  renderCfVendorConcentration();
+}
+
+function renderCfForecast() {
+  destroyChart('ch-cf-forecast');
+  var canvas = document.getElementById('ch-cf-forecast');
+  if (!canvas || !D || !D.cashflow || !D.cashflow.rows) return;
+  // Group unpaid by due date, project next 60 days
+  var unpaid = D.cashflow.rows.filter(function(r){ return r.due_status !== 'Paid' && r.due_date; });
+  var today = new Date(); today.setHours(0,0,0,0);
+  var byDay = {}; // day-offset → ₹
+  unpaid.forEach(function(r){
+    var due = new Date(r.due_date);
+    var off = Math.floor((due - today) / 86400000);
+    if (off < -30 || off > 90) return; // window: 30 days overdue → 90 days future
+    if (!byDay[off]) byDay[off] = 0;
+    byDay[off] += r.total_grn_amount || 0;
+  });
+  // Build labels [-30..+60] day offsets
+  var minOff = -30, maxOff = 60;
+  var labels = [], values = [], cumulative = [];
+  var cum = 0;
+  for (var o = minOff; o <= maxOff; o++) {
+    labels.push(o === 0 ? 'Today' : (o > 0 ? '+'+o+'d' : o+'d'));
+    var v = (byDay[o] || 0) / 1e5;
+    values.push(v);
+    cum += v;
+    cumulative.push(cum);
+  }
+  // Color: overdue red, future green
+  var colors = labels.map(function(_, i){
+    var off = minOff + i;
+    return off < 0 ? '#e53e3e' : '#3ecf8e';
+  });
+  charts['ch-cf-forecast'] = new Chart(canvas, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[
+        {type:'bar', label:'Daily ₹L', data:values, backgroundColor:colors, borderRadius:2, yAxisID:'y'},
+        {type:'line', label:'Cumulative ₹L', data:cumulative, borderColor:'#3b82f6', backgroundColor:'transparent',
+         tension:0.3, pointRadius:0, borderWidth:2, yAxisID:'y1'},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#8892a4',font:{size:10}}}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:9},maxTicksLimit:10}, grid:{display:false}},
+        y:{position:'left', ticks:{color:'#8892a4',font:{size:10},callback:function(v){return '₹'+v.toFixed(0)+'L';}}, grid:{color:'rgba(140,150,170,0.06)'}},
+        y1:{position:'right', ticks:{color:'#3b82f6',font:{size:10},callback:function(v){return '₹'+v.toFixed(0)+'L';}}, grid:{display:false}},
+      }
+    }
+  });
+}
+
+function renderCfVelocity() {
+  destroyChart('ch-cf-velocity');
+  var canvas = document.getElementById('ch-cf-velocity');
+  if (!canvas || !D || !D.cashflow || !D.cashflow.rows) return;
+  // Daily ₹ paid in last 90 days — using grn_date as proxy (when GRN happened, payment lag handled separately)
+  // Actually we use invoice rows where status=Paid; cluster by grn_date
+  var paid = D.cashflow.rows.filter(function(r){ return r.due_status === 'Paid' && r.grn_date; });
+  var byDay = {};
+  paid.forEach(function(r){
+    var d = r.grn_date.slice(0, 10);
+    if (!byDay[d]) byDay[d] = 0;
+    byDay[d] += r.total_grn_amount || 0;
+  });
+  var dates = Object.keys(byDay).sort().slice(-90);
+  if (!dates.length) {
+    canvas.parentElement.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:11px;padding:30px">No paid invoices yet</div>';
+    return;
+  }
+  var values = dates.map(function(d){ return (byDay[d] || 0) / 1e5; });
+  // Rolling 7d
+  var rolling = values.map(function(_, i){
+    var lo = Math.max(0, i - 6);
+    var slc = values.slice(lo, i + 1);
+    return slc.reduce(function(a,b){return a+b;}, 0) / slc.length;
+  });
+  charts['ch-cf-velocity'] = new Chart(canvas, {
+    type:'line',
+    data:{
+      labels:dates,
+      datasets:[
+        {label:'₹L paid', data:values, borderColor:'#3ecf8e', backgroundColor:'rgba(62,207,142,0.10)',
+         tension:0.3, fill:true, pointRadius:0, borderWidth:1.5},
+        {label:'7d Avg', data:rolling, borderColor:'#f5a524', backgroundColor:'transparent',
+         tension:0.3, fill:false, pointRadius:0, borderWidth:1.5, borderDash:[4,4]},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#8892a4',font:{size:10}}}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:9},maxTicksLimit:8}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10},callback:function(v){return '₹'+v.toFixed(0)+'L';}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function renderCfLagByFacility() {
+  if (!D || !D.cashflow || !D.cashflow.rows) return;
+  // Avg lag = paid_grn_date - invoice_date (where status=Paid)
+  // We don't have a payment_date field reliably. Use credit_days for paid invoices as proxy.
+  var paid = D.cashflow.rows.filter(function(r){ return r.due_status === 'Paid'; });
+  var byFac = {};
+  paid.forEach(function(r){
+    var f = r.facility_name || 'Unknown';
+    if (!byFac[f]) byFac[f] = {name:f, count:0, lag_sum:0, paid_sum:0};
+    byFac[f].count++;
+    byFac[f].lag_sum += r.credit_days || 0;
+    byFac[f].paid_sum += r.total_grn_amount || 0;
+  });
+  var arr = Object.values(byFac).map(function(f){
+    return {name:f.name, count:f.count, avg_lag: f.count > 0 ? f.lag_sum/f.count : 0, paid:f.paid_sum};
+  }).sort(function(a,b){ return b.avg_lag - a.avg_lag; });
+  if (!arr.length) {
+    document.getElementById('cf-lag-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No paid invoices yet</div>';
+    return;
+  }
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Facility</th>' +
+    '<th style="text-align:right">Paid Inv</th>' +
+    '<th style="text-align:right">Avg Lag (d)</th>' +
+    '<th style="text-align:right">Total Paid</th>' +
+    '</tr></thead><tbody>';
+  arr.forEach(function(f){
+    var lagColor = f.avg_lag > 60 ? 'var(--red)' : f.avg_lag > 30 ? 'var(--orange)' : 'var(--green)';
+    html += '<tr>' +
+      '<td>'+escapeHtml(f.name.replace(' - Feeder Warehouse',''))+'</td>' +
+      '<td style="text-align:right" class="mono">'+f.count+'</td>' +
+      '<td style="text-align:right;color:'+lagColor+';font-weight:600" class="mono">'+f.avg_lag.toFixed(0)+'d</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(f.paid)+'</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('cf-lag-body').innerHTML = html;
+}
+
+function renderCfVendorConcentration() {
+  if (!D || !D.cashflow || !D.cashflow.rows) return;
+  var unpaid = D.cashflow.rows.filter(function(r){ return r.due_status !== 'Paid'; });
+  var byVendor = {};
+  unpaid.forEach(function(r){
+    var v = r.entity_vendor_legal_name || r.vendor_name || 'Unknown';
+    if (!byVendor[v]) byVendor[v] = {name:v, count:0, outstanding:0};
+    byVendor[v].count++;
+    byVendor[v].outstanding += r.total_grn_amount || 0;
+  });
+  var arr = Object.values(byVendor).sort(function(a,b){ return b.outstanding - a.outstanding; });
+  var totalOut = arr.reduce(function(a,b){ return a+b.outstanding; }, 0);
+  document.getElementById('cf-vendor-count').textContent = arr.length + ' vendors';
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">Vendor</th>' +
+    '<th style="text-align:right">Inv</th>' +
+    '<th style="text-align:right">Outstanding</th>' +
+    '<th style="text-align:right">% of Total</th>' +
+    '</tr></thead><tbody>';
+  arr.forEach(function(v){
+    var pct = totalOut > 0 ? (v.outstanding / totalOut * 100) : 0;
+    html += '<tr>' +
+      '<td style="font-size:10px">'+escapeHtml(v.name.slice(0, 35))+'</td>' +
+      '<td style="text-align:right">'+v.count+'</td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(v.outstanding)+'</td>' +
+      '<td style="text-align:right" class="mono">'+pct.toFixed(1)+'%</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('cf-vendor-body').innerHTML = html;
 }
 
 function drawCfAgingChart(id, labels, values) {
@@ -4629,6 +6162,358 @@ function exportCashflowAllCsv() {
             r.tds_amount, r.net_payable, r.payment_amount, r.reject_reason];
   });
   _downloadCsv('cashflow_all.csv', headers, csvRows);
+}
+
+// ═══ DEEP DIVE — cross-section analysis ═══════════════════════════════
+function renderDeepDive() {
+  if (!D) return;
+  ddRenderSalesVsAds();
+  ddRenderPoVsSales();
+  ddRenderLagAnalysis();
+  ddRenderBrandScorecard();
+  ddRenderImpactScore();
+}
+
+// Pearson correlation helper
+function _pearson(xs, ys) {
+  if (!xs.length || xs.length !== ys.length) return 0;
+  var n = xs.length;
+  var sx = 0, sy = 0;
+  for (var i = 0; i < n; i++) { sx += xs[i]; sy += ys[i]; }
+  var mx = sx / n, my = sy / n;
+  var num = 0, dx2 = 0, dy2 = 0;
+  for (var i = 0; i < n; i++) {
+    var dx = xs[i] - mx, dy = ys[i] - my;
+    num += dx * dy; dx2 += dx*dx; dy2 += dy*dy;
+  }
+  var den = Math.sqrt(dx2 * dy2);
+  return den > 0 ? num / den : 0;
+}
+
+function ddRenderSalesVsAds() {
+  destroyChart('ch-dd-sales-ads');
+  var canvas = document.getElementById('ch-dd-sales-ads');
+  if (!canvas || !D.historical || !D.ads || !D.ads.daily) return;
+  // Build daily sales map and daily ads map, intersect
+  var salesMap = {};
+  (D.historical.sales_daily || []).forEach(function(r){ salesMap[r.date] = r.realized_rev || 0; });
+  var pts = [];
+  D.ads.daily.forEach(function(r){
+    var sales = salesMap[r.date];
+    if (sales != null && r.budget > 0) {
+      pts.push({x: r.budget / 1e5, y: sales / 1e5, date: r.date});
+    }
+  });
+  if (!pts.length) return;
+  // Correlation
+  var corr = _pearson(pts.map(function(p){return p.x;}), pts.map(function(p){return p.y;}));
+  document.getElementById('dd-sales-ads-stat').textContent =
+    'Correlation r = ' + corr.toFixed(3) + ' · ' + pts.length + ' days · ' +
+    (corr > 0.7 ? '🟢 strong positive — spend drives sales' :
+     corr > 0.4 ? '🟡 moderate — spend helps but other factors matter' :
+     corr > 0.0 ? '🟠 weak — spend mildly correlated' :
+                  '🔴 inverse or no correlation — investigate');
+
+  charts['ch-dd-sales-ads'] = new Chart(canvas, {
+    type:'scatter',
+    data:{datasets:[{
+      label:'Daily',
+      data:pts.map(function(p){ return {x:p.x, y:p.y}; }),
+      backgroundColor:'rgba(59,130,246,0.6)',
+      borderColor:'#3b82f6',
+      pointRadius:3,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+               tooltip:{callbacks:{label:function(ctx){
+                 var p = pts[ctx.dataIndex];
+                 return p.date + ': ₹'+p.x.toFixed(2)+'L spend → ₹'+p.y.toFixed(2)+'L sales';
+               }}}},
+      scales:{
+        x:{title:{display:true, text:'Daily Ad Spend (₹L)', color:'#8892a4'},
+           ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+        y:{title:{display:true, text:'Daily Sales (₹L)', color:'#8892a4'},
+           ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function ddRenderPoVsSales() {
+  destroyChart('ch-dd-po-sales');
+  var canvas = document.getElementById('ch-dd-po-sales');
+  if (!canvas || !D.historical) return;
+  var salesMap = {};
+  (D.historical.sales_daily || []).forEach(function(r){ salesMap[r.date] = r.realized_rev || 0; });
+  var pts = [];
+  (D.historical.po_daily || []).forEach(function(r){
+    var sales = salesMap[r.date];
+    if (sales != null) pts.push({x: r.po_count, y: sales / 1e5, date: r.date});
+  });
+  if (!pts.length) return;
+  var corr = _pearson(pts.map(function(p){return p.x;}), pts.map(function(p){return p.y;}));
+  document.getElementById('dd-po-sales-stat').textContent =
+    'Correlation r = ' + corr.toFixed(3) + ' · ' + pts.length + ' days · ' +
+    (corr > 0.4 ? '🟢 POs lead/follow sales (Blinkit reorders to match demand)' :
+     corr > 0.1 ? '🟡 weak link' :
+                  '🔴 PO timing is independent of daily sales');
+
+  charts['ch-dd-po-sales'] = new Chart(canvas, {
+    type:'scatter',
+    data:{datasets:[{
+      label:'Daily',
+      data:pts.map(function(p){ return {x:p.x, y:p.y}; }),
+      backgroundColor:'rgba(245,165,36,0.6)',
+      borderColor:'#f5a524',
+      pointRadius:3,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+               tooltip:{callbacks:{label:function(ctx){
+                 var p = pts[ctx.dataIndex];
+                 return p.date + ': '+p.x+' POs → ₹'+p.y.toFixed(2)+'L sales';
+               }}}},
+      scales:{
+        x:{title:{display:true, text:'Daily PO Count', color:'#8892a4'},
+           ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+        y:{title:{display:true, text:'Daily Sales (₹L)', color:'#8892a4'},
+           ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function ddRenderLagAnalysis() {
+  destroyChart('ch-dd-lag');
+  var canvas = document.getElementById('ch-dd-lag');
+  if (!canvas || !D.historical || !D.ads || !D.ads.daily) return;
+  // Build aligned arrays for last 90 days
+  var salesMap = {};
+  (D.historical.sales_daily || []).forEach(function(r){ salesMap[r.date] = r.realized_rev || 0; });
+  var adsByDate = {};
+  D.ads.daily.forEach(function(r){ adsByDate[r.date] = r.budget || 0; });
+  // Get list of dates with both
+  var commonDates = Object.keys(adsByDate).filter(function(d){ return salesMap[d] != null; }).sort();
+  if (commonDates.length < 30) {
+    document.getElementById('dd-lag-insight').textContent = 'Insufficient overlapping data (need 30+ days)';
+    return;
+  }
+  var spends = commonDates.map(function(d){ return adsByDate[d]; });
+  var sales = commonDates.map(function(d){ return salesMap[d]; });
+  // Compute correlation at lag 0..7
+  var lags = [], corrs = [];
+  for (var lag = 0; lag <= 7; lag++) {
+    var x = [], y = [];
+    for (var i = lag; i < spends.length; i++) {
+      x.push(spends[i - lag]); // spend on earlier day
+      y.push(sales[i]);        // sales on later day
+    }
+    var r = _pearson(x, y);
+    lags.push('Lag '+lag+'d');
+    corrs.push(r);
+  }
+  // Find best lag
+  var maxIdx = 0;
+  for (var i = 1; i < corrs.length; i++) if (corrs[i] > corrs[maxIdx]) maxIdx = i;
+  document.getElementById('dd-lag-insight').textContent =
+    'Best correlation at lag = ' + maxIdx + ' day(s): r = ' + corrs[maxIdx].toFixed(3) + '. ' +
+    (maxIdx === 0 ? 'Spend impact is same-day.' :
+     maxIdx === 1 ? 'Spend impacts sales 1 day later (typical).' :
+                    'Spend impacts sales after ~'+maxIdx+' days.');
+
+  var colors = corrs.map(function(_, i){ return i === maxIdx ? '#3ecf8e' : '#3b82f6'; });
+  charts['ch-dd-lag'] = new Chart(canvas, {
+    type:'bar',
+    data:{labels:lags, datasets:[{label:'Pearson r', data:corrs, backgroundColor:colors, borderRadius:4}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+               tooltip:{callbacks:{label:function(ctx){ return 'r = ' + ctx.parsed.y.toFixed(3); }}}},
+      scales:{
+        x:{ticks:{color:'#8892a4',font:{size:10}}, grid:{display:false}},
+        y:{ticks:{color:'#8892a4',font:{size:10}}, grid:{color:'rgba(140,150,170,0.06)'}},
+      }
+    }
+  });
+}
+
+function ddRenderBrandScorecard() {
+  if (!D || !D.brands) return;
+  // Composite score per brand: normalize each metric across brands, weighted average
+  // Metrics: realized_rev, ad_roas, sku_coverage_30d (active/catalog), city_reach, on_shelf_health
+  var brands = D.brands || [];
+  var ads = (D.ads && D.ads.by_brand) || {};
+  var scoreData = brands.map(function(b){
+    var ad = ads[b.name] || {};
+    var roas = ad.budget > 0 ? (ad.sales / ad.budget) : 0;
+    var coverage = b.catalog_skus > 0 ? (b.active_skus_30d / b.catalog_skus) : 0;
+    return {
+      name: b.name,
+      revenue: b.realized_revenue || 0,
+      ad_spend: ad.budget || 0,
+      ad_sales: ad.sales || 0,
+      roas: roas,
+      sku_coverage_pct: coverage * 100,
+      cities: b.cities_active || 0,
+      stock_warehouses: b.warehouses_with_stock || 0,
+      total_warehouses: 63, // approx
+      discount_pct: b.realized_discount_avg || 0,
+      units: b.units_sold || 0,
+    };
+  });
+  if (!scoreData.length) return;
+
+  // Normalize each numeric metric to 0..100 across brands
+  var keys = ['revenue', 'roas', 'sku_coverage_pct', 'cities', 'stock_warehouses'];
+  var maxVals = {};
+  keys.forEach(function(k){
+    maxVals[k] = Math.max.apply(null, scoreData.map(function(r){ return r[k]; }));
+  });
+  scoreData.forEach(function(r){
+    var s = 0; var counted = 0;
+    keys.forEach(function(k){
+      if (maxVals[k] > 0) { s += (r[k] / maxVals[k]) * 100; counted++; }
+    });
+    r.composite = counted > 0 ? (s / counted) : 0;
+  });
+  scoreData.sort(function(a,b){ return b.composite - a.composite; });
+
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">#</th>' +
+    '<th style="text-align:left">Brand</th>' +
+    '<th style="text-align:right">Composite</th>' +
+    '<th style="text-align:right">Revenue</th>' +
+    '<th style="text-align:right">Ad RoAS</th>' +
+    '<th style="text-align:right">SKU Coverage</th>' +
+    '<th style="text-align:right">Cities</th>' +
+    '<th style="text-align:right">Warehouses</th>' +
+    '<th style="text-align:right">Discount %</th>' +
+    '</tr></thead><tbody>';
+  scoreData.forEach(function(r, i){
+    var compColor = r.composite >= 70 ? 'var(--green)' : r.composite >= 40 ? 'var(--orange)' : 'var(--red)';
+    var roasColor = r.roas >= 3 ? 'var(--green)' : r.roas >= 1.5 ? 'var(--orange)' : 'var(--red)';
+    html += '<tr>' +
+      '<td>'+(i+1)+'</td>' +
+      '<td><span class="tag '+brandTagClass(r.name)+'">'+brandShort(r.name)+'</span> '+escapeHtml(r.name)+'</td>' +
+      '<td style="text-align:right">' +
+        '<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">' +
+          '<div style="width:60px;height:8px;background:var(--surf2);border-radius:4px;overflow:hidden">' +
+            '<div style="height:100%;width:'+r.composite.toFixed(0)+'%;background:'+compColor+'"></div>' +
+          '</div>' +
+          '<span class="mono" style="font-weight:600;color:'+compColor+'">'+r.composite.toFixed(0)+'</span>' +
+        '</div></td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(r.revenue)+'</td>' +
+      '<td style="text-align:right;color:'+roasColor+';font-weight:600" class="mono">'+r.roas.toFixed(2)+'x</td>' +
+      '<td style="text-align:right" class="mono">'+r.sku_coverage_pct.toFixed(0)+'%</td>' +
+      '<td style="text-align:right" class="mono">'+r.cities+'</td>' +
+      '<td style="text-align:right" class="mono">'+r.stock_warehouses+'</td>' +
+      '<td style="text-align:right" class="mono">'+r.discount_pct.toFixed(1)+'%</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('dd-brand-scorecard').innerHTML = html;
+}
+
+function _computeImpactScores() {
+  if (!D || !D.skus) return [];
+  var ads = (D.ads && D.ads.by_sku) || [];
+  var adsByPid = {};
+  ads.forEach(function(a){ adsByPid[a.product_id || a.item_id] = a; });
+  // For each SKU compute: revenue 30d, daily velocity, coverage %, ad RoAS (if any)
+  var totalWh = (D.warehouses || []).length;
+  var scored = D.skus.map(function(s){
+    var rev = s.realized_revenue_30d || 0;
+    var vel = (s.units_sold_30d || 0) / 30;
+    var cov = totalWh > 0 ? ((s.warehouses_stocked || 0) / totalWh) : 0;
+    var ad = adsByPid[s.product_id] || {};
+    var adRoas = ad.budget > 0 ? (ad.sales / ad.budget) : 0;
+    return {
+      item_id: s.item_id,
+      name: displayName(getCatItem(s.item_id) || s),
+      brand: s.brand,
+      category: (getCatItem(s.item_id) || {}).m_category || '',
+      revenue: rev,
+      velocity: vel,
+      coverage_pct: cov * 100,
+      ad_roas: adRoas,
+      ad_spend: ad.budget || 0,
+      cities: s.active_in_cities || 0,
+    };
+  });
+  // Normalize each metric across all SKUs to [0..100]
+  var keys = ['revenue', 'velocity', 'coverage_pct', 'cities'];
+  var maxVals = {};
+  keys.forEach(function(k){
+    maxVals[k] = Math.max.apply(null, scored.map(function(r){ return r[k]; }));
+  });
+  scored.forEach(function(r){
+    var s = 0, counted = 0;
+    keys.forEach(function(k){
+      if (maxVals[k] > 0) { s += (r[k] / maxVals[k]) * 100; counted++; }
+    });
+    // Add ad_roas as bonus (capped at 5x → 100 points)
+    var adBonus = Math.min(r.ad_roas / 5, 1) * 100;
+    if (r.ad_spend > 0) { s += adBonus; counted++; }
+    r.impact_score = counted > 0 ? s / counted : 0;
+  });
+  scored.sort(function(a,b){ return b.impact_score - a.impact_score; });
+  return scored;
+}
+
+function ddRenderImpactScore() {
+  var scored = _computeImpactScores().slice(0, 20);
+  if (!scored.length) {
+    document.getElementById('dd-impact-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">No SKU data</div>';
+    return;
+  }
+  var html = '<table style="font-size:11px;width:100%"><thead><tr>' +
+    '<th style="text-align:left">#</th>' +
+    '<th style="text-align:left;min-width:280px">Product</th>' +
+    '<th>Brand</th>' +
+    '<th style="text-align:right">Score</th>' +
+    '<th style="text-align:right">30d Rev</th>' +
+    '<th style="text-align:right">DRR</th>' +
+    '<th style="text-align:right">Coverage</th>' +
+    '<th style="text-align:right">Cities</th>' +
+    '<th style="text-align:right">Ad RoAS</th>' +
+    '</tr></thead><tbody>';
+  scored.forEach(function(r, i){
+    var scoreColor = r.impact_score >= 60 ? 'var(--green)' : r.impact_score >= 30 ? 'var(--orange)' : 'var(--red)';
+    var roasColor = r.ad_roas >= 2 ? 'var(--green)' : r.ad_roas >= 1 ? 'var(--orange)' : 'var(--text3)';
+    html += '<tr>' +
+      '<td>'+(i+1)+'</td>' +
+      '<td><div style="font-weight:500">'+escapeHtml(r.name)+'</div>' +
+        '<div class="pid">'+r.item_id+' · '+escapeHtml(r.category)+'</div></td>' +
+      '<td><span class="tag '+brandTagClass(r.brand)+'">'+brandShort(r.brand)+'</span></td>' +
+      '<td style="text-align:right">' +
+        '<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">' +
+          '<div style="width:50px;height:6px;background:var(--surf2);border-radius:3px;overflow:hidden">' +
+            '<div style="height:100%;width:'+r.impact_score.toFixed(0)+'%;background:'+scoreColor+'"></div>' +
+          '</div>' +
+          '<span class="mono" style="font-weight:600;color:'+scoreColor+'">'+r.impact_score.toFixed(0)+'</span>' +
+        '</div></td>' +
+      '<td style="text-align:right" class="mono">'+fmtINR(r.revenue)+'</td>' +
+      '<td style="text-align:right" class="mono">'+r.velocity.toFixed(1)+'</td>' +
+      '<td style="text-align:right" class="mono">'+r.coverage_pct.toFixed(0)+'%</td>' +
+      '<td style="text-align:right" class="mono">'+r.cities+'</td>' +
+      '<td style="text-align:right;color:'+roasColor+';font-weight:'+(r.ad_roas > 0 ? 600 : 400)+'" class="mono">'+(r.ad_roas > 0 ? r.ad_roas.toFixed(2)+'x' : '—')+'</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('dd-impact-body').innerHTML = html;
+}
+
+function exportImpactScoreCsv() {
+  var scored = _computeImpactScores();
+  var headers = ['Item ID','Product','Brand','Category','Impact Score','30d Revenue','Daily Velocity','Coverage %','Cities Active','Ad Spend','Ad RoAS'];
+  var rows = scored.map(function(r){
+    return [r.item_id, r.name, r.brand, r.category, r.impact_score.toFixed(1),
+            r.revenue, r.velocity.toFixed(2), r.coverage_pct.toFixed(1),
+            r.cities, r.ad_spend, r.ad_roas.toFixed(2)];
+  });
+  _downloadCsv('sku_impact_scores.csv', headers, rows);
 }
 
 // ═══ MISSING TABLE CSV EXPORTERS (Overview / POs / Stock / Cities) ═══
