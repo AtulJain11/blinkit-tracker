@@ -867,11 +867,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <select class="fsel" id="ads-metric-sel" onchange="renderAds()" style="margin-left:10px;font-size:10px">
           <option value="budget">Budget Consumed (₹)</option>
           <option value="impr">Impressions</option>
-          <option value="atc">ATC (D+I)</option>
           <option value="qty">Qty Sold (D+I)</option>
           <option value="sales">Sales (D+I)</option>
           <option value="roas">RoAS</option>
-          <option value="new_users">New Users</option>
+          <option value="cpm">CPM</option>
         </select>
       </div>
       <div class="chart-wrap"><canvas id="ch-ads-daily"></canvas></div>
@@ -904,10 +903,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <button class="fbtn active" id="ads-mm-sales" onclick="toggleAdsMetric('sales',this)">Sales</button>
         <button class="fbtn"        id="ads-mm-d_sales" onclick="toggleAdsMetric('d_sales',this)">Direct Sales</button>
         <button class="fbtn"        id="ads-mm-impr" onclick="toggleAdsMetric('impr',this)">Impressions</button>
-        <button class="fbtn"        id="ads-mm-atc"  onclick="toggleAdsMetric('atc',this)">ATC</button>
         <button class="fbtn"        id="ads-mm-qty"  onclick="toggleAdsMetric('qty',this)">Qty</button>
-        <button class="fbtn"        id="ads-mm-new_users" onclick="toggleAdsMetric('new_users',this)">New Users</button>
         <button class="fbtn"        id="ads-mm-roas" onclick="toggleAdsMetric('roas',this)">RoAS</button>
+        <button class="fbtn"        id="ads-mm-cpm"  onclick="toggleAdsMetric('cpm',this)">CPM</button>
       </div>
     </div>
     <div style="position:relative;height:300px;padding:14px"><canvas id="ch-ads-multi"></canvas></div>
@@ -935,11 +933,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="text-align:right" onclick="sortAdsCampaigns('d_sales')">Direct Sales</th>
         <th style="text-align:right" onclick="sortAdsCampaigns('roas')">RoAS</th>
         <th style="text-align:right" onclick="sortAdsCampaigns('direct_roas')">Direct RoAS</th>
-        <th style="text-align:right" onclick="sortAdsCampaigns('atc')">ATC</th>
         <th style="text-align:right" onclick="sortAdsCampaigns('qty')">Qty</th>
         <th style="text-align:right" onclick="sortAdsCampaigns('impr')">Impr</th>
-        <th style="text-align:right" onclick="sortAdsCampaigns('new_users')">New Users</th>
-        <th style="text-align:right" onclick="sortAdsCampaigns('cac')">CAC</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('cpm')">CPM</th>
+        <th style="text-align:right" onclick="sortAdsCampaigns('position_avg')">Position</th>
       </tr></thead>
       <tbody id="ads-campaigns-body"></tbody>
     </table>
@@ -965,9 +962,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="text-align:right" onclick="sortAdsSlots('d_sales')">Direct Sales</th>
         <th style="text-align:right" onclick="sortAdsSlots('roas')">RoAS</th>
         <th style="text-align:right" onclick="sortAdsSlots('direct_roas')">Direct RoAS</th>
-        <th style="text-align:right" onclick="sortAdsSlots('atc')">ATC</th>
         <th style="text-align:right" onclick="sortAdsSlots('qty')">Qty</th>
         <th style="text-align:right" onclick="sortAdsSlots('impr')">Impr</th>
+        <th style="text-align:right" onclick="sortAdsSlots('cpm')">CPM</th>
       </tr></thead>
       <tbody id="ads-slots-body"></tbody>
     </table>
@@ -994,9 +991,9 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="text-align:right" onclick="sortAdsProducts('budget')">Spend ▼</th>
         <th style="text-align:right" onclick="sortAdsProducts('sales')">Sales</th>
         <th style="text-align:right" onclick="sortAdsProducts('roas')">RoAS</th>
-        <th style="text-align:right" onclick="sortAdsProducts('atc')">ATC</th>
         <th style="text-align:right" onclick="sortAdsProducts('qty')">Qty</th>
         <th style="text-align:right" onclick="sortAdsProducts('impr')">Impr</th>
+        <th style="text-align:right" onclick="sortAdsProducts('cpm')">CPM</th>
         <th style="text-align:right" onclick="sortAdsProducts('cps')">CPS</th>
         <th style="text-align:right" onclick="sortAdsProducts('campaign_count')">Camps</th>
       </tr></thead>
@@ -1124,7 +1121,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <button class="fbtn" id="kw-trend-metric-sales" onclick="setKwTrendMetric('sales',this)">Sales</button>
         <button class="fbtn" id="kw-trend-metric-roas" onclick="setKwTrendMetric('roas',this)">RoAS</button>
         <button class="fbtn" id="kw-trend-metric-impr" onclick="setKwTrendMetric('impr',this)">Impr</button>
-        <button class="fbtn" id="kw-trend-metric-atc" onclick="setKwTrendMetric('atc',this)">ATC</button>
+        <button class="fbtn" id="kw-trend-metric-cpm" onclick="setKwTrendMetric('cpm',this)">CPM</button>
+        <button class="fbtn" id="kw-trend-metric-position" onclick="setKwTrendMetric('position',this)">Position</button>
       </div>
     </div>
     <div style="position:relative;height:340px;padding:14px"><canvas id="ch-kw-trend"></canvas></div>
@@ -1151,10 +1149,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
         <th style="text-align:right" onclick="sortKw('d_sales')">Direct Sales</th>
         <th style="text-align:right" onclick="sortKw('roas')">RoAS</th>
         <th style="text-align:right" onclick="sortKw('direct_roas')">Direct RoAS</th>
-        <th style="text-align:right" onclick="sortKw('atc')">ATC</th>
         <th style="text-align:right" onclick="sortKw('qty')">Qty</th>
         <th style="text-align:right" onclick="sortKw('impr')">Impr</th>
-        <th style="text-align:right" onclick="sortKw('cpa')">CPA</th>
+        <th style="text-align:right" onclick="sortKw('cpm')">CPM</th>
+        <th style="text-align:right" onclick="sortKw('position_avg')">Position</th>
         <th style="text-align:right">Δ Spend</th>
         <th style="text-align:right">Δ RoAS</th>
       </tr></thead>
@@ -1387,7 +1385,7 @@ var H = {           // per-tab filter state
           kwSortBy:'budget',   kwSortDir:'desc',
           slotSortBy:'budget', slotSortDir:'desc',
           prodSortBy:'budget', prodSortDir:'desc',
-          mm_metrics:{spend:true, sales:true, d_sales:false, impr:false, atc:false, qty:false, new_users:false, roas:false}},
+          mm_metrics:{spend:true, sales:true, d_sales:false, impr:false, qty:false, roas:false, cpm:false}},
   keywords: {brand:'ALL', match:'ALL', search:'', category:'',
              mode:'all', day:'', month:'', year:'', from:'', to:'', compare:'none',
              trendMetric:'budget',
@@ -4212,7 +4210,7 @@ var ADS_TYPE_COLOR = {
   'PRODUCT_LISTING':'#4f8ef7', 'PRODUCT_RECOMMENDATION':'#a78bfa'
 };
 var ADS_METRIC_KEYS = ['impr','atc','qty','sales','budget','d_atc','i_atc',
-                       'd_qty','i_qty','d_sales','i_sales','new_users'];
+                       'd_qty','i_qty','d_sales','i_sales','new_users','pos_x_impr'];
 
 function setAdsBrand(brand, btn) {
   H.ads.brand = brand;
@@ -4342,7 +4340,7 @@ function _adsDateDiffDays(from, to) {
 // Sum metrics from a daily series within [from, to].
 function _adsSumDaily(series, win) {
   var t = {impr:0,atc:0,qty:0,sales:0,budget:0,new_users:0,
-           d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0};
+           d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0, pos_x_impr:0};
   if (!series) return t;
   for (var i=0; i<series.length; i++) {
     var d = series[i];
@@ -4399,9 +4397,13 @@ function _adsCampaignsInWindow(win, brandFilter, typeFilter, categoryFilter) {
       // No window — use the all-history numbers already on c
       sub = {impr:c.impr||0,atc:c.atc||0,qty:c.qty||0,sales:c.sales||0,budget:c.budget||0,
              new_users:c.new_users||0,d_atc:c.d_atc||0,i_atc:c.i_atc||0,
-             d_qty:c.d_qty||0,i_qty:c.i_qty||0,d_sales:c.d_sales||0,i_sales:c.i_sales||0};
+             d_qty:c.d_qty||0,i_qty:c.i_qty||0,d_sales:c.d_sales||0,i_sales:c.i_sales||0,
+             pos_x_impr:c.pos_x_impr||0};
     }
     sub.roas = sub.budget > 0 ? sub.sales / sub.budget : 0;
+    sub.direct_roas = sub.budget > 0 ? sub.d_sales / sub.budget : 0;
+    sub.cpm  = sub.impr > 0 ? (sub.budget * 1000 / sub.impr) : 0;
+    sub.position_avg = sub.impr > 0 ? (sub.pos_x_impr / sub.impr) : 0;
     sub.cid    = c.cid;
     sub.name   = c.name;
     sub.brand  = c.brand;
@@ -4436,7 +4438,8 @@ function _adsProductsInWindow(win, brandFilter, typeFilter, categoryFilter) {
     } else {
       sub = {impr:c.impr||0,atc:c.atc||0,qty:c.qty||0,sales:c.sales||0,budget:c.budget||0,
              new_users:c.new_users||0,d_atc:c.d_atc||0,i_atc:c.i_atc||0,
-             d_qty:c.d_qty||0,i_qty:c.i_qty||0,d_sales:c.d_sales||0,i_sales:c.i_sales||0};
+             d_qty:c.d_qty||0,i_qty:c.i_qty||0,d_sales:c.d_sales||0,i_sales:c.i_sales||0,
+             pos_x_impr:c.pos_x_impr||0};
     }
     if (!sub.budget && !sub.sales && !sub.impr) continue; // skip empty
     for (var p=0; p<pids.length; p++) {
@@ -4461,7 +4464,7 @@ function _adsProductsInWindow(win, brandFilter, typeFilter, categoryFilter) {
                       image:(sku && sku.image),
                       impr:0,atc:0,qty:0,sales:0,budget:0,
                       d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0,
-                      new_users:0};
+                      new_users:0, pos_x_impr:0};
         skuLink[pid] = [];
       }
       var b = bySku[pid];
@@ -4480,6 +4483,7 @@ function _adsProductsInWindow(win, brandFilter, typeFilter, categoryFilter) {
     r.cps  = r.sales > 0 ? r.budget / r.sales : 0;
     r.cpa  = r.atc > 0 ? r.budget / r.atc : 0;
     r.cpm  = r.impr > 0 ? r.budget * 1000 / r.impr : 0;
+    r.position_avg = r.impr > 0 ? r.pos_x_impr / r.impr : 0;
     r.campaigns = skuLink[pid] || [];
     r.campaign_count = r.campaigns.length;
     out.push(r);
@@ -4567,12 +4571,13 @@ function renderAds() {
 
   // ── Totals ──────────────────────────────────────────────────────────
   var t = {impr:0,atc:0,qty:0,sales:0,budget:0,new_users:0,
-           d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0};
+           d_atc:0,i_atc:0,d_qty:0,i_qty:0,d_sales:0,i_sales:0, pos_x_impr:0};
   campsInWin.forEach(function(c){
     ADS_METRIC_KEYS.forEach(function(k){ t[k] += (c[k]||0); });
   });
   t.roas = t.budget > 0 ? t.sales / t.budget : 0;
   t.cpm  = t.impr > 0 ? (t.budget * 1000 / t.impr) : 0;
+  t.position_avg = t.impr > 0 ? (t.pos_x_impr / t.impr) : 0;
 
   // ── KPI tiles ───────────────────────────────────────────────────────
   function tile(label, value, sub, color) {
@@ -4586,10 +4591,10 @@ function renderAds() {
   kpi += tile('Spend',       fmtINR(t.budget),  winSub,                 'var(--accent)');
   kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',      'var(--green)');
   kpi += tile('RoAS',        (t.roas||0).toFixed(2)+'x', 'sales / spend','var(--purple)');
-  kpi += tile('Impressions', fmtNum(t.impr),    'CPM ₹'+(t.cpm||0).toFixed(0),'var(--text)');
-  kpi += tile('ATC',         fmtNum(t.atc),     'add-to-carts',         'var(--text)');
+  kpi += tile('Impressions', fmtNum(t.impr),    '',                     'var(--text)');
+  kpi += tile('CPM',         fmtINR(t.cpm||0),  '₹ per 1000 impr',      'var(--orange)');
   kpi += tile('Qty Sold',    fmtNum(t.qty),     'units',                'var(--text)');
-  kpi += tile('New Users',   fmtNum(t.new_users), 'acquired',           'var(--orange)');
+  kpi += tile('Avg Position',(t.position_avg||0).toFixed(2), 'impr-weighted','var(--text)');
   var activeCamps = campsInWin.filter(function(c){ return (c.budget||0) > 0; }).length;
   kpi += tile('Campaigns',   activeCamps,       'with spend in window', 'var(--text)');
   document.getElementById('ads-kpis').innerHTML = kpi;
@@ -4598,9 +4603,9 @@ function renderAds() {
   var metric = H.ads.metric || 'budget';
   var metricLabels = {
     budget: 'Budget Consumed (₹)', impr: 'Impressions',
-    atc: 'ATC (D+I)',              qty: 'Qty Sold (D+I)',
+    qty: 'Qty Sold (D+I)',
     sales:'Sales (₹, D+I)',        roas:'RoAS',
-    new_users: 'New Users'
+    cpm: 'CPM (₹)'
   };
   var lblMetricEl = document.getElementById('ads-metric-label');
   if (lblMetricEl) lblMetricEl.textContent = metricLabels[metric] || metric;
@@ -4790,7 +4795,6 @@ function renderAds() {
                  ' <span style="color:var(--accent);font-size:10px">+'+(pids.length-1)+'</span></div>' +
                  (catList ? '<div style="color:var(--text3);font-size:10px">'+escapeHtml(catList)+'</div>' : '');
     }
-    var cac = c.new_users > 0 ? (c.budget / c.new_users) : 0;
     cBody += '<tr>' +
       '<td>'+(i+1)+'</td>' +
       '<td><span class="tag '+brandTagClass(c.brand)+'">'+brandShort(c.brand)+'</span></td>' +
@@ -4805,15 +4809,14 @@ function renderAds() {
       '<td style="text-align:right">'+fmtINR(c.d_sales)+'</td>' +
       '<td style="text-align:right;color:'+( (c.roas||0) >= 2 ? 'var(--green)' : (c.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(c.roas||0).toFixed(2)+'x</td>' +
       '<td style="text-align:right;color:'+( (c.direct_roas||0) >= 2 ? 'var(--green)' : (c.direct_roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(c.direct_roas||0).toFixed(2)+'x</td>' +
-      '<td style="text-align:right">'+fmtNum(c.atc)+'</td>' +
       '<td style="text-align:right">'+fmtNum(c.qty)+'</td>' +
       '<td style="text-align:right">'+fmtNum(c.impr)+'</td>' +
-      '<td style="text-align:right">'+fmtNum(c.new_users)+'</td>' +
-      '<td style="text-align:right" class="mono">'+(cac > 0 ? fmtINR(cac) : '—')+'</td>' +
+      '<td style="text-align:right" class="mono">'+(c.cpm > 0 ? fmtINR(c.cpm) : '—')+'</td>' +
+      '<td style="text-align:right" class="mono">'+(c.position_avg > 0 ? c.position_avg.toFixed(2) : '—')+'</td>' +
     '</tr>';
   });
   if (camps.length === 0) {
-    cBody = '<tr><td colspan="15" style="text-align:center;color:var(--text3);padding:20px">No campaigns match the current filter.</td></tr>';
+    cBody = '<tr><td colspan="14" style="text-align:center;color:var(--text3);padding:20px">No campaigns match the current filter.</td></tr>';
   }
   document.getElementById('ads-campaigns-body').innerHTML = cBody;
 
@@ -4895,9 +4898,9 @@ function renderAds() {
       '<td style="text-align:right">'+fmtINR(s.d_sales)+'</td>' +
       '<td style="text-align:right;color:'+( (s.roas||0) >= 2 ? 'var(--green)' : (s.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(s.roas||0).toFixed(2)+'x</td>' +
       '<td style="text-align:right;color:'+( (s.direct_roas||0) >= 2 ? 'var(--green)' : (s.direct_roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(s.direct_roas||0).toFixed(2)+'x</td>' +
-      '<td style="text-align:right">'+fmtNum(s.atc)+'</td>' +
       '<td style="text-align:right">'+fmtNum(s.qty)+'</td>' +
       '<td style="text-align:right">'+fmtNum(s.impr)+'</td>' +
+      '<td style="text-align:right" class="mono">'+(s.cpm > 0 ? fmtINR(s.cpm) : '—')+'</td>' +
     '</tr>';
   });
   if (slots.length === 0) {
@@ -4945,9 +4948,9 @@ function renderAds() {
       '<td style="text-align:right">'+fmtINR(p.budget)+'</td>' +
       '<td style="text-align:right">'+fmtINR(p.sales)+'</td>' +
       '<td style="text-align:right;color:'+( (p.roas||0) >= 2 ? 'var(--green)' : (p.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(p.roas||0).toFixed(2)+'x</td>' +
-      '<td style="text-align:right">'+fmtNum(p.atc)+'</td>' +
       '<td style="text-align:right">'+fmtNum(p.qty)+'</td>' +
       '<td style="text-align:right">'+fmtNum(p.impr)+'</td>' +
+      '<td style="text-align:right" class="mono">'+(p.cpm > 0 ? fmtINR(p.cpm) : '—')+'</td>' +
       '<td style="text-align:right">'+fmtPct((p.cps||0)*100, 1)+'</td>' +
       '<td style="text-align:right">'+(p.campaign_count||0)+'</td>' +
     '</tr>';
@@ -5150,10 +5153,10 @@ function renderAdsBrandH2H() {
       sales: br.sales || 0,
       roas: br.budget > 0 ? br.sales / br.budget : 0,
       qty: br.qty || 0,
-      atc: br.atc || 0,
-      new_users: br.new_users || 0,
       impr: br.impr || 0,
-      cac: br.new_users > 0 ? br.budget / br.new_users : 0,
+      cpm: (br.cpm != null) ? br.cpm : (br.impr > 0 ? (br.budget * 1000 / br.impr) : 0),
+      position_avg: (br.position_avg != null) ? br.position_avg :
+                    ((br.impr > 0 && br.pos_x_impr) ? (br.pos_x_impr / br.impr) : 0),
     };
   }).sort(function(a,b){ return b.spend - a.spend; });
   if (!rows.length) {
@@ -5187,7 +5190,7 @@ function renderAdsBrandH2H() {
         '<div style="font-size:10px;width:64px;text-align:right" class="mono">'+fmtINR(r.sales)+'</div>' +
       '</div>' +
       '<div style="font-size:10px;color:var(--text3);margin-top:4px">' +
-        fmtNum(r.qty)+' u · '+fmtNum(r.new_users)+' new users · CAC '+fmtINR(r.cac)+
+        fmtNum(r.qty)+' u · CPM '+fmtINR(r.cpm)+(r.position_avg > 0 ? ' · Pos '+r.position_avg.toFixed(2) : '')+
       '</div>' +
       '</div>';
   });
@@ -5290,10 +5293,9 @@ function drawAdsMultiMetric() {
     sales:     {label:'Sales (₹L)',     field:'sales',     color:'#3ecf8e', scale:1e5, yAxis:'y',  fmt:'inr'},
     d_sales:   {label:'Direct Sales (₹L)', field:'d_sales', color:'#10b981', scale:1e5, yAxis:'y',  fmt:'inr'},
     impr:      {label:'Impressions',    field:'impr',      color:'#06b6d4', scale:1,   yAxis:'y1', fmt:'num'},
-    atc:       {label:'ATC',            field:'atc',       color:'#8b5cf6', scale:1,   yAxis:'y1', fmt:'num'},
     qty:       {label:'Qty Sold',       field:'qty',       color:'#ec4899', scale:1,   yAxis:'y1', fmt:'num'},
-    new_users: {label:'New Users',      field:'new_users', color:'#f97316', scale:1,   yAxis:'y1', fmt:'num'},
     roas:      {label:'RoAS',           field:'roas',      color:'#14b8a6', scale:1,   yAxis:'y1', fmt:'roas'},
+    cpm:       {label:'CPM (₹)',        field:'cpm',       color:'#8b5cf6', scale:1,   yAxis:'y1', fmt:'inr'},
   };
 
   var labels = daily.map(function(d){ return d.date; });
@@ -5409,8 +5411,7 @@ function exportAdsCampaignsCsv() {
   var camps = _adsCampaignsInWindow(win, H.ads.brand, H.ads.type, H.ads.category);
   var headers = ['Brand','Campaign','Campaign ID','Type','Status','Products','Categories','PID Count',
                  'Spend','Sales','Direct Sales','Indirect Sales','RoAS','Direct RoAS','Indirect RoAS',
-                 'ATC','Direct ATC','Indirect ATC','Qty','Direct Qty','Indirect Qty',
-                 'Impressions','New Users','CAC'];
+                 'Qty','Direct Qty','Indirect Qty','Impressions','CPM','Position'];
   var rows = camps.map(function(c){
     var pids = c.pids || [];
     var prodNames = [], cats = {};
@@ -5423,13 +5424,12 @@ function exportAdsCampaignsCsv() {
         prodNames.push('pid '+pid);
       }
     });
-    var cac = c.new_users > 0 ? c.budget / c.new_users : 0;
     return [c.brand, c.name, c.cid, c.type, c.status||'',
             prodNames.join(' | '), Object.keys(cats).join(' | '), pids.length,
             c.budget, c.sales, c.d_sales, c.i_sales,
             c.roas, c.direct_roas, c.indirect_roas,
-            c.atc, c.d_atc, c.i_atc, c.qty, c.d_qty, c.i_qty,
-            c.impr, c.new_users, cac];
+            c.qty, c.d_qty, c.i_qty,
+            c.impr, c.cpm || 0, c.position_avg || 0];
   });
   _downloadCsv('ads_campaigns_'+_adsCsvSuffix()+'.csv', headers, rows);
 }
@@ -5437,10 +5437,11 @@ function exportAdsKeywordsCsv() {
   if (!D || !D.ads) return;
   var brandFilter = H.ads.brand;
   var kws = (D.ads.keywords||[]).filter(function(k){ return brandFilter === 'ALL' || k.brand === brandFilter; });
-  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions'];
+  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Spend','Sales','RoAS','Direct RoAS','Qty','Impressions','CPM','Position'];
   var rows = kws.map(function(k){
     return [k.brand, k.campaign_name, k.cid, k.keyword, k.match_type,
-            k.budget, k.sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr];
+            k.budget, k.sales, k.roas, k.direct_roas, k.qty, k.impr,
+            k.cpm || 0, k.position_avg || 0];
   });
   _downloadCsv('ads_keywords_all-history.csv', headers, rows);
 }
@@ -5450,7 +5451,7 @@ function exportAdsSlotsCsv() {
   var campByCid = {};
   (D.ads.campaigns || []).forEach(function(c){ campByCid[c.cid] = c; });
   var slots = (D.ads.reco_slots||[]).filter(function(s){ return brandFilter === 'ALL' || s.brand === brandFilter; });
-  var headers = ['Brand','Campaign','Campaign ID','Products','Categories','Slot','Spend','Sales','RoAS','Direct RoAS','ATC','Qty','Impressions'];
+  var headers = ['Brand','Campaign','Campaign ID','Products','Categories','Slot','Spend','Sales','RoAS','Direct RoAS','Qty','Impressions','CPM'];
   var rows = slots.map(function(s){
     var camp = campByCid[s.cid] || {};
     var pids = camp.pids || [];
@@ -5466,7 +5467,7 @@ function exportAdsSlotsCsv() {
     });
     return [s.brand, s.campaign_name, s.cid,
             prodNames.join(' | '), Object.keys(cats).join(' | '),
-            s.slot, s.budget, s.sales, s.roas, s.direct_roas, s.atc, s.qty, s.impr];
+            s.slot, s.budget, s.sales, s.roas, s.direct_roas, s.qty, s.impr, s.cpm || 0];
   });
   _downloadCsv('ads_recoslots_all-history.csv', headers, rows);
 }
@@ -5474,11 +5475,11 @@ function exportAdsProductsCsv() {
   if (!D || !D.ads) return;
   var win = _adsResolveWindow();
   var prods = _adsProductsInWindow(win, H.ads.brand, H.ads.type, H.ads.category);
-  var headers = ['Brand','PID','Item ID','Product','Clean Name','Category','MRP','Spend','Sales','RoAS','ATC','Qty','Impressions','CPS','CPA','CPM','Campaigns'];
+  var headers = ['Brand','PID','Item ID','Product','Clean Name','Category','MRP','Spend','Sales','RoAS','Qty','Impressions','CPM','Position','CPS','Campaigns'];
   var rows = prods.map(function(p){
     return [p.brand, p.pid, p.item_id, p.name, p.clean_name, p.m_category, p.mrp,
-            p.budget, p.sales, p.roas, p.atc, p.qty, p.impr,
-            p.cps, p.cpa, p.cpm, p.campaign_count];
+            p.budget, p.sales, p.roas, p.qty, p.impr,
+            p.cpm || 0, p.position_avg || 0, p.cps, p.campaign_count];
   });
   _downloadCsv('ads_products_'+_adsCsvSuffix()+'.csv', headers, rows);
 }
@@ -5532,24 +5533,28 @@ function _kwDateInWindow(dateStr, win) {
 }
 
 function _kwSumDaily(rows, win) {
-  var s = {budget:0, sales:0, atc:0, qty:0, impr:0, d_atc:0, d_qty:0, d_sales:0, new_users:0, days:0};
+  var s = {budget:0, sales:0, atc:0, qty:0, impr:0, d_atc:0, d_qty:0, d_sales:0,
+           new_users:0, pos_x_impr:0, days:0};
   if (!rows) return s;
   rows.forEach(function(r){
     if (!_kwDateInWindow(r.date, win)) return;
-    s.budget    += r.budget    || 0;
-    s.sales     += r.sales     || 0;
-    s.atc       += r.atc       || 0;
-    s.qty       += r.qty       || 0;
-    s.impr      += r.impr      || 0;
-    s.d_atc     += r.d_atc     || 0;
-    s.d_qty     += r.d_qty     || 0;
-    s.d_sales   += r.d_sales   || 0;
-    s.new_users += r.new_users || 0;
+    s.budget     += r.budget     || 0;
+    s.sales      += r.sales      || 0;
+    s.atc        += r.atc        || 0;
+    s.qty        += r.qty        || 0;
+    s.impr       += r.impr       || 0;
+    s.d_atc      += r.d_atc      || 0;
+    s.d_qty      += r.d_qty      || 0;
+    s.d_sales    += r.d_sales    || 0;
+    s.new_users  += r.new_users  || 0;
+    s.pos_x_impr += r.pos_x_impr || 0;
     s.days++;
   });
-  s.roas        = s.budget > 0 ? s.sales / s.budget   : 0;
-  s.direct_roas = s.budget > 0 ? s.d_sales / s.budget : 0;
-  s.cpa         = s.atc > 0 ? s.budget / s.atc        : 0;
+  s.roas         = s.budget > 0 ? s.sales / s.budget         : 0;
+  s.direct_roas  = s.budget > 0 ? s.d_sales / s.budget       : 0;
+  s.cpa          = s.atc > 0    ? s.budget / s.atc           : 0;
+  s.cpm          = s.impr > 0   ? (s.budget * 1000 / s.impr) : 0;
+  s.position_avg = s.impr > 0   ? (s.pos_x_impr / s.impr)    : 0;
   return s;
 }
 
@@ -5615,9 +5620,11 @@ function _kwBuildWindowed(brand, match, category, search, win, prevWin) {
       cur = {
         budget:k.budget||0, sales:k.sales||0, atc:k.atc||0, qty:k.qty||0, impr:k.impr||0,
         d_atc:k.d_atc||0, d_qty:k.d_qty||0, d_sales:k.d_sales||0, new_users:k.new_users||0,
-        days:0,
+        pos_x_impr:k.pos_x_impr||0, days:0,
         roas:k.roas||0, direct_roas:k.direct_roas||0,
         cpa:(k.atc>0)?(k.budget/k.atc):0,
+        cpm: k.cpm || ((k.impr > 0) ? (k.budget * 1000 / k.impr) : 0),
+        position_avg: k.position_avg || ((k.impr > 0 && k.pos_x_impr) ? (k.pos_x_impr / k.impr) : 0),
       };
       prev = null;
     }
@@ -5631,12 +5638,17 @@ function _kwBuildWindowed(brand, match, category, search, win, prevWin) {
       // Window-aware metrics:
       budget:cur.budget, sales:cur.sales, atc:cur.atc, qty:cur.qty, impr:cur.impr,
       d_sales:cur.d_sales, d_qty:cur.d_qty, d_atc:cur.d_atc, new_users:cur.new_users,
+      pos_x_impr:cur.pos_x_impr,
       roas:cur.roas, direct_roas:cur.direct_roas, cpa:cur.cpa,
+      cpm:cur.cpm, position_avg:cur.position_avg,
       // Comparison
       prev_budget: prev ? prev.budget : null,
       prev_sales:  prev ? prev.sales  : null,
       prev_roas:   prev ? prev.roas   : null,
       prev_atc:    prev ? prev.atc    : null,
+      prev_impr:   prev ? prev.impr   : null,
+      prev_cpm:    prev ? prev.cpm    : null,
+      prev_position_avg: prev ? prev.position_avg : null,
     });
   }
   return out;
@@ -5667,22 +5679,28 @@ function renderKeywords() {
   var kws = _kwBuildWindowed(brand, match, category, search, win, prevWin);
 
   // KPI tiles (current window + delta vs comparison)
-  var t = {budget:0, sales:0, atc:0, qty:0, impr:0, d_sales:0, new_users:0};
-  var pt = {budget:0, sales:0, atc:0, qty:0, impr:0};
+  var t  = {budget:0, sales:0, qty:0, impr:0, d_sales:0, pos_x_impr:0};
+  var pt = {budget:0, sales:0, impr:0, pos_x_impr:0};
   var hasPrev = false;
   kws.forEach(function(k){
-    t.budget += k.budget; t.sales += k.sales; t.atc += k.atc; t.qty += k.qty; t.impr += k.impr;
-    t.d_sales += k.d_sales; t.new_users += k.new_users;
+    t.budget += k.budget; t.sales += k.sales;
+    t.qty += k.qty; t.impr += k.impr;
+    t.d_sales += k.d_sales;
+    t.pos_x_impr += k.pos_x_impr || 0;
     if (k.prev_budget != null) {
       hasPrev = true;
       pt.budget += k.prev_budget || 0;
       pt.sales  += k.prev_sales  || 0;
-      pt.atc    += k.prev_atc    || 0;
+      pt.impr   += k.prev_impr   || 0;
+      pt.pos_x_impr += (k.prev_position_avg && k.prev_impr) ? (k.prev_position_avg * k.prev_impr) : 0;
     }
   });
   t.roas = t.budget > 0 ? t.sales / t.budget : 0;
-  t.cpa  = t.atc > 0 ? t.budget / t.atc : 0;
+  t.cpm  = t.impr > 0 ? (t.budget * 1000 / t.impr) : 0;
+  t.position_avg = t.impr > 0 ? (t.pos_x_impr / t.impr) : 0;
   pt.roas = pt.budget > 0 ? pt.sales / pt.budget : 0;
+  pt.cpm  = pt.impr > 0 ? (pt.budget * 1000 / pt.impr) : 0;
+  pt.position_avg = pt.impr > 0 ? (pt.pos_x_impr / pt.impr) : 0;
   function deltaStr(curV, prevV, fmt) {
     if (!hasPrev || prevV == null || prevV === 0) return '';
     var pct = ((curV - prevV) / prevV * 100);
@@ -5700,10 +5718,10 @@ function renderKeywords() {
   kpi += tile('Spend',       fmtINR(t.budget),  kws.length+' keywords', 'var(--accent)', deltaStr(t.budget, pt.budget));
   kpi += tile('Sales',       fmtINR(t.sales),   'D+I attribution',      'var(--green)',  deltaStr(t.sales, pt.sales));
   kpi += tile('RoAS',        (t.roas||0).toFixed(2)+'x', 'sales / spend','var(--purple)', hasPrev && pt.roas > 0 ? deltaStr(t.roas, pt.roas) : '');
-  kpi += tile('Impressions', fmtNum(t.impr),    '',                     'var(--text)',   '');
-  kpi += tile('ATC',         fmtNum(t.atc),     'add-to-carts',         'var(--text)',   deltaStr(t.atc, pt.atc));
+  kpi += tile('Impressions', fmtNum(t.impr),    '',                     'var(--text)',   deltaStr(t.impr, pt.impr));
+  kpi += tile('CPM',         fmtINR(t.cpm),     '₹ per 1000 impr',      'var(--orange)', hasPrev && pt.cpm > 0 ? deltaStr(t.cpm, pt.cpm) : '');
   kpi += tile('Qty',         fmtNum(t.qty),     'units',                'var(--text)',   '');
-  kpi += tile('CPA',         fmtINR(t.cpa),     'cost per ATC',         'var(--orange)', '');
+  kpi += tile('Avg Position', (t.position_avg||0).toFixed(2), 'impr-weighted', 'var(--text)', hasPrev && pt.position_avg > 0 ? deltaStr(t.position_avg, pt.position_avg) : '');
   document.getElementById('kw-kpis').innerHTML = kpi;
 
   // Sort
@@ -5748,10 +5766,10 @@ function renderKeywords() {
       '<td style="text-align:right">'+fmtINR(k.d_sales)+'</td>' +
       '<td style="text-align:right;color:'+( (k.roas||0) >= 2 ? 'var(--green)' : (k.roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(k.roas||0).toFixed(2)+'x</td>' +
       '<td style="text-align:right;color:'+( (k.direct_roas||0) >= 2 ? 'var(--green)' : (k.direct_roas||0) >= 1 ? 'var(--orange)' : 'var(--red)' )+'">'+(k.direct_roas||0).toFixed(2)+'x</td>' +
-      '<td style="text-align:right">'+fmtNum(k.atc)+'</td>' +
       '<td style="text-align:right">'+fmtNum(k.qty)+'</td>' +
       '<td style="text-align:right">'+fmtNum(k.impr)+'</td>' +
-      '<td style="text-align:right">'+(k.cpa > 0 ? fmtINR(k.cpa) : '—')+'</td>' +
+      '<td style="text-align:right" class="mono">'+(k.cpm > 0 ? fmtINR(k.cpm) : '—')+'</td>' +
+      '<td style="text-align:right" class="mono">'+(k.position_avg > 0 ? k.position_avg.toFixed(2) : '—')+'</td>' +
       deltaCell(k.budget, k.prev_budget) +
       deltaCell(k.roas, k.prev_roas, true) +
     '</tr>';
@@ -5820,7 +5838,7 @@ function renderKwIntel(kws, hasPrev) {
       '</div>' +
       '<div style="text-align:right">' +
         '<div style="color:var(--red);font-weight:600">'+fmtINR(k.budget)+'</div>' +
-        '<div style="color:var(--text3);font-size:10px">'+fmtNum(k.atc)+' atc · '+fmtNum(k.impr)+' impr</div>' +
+        '<div style="color:var(--text3);font-size:10px">'+fmtNum(k.impr)+' impr · CPM '+fmtINR(k.cpm||0)+'</div>' +
       '</div>' +
       '</div>';
   });
@@ -5879,11 +5897,12 @@ function renderKwTrend(windowKws, win) {
     rows.forEach(function(r){ if (_kwDateInWindow(r.date, win)) byDate[r.date] = r; });
     var data = dates.map(function(d){
       var r = byDate[d]; if (!r) return null;
-      if (metric === 'budget')      return (r.budget || 0) / 1000;
-      if (metric === 'sales')       return (r.sales  || 0) / 1000;
-      if (metric === 'roas')        return (r.budget > 0) ? ((r.sales || 0) / r.budget) : 0;
-      if (metric === 'impr')        return r.impr || 0;
-      if (metric === 'atc')         return r.atc || 0;
+      if (metric === 'budget')   return (r.budget || 0) / 1000;
+      if (metric === 'sales')    return (r.sales  || 0) / 1000;
+      if (metric === 'roas')     return (r.budget > 0) ? ((r.sales || 0) / r.budget) : 0;
+      if (metric === 'impr')     return r.impr || 0;
+      if (metric === 'cpm')      return (r.impr > 0) ? ((r.budget || 0) * 1000 / r.impr) : 0;
+      if (metric === 'position') return (r.impr > 0 && r.pos_x_impr) ? (r.pos_x_impr / r.impr) : 0;
       return 0;
     });
     return {
@@ -5970,14 +5989,18 @@ function toggleKwDrilldown(kid, rowEl) {
   var totalSpend = inWin.reduce(function(a,b){ return a + (b.budget||0); }, 0);
   var totalSales = inWin.reduce(function(a,b){ return a + (b.sales||0); }, 0);
   var totalImpr  = inWin.reduce(function(a,b){ return a + (b.impr||0); }, 0);
-  var totalAtc   = inWin.reduce(function(a,b){ return a + (b.atc||0); }, 0);
+  var totalPxI   = inWin.reduce(function(a,b){ return a + (b.pos_x_impr||0); }, 0);
   var roas = totalSpend > 0 ? totalSales / totalSpend : 0;
+  var cpm  = totalImpr > 0 ? (totalSpend * 1000 / totalImpr) : 0;
+  var pos  = totalImpr > 0 ? (totalPxI / totalImpr) : 0;
   var info =
     _drillCell('Keyword', '<strong>'+escapeHtml(k.keyword||'')+'</strong> <span class="tag '+brandTagClass(k.brand)+'">'+brandShort(k.brand)+'</span>') +
     _drillCell('Campaign', escapeHtml(k.campaign_name||'')) +
     _drillCell('Match Type', k.match_type || 'NA') +
     _drillCell('Window Spend', fmtINR(totalSpend)) +
     _drillCell('Window Sales', fmtINR(totalSales) + ' (' + roas.toFixed(2) + 'x)') +
+    _drillCell('Impressions', fmtNum(totalImpr) + ' · CPM ' + fmtINR(cpm)) +
+    _drillCell('Avg Position', pos > 0 ? pos.toFixed(2) + ' (impr-weighted)' : '—') +
     _drillCell('Active Days', inWin.length + ' days');
   var dr = document.createElement('tr');
   dr.className = 'kw-drill-row';
@@ -6021,17 +6044,25 @@ function exportKeywordsCsv() {
   var win = _kwResolveWindow();
   var prevWin = resolvePrev(win, 'keywords');
   var kws = _kwBuildWindowed(brand, match, category, search, win, prevWin);
-  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Window','Spend','Sales','D Sales','RoAS','Direct RoAS','ATC','Qty','Impressions','New Users','CPA',
-                 'Prev Spend','Prev Sales','Prev RoAS','Spend Δ%','RoAS Δ%'];
+  var headers = ['Brand','Campaign','Campaign ID','Keyword','Match','Window',
+                 'Spend','Sales','D Sales','RoAS','Direct RoAS','Qty','Impressions','CPM','Position',
+                 'Prev Spend','Prev Sales','Prev RoAS','Prev Impressions','Prev CPM','Prev Position',
+                 'Spend Δ%','RoAS Δ%','CPM Δ%','Position Δ%'];
   var rows = kws.map(function(k){
     var spendDelta = (k.prev_budget != null && k.prev_budget > 0) ? ((k.budget - k.prev_budget)/k.prev_budget*100).toFixed(1) : '';
     var roasDelta  = (k.prev_roas   != null && k.prev_roas   > 0) ? ((k.roas   - k.prev_roas)  /k.prev_roas  *100).toFixed(1) : '';
+    var cpmDelta   = (k.prev_cpm    != null && k.prev_cpm    > 0) ? ((k.cpm    - k.prev_cpm)   /k.prev_cpm   *100).toFixed(1) : '';
+    var posDelta   = (k.prev_position_avg != null && k.prev_position_avg > 0) ?
+                     ((k.position_avg - k.prev_position_avg)/k.prev_position_avg*100).toFixed(1) : '';
     return [k.brand, k.campaign_name, k.cid, k.keyword, k.match_type, win.label,
-            k.budget, k.sales, k.d_sales, k.roas, k.direct_roas, k.atc, k.qty, k.impr, k.new_users, k.cpa,
-            k.prev_budget != null ? k.prev_budget : '',
-            k.prev_sales  != null ? k.prev_sales  : '',
-            k.prev_roas   != null ? k.prev_roas   : '',
-            spendDelta, roasDelta];
+            k.budget, k.sales, k.d_sales, k.roas, k.direct_roas, k.qty, k.impr, k.cpm || 0, k.position_avg || 0,
+            k.prev_budget       != null ? k.prev_budget       : '',
+            k.prev_sales        != null ? k.prev_sales        : '',
+            k.prev_roas         != null ? k.prev_roas         : '',
+            k.prev_impr         != null ? k.prev_impr         : '',
+            k.prev_cpm          != null ? k.prev_cpm          : '',
+            k.prev_position_avg != null ? k.prev_position_avg : '',
+            spendDelta, roasDelta, cpmDelta, posDelta];
   });
   _downloadCsv('keywords_'+win.label.replace(/[^a-z0-9]/gi,'_')+'.csv', headers, rows);
 }
