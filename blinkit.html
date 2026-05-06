@@ -5881,7 +5881,7 @@ function renderKwTrend(windowKws, win) {
       var r = byDate[d]; if (!r) return null;
       if (metric === 'budget')      return (r.budget || 0) / 1000;
       if (metric === 'sales')       return (r.sales  || 0) / 1000;
-      if (metric === 'roas')        return r.roas || 0;
+      if (metric === 'roas')        return (r.budget > 0) ? ((r.sales || 0) / r.budget) : 0;
       if (metric === 'impr')        return r.impr || 0;
       if (metric === 'atc')         return r.atc || 0;
       return 0;
@@ -5963,7 +5963,8 @@ function toggleKwDrilldown(kid, rowEl) {
   var bars = inWin.map(function(r){
     var h = maxBudget > 0 ? Math.max(2, (r.budget||0) / maxBudget * 60) : 2;
     var color = r.budget > 0 ? '#3b82f6' : 'transparent';
-    return '<div title="'+r.date+': spend '+fmtINR(r.budget||0)+', sales '+fmtINR(r.sales||0)+', roas '+(r.roas||0).toFixed(2)+'x" '+
+    var dayRoas = (r.budget > 0) ? ((r.sales || 0) / r.budget) : 0;
+    return '<div title="'+r.date+': spend '+fmtINR(r.budget||0)+', sales '+fmtINR(r.sales||0)+', roas '+dayRoas.toFixed(2)+'x" '+
            'style="flex:1;background:'+color+';height:'+h+'px;min-height:2px;border-radius:2px 2px 0 0;margin:0 1px"></div>';
   }).join('');
   var totalSpend = inWin.reduce(function(a,b){ return a + (b.budget||0); }, 0);
