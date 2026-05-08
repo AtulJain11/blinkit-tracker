@@ -116,6 +116,25 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .tag.idle{background:rgba(245,82,82,.15);color:var(--red)}
 .tag.partial{background:rgba(245,200,66,.15);color:var(--yellow)}
 
+
+/* PINCODE KEYWORD PILL BAR */
+.kwbar{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:14px;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+.kwbar::-webkit-scrollbar{height:6px}
+.kwbar::-webkit-scrollbar-track{background:transparent}
+.kwbar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.kwbar-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:7px;
+  background:linear-gradient(135deg,#f5c842,#f5a524);color:#000;font-size:14px;flex-shrink:0;margin-right:4px}
+.kwbar-info{display:flex;flex-direction:column;margin-right:8px;flex-shrink:0}
+.kwbar-info .t{font-size:12px;font-weight:700;color:var(--text);line-height:1.2}
+.kwbar-info .s{font-size:10px;color:var(--text3);line-height:1.2}
+.kwbar-divider{width:1px;height:20px;background:var(--border);margin:0 6px;flex-shrink:0}
+.kwpill{padding:5px 12px;border-radius:14px;border:1px solid var(--border2);background:var(--bg3);
+  color:var(--text2);font-size:11px;font-family:'Calibri',sans-serif;font-weight:600;cursor:pointer;
+  transition:all .15s;flex-shrink:0;white-space:nowrap}
+.kwpill:hover{border-color:var(--text2);color:var(--text)}
+.kwpill.active{background:var(--accent);border-color:var(--accent);color:#000}
+
 /* CHARTS */
 .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px;margin-bottom:14px}
 .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
@@ -1676,6 +1695,17 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace;text-align:right" id="pc-organic-meta">—</div>
   </div>
 
+  <div class="kwbar" id="pc-organic-kwbar">
+    <div class="kwbar-icon">🔍</div>
+    <div class="kwbar-info">
+      <span class="t">Keyword</span>
+      <span class="s">Click to filter</span>
+    </div>
+    <div class="kwbar-divider"></div>
+    <button class="kwpill active" onclick="setPcKeyword('organic','',this)">All keywords</button>
+    <!-- pills injected here by JS -->
+  </div>
+
   <div class="filters">
     <span class="filter-label">Brand</span>
     <button class="fbtn active" onclick="setPcFilter('organic','brand','ALL',this)">All</button>
@@ -1759,6 +1789,17 @@ tr:hover td{background:rgba(255,255,255,.02)}
       <div style="font-size:11px;color:var(--text2)">Every competitor ad slot we observed, by keyword × pincode. Tells you who's spending where and how hard you'd have to bid to displace them.</div>
     </div>
     <div style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace;text-align:right" id="pc-ads-meta">—</div>
+  </div>
+
+  <div class="kwbar" id="pc-ads-kwbar">
+    <div class="kwbar-icon" style="background:linear-gradient(135deg,#f87171,#ef4444);color:#fff">🎯</div>
+    <div class="kwbar-info">
+      <span class="t">Keyword</span>
+      <span class="s">Click to filter</span>
+    </div>
+    <div class="kwbar-divider"></div>
+    <button class="kwpill active" onclick="setPcKeyword('ads','',this)">All keywords</button>
+    <!-- pills injected here by JS -->
   </div>
 
   <div class="filters">
@@ -9096,8 +9137,8 @@ function exportCitiesCsv() {
 var PC = null;            // pincode data (parsed from bk_pincode_data.json)
 var PC_FILTERS = {
   pricing: { brand: 'ALL', status: 'ALL', city: '', search: '' },
-  organic: { brand: 'ALL', rankBucket: 'ALL', city: '', search: '' },
-  ads:     { adRank: 'ALL', city: '', comp: '', search: '' },
+  organic: { brand: 'ALL', rankBucket: 'ALL', city: '', search: '', keyword: '' },
+  ads:     { adRank: 'ALL', city: '', comp: '', search: '', keyword: '' },
   avail:   { brand: 'ALL', status: 'ALL', priority: '', city: '', search: '' }
 };
 var PC_SORT = {
@@ -9167,7 +9208,49 @@ function buildPcFilters() {
       if (el) el.textContent = dt;
     });
   }
+  // Build alphabetical keyword pills for Organic + Ads
+  buildPcKeywordBar('organic');
+  buildPcKeywordBar('ads');
 }
+
+// Build alphabetical keyword pill bar for a tab and inject into DOM.
+// Called once after PC data loads (from buildPcFilters).
+function buildPcKeywordBar(tab) {
+  if (!PC) return;
+  var rows = (tab === 'organic') ? (PC.organic || []) : (PC.ads || []);
+  var kws = {};
+  rows.forEach(function(r){ if (r.keyword) kws[r.keyword] = true; });
+  var arr = Object.keys(kws).sort(function(a,b){ return a.localeCompare(b); });
+  var bar = document.getElementById('pc-'+tab+'-kwbar');
+  if (!bar) return;
+  // Remove all existing keyword pills (keep icon, info, divider, and 'All' pill)
+  // Strategy: find "All keywords" pill, then remove every kwpill after it
+  var pills = bar.querySelectorAll('.kwpill');
+  // First pill is "All keywords" — keep it. Remove the rest then re-add.
+  for (var i = pills.length - 1; i >= 1; i--) pills[i].remove();
+  var html = '';
+  arr.forEach(function(k){
+    var safe = String(k).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    html += '<button class="kwpill" onclick="setPcKeyword(\''+tab+'\',\''+safe+'\',this)">'+k+'</button>';
+  });
+  // Append after the "All keywords" button
+  var allBtn = bar.querySelector('.kwpill');
+  if (allBtn) allBtn.insertAdjacentHTML('afterend', html);
+}
+
+// Click handler for keyword pills.
+function setPcKeyword(tab, keyword, btn) {
+  PC_FILTERS[tab].keyword = keyword || '';
+  // Update active class within the bar
+  var bar = document.getElementById('pc-'+tab+'-kwbar');
+  if (bar) {
+    bar.querySelectorAll('.kwpill').forEach(function(p){ p.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+  }
+  if (tab === 'organic') renderPcOrganic();
+  else if (tab === 'ads') renderPcAds();
+}
+
 
 function setPcFilter(tab, key, value, btn) {
   PC_FILTERS[tab][key] = value;
@@ -9400,6 +9483,7 @@ function renderPcOrganic() {
   var citySel = document.getElementById('pc-organic-city').value || '';
 
   var rows = (PC.organic || []).filter(function(r){
+    if (f.keyword && r.keyword !== f.keyword) return false;
     if (f.brand !== 'ALL' && r.brand !== f.brand) return false;
     if (citySel && r.city !== citySel) return false;
     if (f.rankBucket === 'top3' && (r.rank == null || r.rank > 3)) return false;
@@ -9454,6 +9538,7 @@ function renderPcOrganic() {
 
   // Per-keyword summary
   var kwRows = kwSummary.slice();
+  if (f.keyword) kwRows = kwRows.filter(function(r){ return r.keyword === f.keyword; });
   if (search) kwRows = kwRows.filter(function(r){ return (r.keyword||'').toLowerCase().includes(search); });
   var kwSort = PC_SORT['organic-kw'];
   kwRows = genericSort(kwRows, kwSort.col, kwSort.dir);
@@ -9502,6 +9587,7 @@ function renderPcAds() {
   var compSel = document.getElementById('pc-ads-comp').value || '';
 
   var rows = (PC.ads || []).filter(function(r){
+    if (f.keyword && r.keyword !== f.keyword) return false;
     if (f.adRank !== 'ALL' && r.ad_rank != +f.adRank) return false;
     if (citySel && r.city !== citySel) return false;
     if (compSel && r.comp_brand !== compSel) return false;
@@ -9555,6 +9641,7 @@ function renderPcAds() {
 
   // Per-keyword summary
   var kwRows = kwSummary.slice();
+  if (f.keyword) kwRows = kwRows.filter(function(r){ return r.keyword === f.keyword; });
   if (search) kwRows = kwRows.filter(function(r){ return (r.keyword||'').toLowerCase().includes(search) || (r.top_buyer||'').toLowerCase().includes(search); });
   var kwSort = PC_SORT['ads-kw'];
   kwRows = genericSort(kwRows, kwSort.col, kwSort.dir);
