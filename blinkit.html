@@ -209,6 +209,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
   <button class="nav-tab" onclick="showPage('pc-pricing',this)">💰 Pricing</button>
   <button class="nav-tab" onclick="showPage('pc-organic',this)">🔍 Organic</button>
   <button class="nav-tab" onclick="showPage('pc-ads',this)">🎯 Ads Search</button>
+  <button class="nav-tab" onclick="showPage('pc-kwpos',this)">🎯 Keyword Position</button>
   <button class="nav-tab" onclick="showPage('pc-avail',this)">📍 Availability</button>
   <div class="nav-right">
     <span class="nav-meta" id="nav-meta">—</span>
@@ -1673,6 +1674,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
   <div class="stat-grid" id="pc-pricing-kpis"></div>
 
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">
+      <span class="card-title">📈 Trend · Last 4 Snapshots</span>
+      <span class="card-sub" id="pc-pricing-trend-sub">—</span>
+    </div>
+    <div id="pc-pricing-trend-body" style="padding:14px"></div>
+  </div>
+
   <div class="card">
     <div class="card-hdr">
       <span class="card-title">📊 Pricing Insights</span>
@@ -1772,6 +1781,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
 
   <div class="stat-grid" id="pc-organic-kpis"></div>
 
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">
+      <span class="card-title">📈 Trend · Last 4 Snapshots</span>
+      <span class="card-sub" id="pc-organic-trend-sub">—</span>
+    </div>
+    <div id="pc-organic-trend-body" style="padding:14px"></div>
+  </div>
+
   <div class="card">
     <div class="card-hdr">
       <span class="card-title">📊 Organic Search Insights</span>
@@ -1865,6 +1882,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 
   <div class="stat-grid" id="pc-ads-kpis"></div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">
+      <span class="card-title">📈 Trend · Last 4 Snapshots</span>
+      <span class="card-sub" id="pc-ads-trend-sub">—</span>
+    </div>
+    <div id="pc-ads-trend-body" style="padding:14px"></div>
+  </div>
 
   <div class="card">
     <div class="card-hdr">
@@ -1990,6 +2015,127 @@ tr:hover td{background:rgba(255,255,255,.02)}
 </div>
 
 <!-- ═══ AVAILABILITY BY PINCODE PAGE ══════════════════════════════════ -->
+<div class="page" id="page-pc-kwpos">
+  <div style="background:linear-gradient(135deg,rgba(245,165,36,.10),rgba(245,165,36,.02));border:1px solid rgba(245,165,36,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px">
+    <div style="font-size:24px">🎯</div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">Keyword Position — Combined Organic + Ad View</div>
+      <div style="font-size:11px;color:var(--text2)">For every keyword we track, see where our SKUs rank both organically and as ads. Three drill-down levels: per-keyword, per (keyword × SKU), per (keyword × SKU × pincode).</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><select class="pc-date-sel" id="pc-kwpos-datesel" onchange="setPcDate('kwpos',this.value)"></select><div style="font-size:10px;color:var(--text3);font-family:'Courier New',monospace;text-align:right" id="pc-kwpos-meta">—</div></div>
+  </div>
+
+  <div class="filters">
+    <span class="filter-label">Brand</span>
+    <button class="fbtn active" onclick="setPcFilter('kwpos','brand','ALL',this)">All</button>
+    <button class="fbtn ba"     onclick="setPcFilter('kwpos','brand','Bare Anatomy',this)">BA</button>
+    <button class="fbtn cap"    onclick="setPcFilter('kwpos','brand','Chemist At Play',this)">CAP</button>
+    <button class="fbtn ss"     onclick="setPcFilter('kwpos','brand','SunScoop',this)">SS</button>
+    <button class="fbtn vinci"  onclick="setPcFilter('kwpos','brand','Vinci Botanicals',this)">Vinci</button>
+    <div class="fsep"></div>
+    <span class="filter-label">Keyword</span>
+    <select class="fsel" id="pc-kwpos-keyword" onchange="renderPcKwpos()" style="min-width:160px"><option value="">All keywords</option></select>
+    <div class="fsep"></div>
+    <span class="filter-label">City</span>
+    <select class="fsel" id="pc-kwpos-city" onchange="renderPcKwpos()" style="min-width:140px"><option value="">All</option></select>
+    <div class="fsep"></div>
+    <input class="fsearch" placeholder="Search keyword, SKU, product..." id="pc-kwpos-search" oninput="renderPcKwpos()">
+  </div>
+
+  <div class="stat-grid" id="pc-kwpos-kpis"></div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">
+      <span class="card-title">📈 Trend · Last 4 Snapshots</span>
+      <span class="card-sub" id="pc-kwpos-trend-sub">—</span>
+    </div>
+    <div id="pc-kwpos-trend-body" style="padding:14px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">📊 Keyword Position Insights</span>
+      <span class="card-sub" id="pc-kwpos-insight-sub"></span>
+    </div>
+    <div id="pc-kwpos-insights-body" style="padding:14px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🥇 Section 1 · Per Keyword Summary</span>
+      <span class="card-sub">One row per keyword · org + ad rank averaged across our SKUs</span>
+      <button class="csv-btn" onclick="exportPcKwposLevel1()">⬇ CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="pc-kwpos-l1-table">
+        <thead><tr>
+          <th>Keyword</th>
+          <th class="num">Our SKUs</th>
+          <th class="num">Pincodes</th>
+          <th class="num">Best Org</th>
+          <th class="num">Avg Org</th>
+          <th class="num">#1 Org Wins</th>
+          <th class="num">Best Ad</th>
+          <th class="num">Avg Ad</th>
+          <th class="num">#1 Ad Wins</th>
+          <th class="num">Org+Ad Overlap</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">🎯 Section 2 · Per (Keyword × SKU)</span>
+      <span class="card-sub">Each of our SKUs' organic + ad position per keyword</span>
+      <button class="csv-btn" onclick="exportPcKwposLevel2()">⬇ CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="pc-kwpos-l2-table">
+        <thead><tr>
+          <th>Keyword</th>
+          <th>Blinkit ID / Product</th>
+          <th>Brand</th>
+          <th class="num">Pincodes</th>
+          <th class="num">Best Org</th>
+          <th class="num">Avg Org</th>
+          <th class="num">Org #1 %</th>
+          <th class="num">Best Ad</th>
+          <th class="num">Avg Ad</th>
+          <th class="num">Ad #1 %</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">📍 Section 3 · Per (Keyword × SKU × Pincode)</span>
+      <span class="card-sub">Full detail — every observed combination</span>
+      <button class="csv-btn" onclick="exportPcKwposLevel3()">⬇ CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="pc-kwpos-l3-table">
+        <thead><tr>
+          <th>Keyword</th>
+          <th>Blinkit ID / Product</th>
+          <th>Brand</th>
+          <th>Pincode</th>
+          <th>City</th>
+          <th class="num">Org Rank</th>
+          <th class="num">Ad Rank</th>
+          <th>In Stock</th>
+          <th class="num">Price</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-pc-avail">
   <div style="background:linear-gradient(135deg,rgba(167,139,250,.10),rgba(167,139,250,.02));border:1px solid rgba(167,139,250,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px">
     <div style="font-size:24px">📍</div>
@@ -2023,6 +2169,14 @@ tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 
   <div class="stat-grid" id="pc-avail-kpis"></div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr">
+      <span class="card-title">📈 Trend · Last 4 Snapshots</span>
+      <span class="card-sub" id="pc-avail-trend-sub">—</span>
+    </div>
+    <div id="pc-avail-trend-body" style="padding:14px"></div>
+  </div>
 
   <div class="card">
     <div class="card-hdr">
@@ -10758,6 +10912,580 @@ function exportPcCsv(kind) {
   a.href = url; a.download = fname; a.click();
   setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
 }
+
+
+
+// ══════════════════════════════════════════════════════════════════
+// PINCODE TREND CHARTS — top of each pincode tab
+// ══════════════════════════════════════════════════════════════════
+// Configures which metric(s) each tab shows.
+var PC_TREND_METRICS = {
+  pricing: [
+    { key: 'compliance_breaches', label: 'Compliance Breaches', color: '#ef4444', lowerIsBetter: true },
+    { key: 'avg_actual_disc',     label: 'Avg Actual Disc %',   color: '#10b981', lowerIsBetter: false, fmt: function(v){return (v==null?'—':v.toFixed(1)+'%');} }
+  ],
+  organic: [
+    { key: '__organic_avg_rank',  label: 'Avg Org Rank',        color: '#f5a524', lowerIsBetter: true, fmt: function(v){return v==null?'—':v.toFixed(1);} },
+    { key: '__organic_top3_pct',  label: 'Top 3 Wins %',        color: '#10b981', lowerIsBetter: false, fmt: function(v){return v==null?'—':v.toFixed(1)+'%';} }
+  ],
+  ads: [
+    { key: 'ad_slots_total',      label: 'Total Ad Slots',      color: '#3b82f6', lowerIsBetter: null },
+    { key: '__our_ads_top_pct',   label: 'Our Ads at #1 %',     color: '#10b981', lowerIsBetter: false, fmt: function(v){return v==null?'—':v.toFixed(1)+'%';} }
+  ],
+  avail: [
+    { key: 'in_stock_pct',        label: 'In-Stock %',          color: '#10b981', lowerIsBetter: false, fmt: function(v){return v==null?'—':v.toFixed(1)+'%';} },
+    { key: 'tier1_oos_count',     label: 'Tier 1 OOS',          color: '#ef4444', lowerIsBetter: true }
+  ],
+  kwpos: [
+    { key: '__organic_avg_rank',  label: 'Avg Org Rank',        color: '#f5a524', lowerIsBetter: true, fmt: function(v){return v==null?'—':v.toFixed(1);} },
+    { key: '__ads_avg_rank',      label: 'Avg Ad Rank',         color: '#3b82f6', lowerIsBetter: true, fmt: function(v){return v==null?'—':v.toFixed(1);} }
+  ]
+};
+
+// Compute derived metrics that aren't in summary, by scanning a snapshot's arrays
+function computeSnapshotDerived(snap) {
+  var d = {};
+  // organic avg rank + top3 win %
+  var org = snap.organic || [];
+  if (org.length) {
+    var ranks = org.filter(function(r){return r.organic_rank != null;}).map(function(r){return +r.organic_rank;});
+    if (ranks.length) {
+      d.__organic_avg_rank = ranks.reduce(function(a,b){return a+b;}, 0) / ranks.length;
+      var top3 = ranks.filter(function(r){return r <= 3;}).length;
+      d.__organic_top3_pct = 100 * top3 / ranks.length;
+    }
+  }
+  // our_ads avg rank + #1 share
+  var our = snap.our_ads || [];
+  if (our.length) {
+    var arnks = our.filter(function(r){return r.ad_rank != null;}).map(function(r){return +r.ad_rank;});
+    if (arnks.length) {
+      d.__ads_avg_rank = arnks.reduce(function(a,b){return a+b;}, 0) / arnks.length;
+      var top1 = arnks.filter(function(r){return r === 1;}).length;
+      d.__our_ads_top_pct = 100 * top1 / arnks.length;
+    }
+  }
+  return d;
+}
+
+function pcTrendData(tab) {
+  // Returns array of {date, day_type, metricsByKey} for last 4 snapshots, oldest→newest
+  if (!PC || !PC.snapshots || !PC.snapshots.length) return [];
+  // PC.snapshots is newest first; reverse for chronological
+  var snaps = PC.snapshots.slice().reverse();
+  return snaps.map(function(s){
+    var summ = (s.summary || {});
+    var derived = computeSnapshotDerived(s);
+    var merged = {};
+    Object.keys(summ).forEach(function(k){ merged[k] = summ[k]; });
+    Object.keys(derived).forEach(function(k){ merged[k] = derived[k]; });
+    return { date: s.snapshot_date, day_type: s.day_type, metrics: merged };
+  });
+}
+
+function renderPcTrend(tab) {
+  var body = document.getElementById('pc-' + tab + '-trend-body');
+  var sub  = document.getElementById('pc-' + tab + '-trend-sub');
+  if (!body) return;
+  var data = pcTrendData(tab);
+  var metrics = PC_TREND_METRICS[tab];
+  if (!metrics) { body.innerHTML = ''; return; }
+  if (!data.length) {
+    body.innerHTML = '<div style="color:var(--text3);font-size:12px">No snapshot history yet.</div>';
+    if (sub) sub.textContent = '—';
+    return;
+  }
+  if (sub) sub.textContent = data.length + ' snapshot' + (data.length===1?'':'s') + ': ' + data[0].date + ' → ' + data[data.length-1].date;
+
+  // Build a side-by-side grid of mini line-charts (one per metric)
+  var W = 320, H = 100, PAD_L = 40, PAD_R = 12, PAD_T = 16, PAD_B = 26;
+  var charts = metrics.map(function(m){
+    var pts = data.map(function(d){ return {date: d.date, day_type: d.day_type, val: d.metrics[m.key]}; });
+    var nums = pts.map(function(p){return p.val;}).filter(function(v){return v != null && !isNaN(v);});
+    if (!nums.length) {
+      return '<div style="border:1px solid var(--border);border-radius:8px;padding:14px;background:rgba(0,0,0,.15)">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">' + m.label + '</div>' +
+        '<div style="color:var(--text3);font-size:11px">No data</div></div>';
+    }
+    var min = Math.min.apply(null, nums), max = Math.max.apply(null, nums);
+    var range = Math.max(max - min, max * 0.05 || 1);
+    var plotW = W - PAD_L - PAD_R, plotH = H - PAD_T - PAD_B;
+    function x(i){ return PAD_L + (pts.length <= 1 ? plotW/2 : plotW * i / (pts.length-1)); }
+    function y(v){ return PAD_T + plotH - plotH * (v - min) / range; }
+
+    var fmt = m.fmt || function(v){ return v == null ? '—' : (Math.round(v)).toLocaleString('en-IN'); };
+
+    var path = pts.map(function(p, i){
+      if (p.val == null) return null;
+      return (i === 0 || pts[i-1].val == null ? 'M' : 'L') + x(i).toFixed(1) + ',' + y(p.val).toFixed(1);
+    }).filter(Boolean).join(' ');
+
+    var dots = pts.map(function(p, i){
+      if (p.val == null) return '';
+      var color = m.color;
+      var cx = x(i).toFixed(1), cy = y(p.val).toFixed(1);
+      return '<circle cx="'+cx+'" cy="'+cy+'" r="3.5" fill="'+color+'" stroke="#fff" stroke-width="1"/>' +
+             '<text x="'+cx+'" y="'+(parseFloat(cy)-8).toFixed(1)+'" text-anchor="middle" fill="var(--text)" font-size="10" font-weight="600">'+fmt(p.val)+'</text>';
+    }).join('');
+
+    var xLabels = pts.map(function(p, i){
+      return '<text x="'+x(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" fill="var(--text3)" font-size="9">'+(p.date || '').slice(5)+'</text>';
+    }).join('');
+
+    // Latest vs previous delta
+    var deltaHtml = '';
+    if (pts.length >= 2 && pts[pts.length-1].val != null && pts[pts.length-2].val != null) {
+      var cur = pts[pts.length-1].val, prv = pts[pts.length-2].val;
+      var diff = cur - prv;
+      var goodWhen = m.lowerIsBetter;
+      var isGood = goodWhen === null ? null : (goodWhen ? diff < 0 : diff > 0);
+      var dColor = isGood === null ? 'var(--text3)' : isGood ? '#10b981' : '#ef4444';
+      var sign = diff > 0 ? '+' : '';
+      var dispDiff = (m.fmt && (m.key.indexOf('pct') >= 0 || m.fmt.toString().indexOf('%') >= 0))
+        ? sign + diff.toFixed(1) + 'pp'
+        : (typeof diff === 'number' && Math.abs(diff) < 10 ? sign + diff.toFixed(1) : sign + Math.round(diff).toLocaleString('en-IN'));
+      deltaHtml = '<span style="color:'+dColor+';font-size:11px;font-weight:600">' + dispDiff + '</span>';
+    }
+
+    return '<div style="border:1px solid var(--border);border-radius:8px;padding:12px;background:rgba(0,0,0,.15)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--text2)">' + m.label + '</div>' +
+        '<div>' + deltaHtml + '</div>' +
+      '</div>' +
+      '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:110px;display:block">' +
+        '<path d="'+path+'" fill="none" stroke="'+m.color+'" stroke-width="2"/>' +
+        dots +
+        xLabels +
+      '</svg>' +
+      '</div>';
+  }).join('');
+
+  body.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">' + charts + '</div>';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HOOK trend into existing render functions
+// We do this by wrapping the originals AFTER they're defined.
+// ══════════════════════════════════════════════════════════════════
+(function(){
+  function wrap(name, tab) {
+    var orig = window[name];
+    if (typeof orig !== 'function') return;
+    window[name] = function() {
+      var r = orig.apply(this, arguments);
+      try { renderPcTrend(tab); } catch(e) { console.warn('renderPcTrend('+tab+') failed:', e); }
+      return r;
+    };
+  }
+  wrap('renderPcPricing', 'pricing');
+  wrap('renderPcOrganic', 'organic');
+  wrap('renderPcAds',     'ads');
+  wrap('renderPcAvail',   'avail');
+})();
+
+// ══════════════════════════════════════════════════════════════════
+// KEYWORD POSITION TAB — 3-level aggregation
+// ══════════════════════════════════════════════════════════════════
+
+// Maintain filters for this new tab in the same shape as other PC tabs
+var PC_KWPOS_FILTERS = { brand: 'ALL', keyword: '', city: '', search: '' };
+
+function buildPcKwposFilters() {
+  if (!PC_VIEW) return;
+  // Keyword dropdown from organic + our_ads union
+  var kws = {};
+  (PC_VIEW.organic || []).forEach(function(r){ if (r.keyword) kws[r.keyword] = true; });
+  (PC_VIEW.our_ads || []).forEach(function(r){ if (r.keyword) kws[r.keyword] = true; });
+  var kwArr = Object.keys(kws).sort();
+  var kwSel = document.getElementById('pc-kwpos-keyword');
+  if (kwSel) {
+    kwSel.innerHTML = '<option value="">All keywords</option>' +
+      kwArr.map(function(k){return '<option value="'+k+'">'+k+'</option>';}).join('');
+  }
+  // City dropdown
+  var cities = (PC_VIEW.filters && PC_VIEW.filters.cities || []).slice().sort();
+  var citySel = document.getElementById('pc-kwpos-city');
+  if (citySel) {
+    citySel.innerHTML = '<option value="">All</option>' +
+      cities.map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  }
+}
+
+// Compute 3-level aggregations from PC_VIEW.organic + PC_VIEW.our_ads
+function pcKwposBuild() {
+  if (!PC_VIEW) return { l1: [], l2: [], l3: [] };
+  var organic = PC_VIEW.organic || [];
+  var ourAds = PC_VIEW.our_ads || [];
+
+  // Filters
+  var fBrand = PC_KWPOS_FILTERS.brand;
+  var fKw = PC_KWPOS_FILTERS.keyword;
+  var fCity = PC_KWPOS_FILTERS.city;
+  var fSearch = (PC_KWPOS_FILTERS.search || '').toLowerCase().trim();
+
+  function pass(r) {
+    if (fBrand !== 'ALL' && r.brand !== fBrand) return false;
+    if (fKw && r.keyword !== fKw) return false;
+    if (fCity && r.city !== fCity) return false;
+    if (fSearch) {
+      var blob = (r.keyword + ' ' + r.sku + ' ' + (r.sku_name||'') + ' ' + (r.brand||'') + ' ' + (r.pincode||'')).toLowerCase();
+      if (blob.indexOf(fSearch) < 0) return false;
+    }
+    return true;
+  }
+
+  var orgFiltered = organic.filter(pass);
+  var adsFiltered = ourAds.filter(pass);
+
+  // Build a per-pincode lookup: key = "kw||sku||pincode" → { org_rank, ad_rank, in_stock, price, ... }
+  var l3Map = {};
+  orgFiltered.forEach(function(r){
+    var key = r.keyword + '||' + r.sku + '||' + r.pincode;
+    if (!l3Map[key]) {
+      l3Map[key] = {
+        keyword: r.keyword, sku: r.sku, sku_name: r.sku_name, brand: r.brand,
+        pincode: r.pincode, city: r.city,
+        org_rank: null, ad_rank: null, in_stock: null, price: null
+      };
+    }
+    l3Map[key].org_rank = r.organic_rank;
+    if (r.in_stock != null) l3Map[key].in_stock = r.in_stock;
+    if (r.price != null) l3Map[key].price = r.price;
+  });
+  adsFiltered.forEach(function(r){
+    var key = r.keyword + '||' + r.sku + '||' + r.pincode;
+    if (!l3Map[key]) {
+      l3Map[key] = {
+        keyword: r.keyword, sku: r.sku, sku_name: r.sku_name || r.ad_product, brand: r.brand || r.ad_brand,
+        pincode: r.pincode, city: r.city,
+        org_rank: null, ad_rank: null, in_stock: null, price: null
+      };
+    }
+    l3Map[key].ad_rank = r.ad_rank;
+    if (l3Map[key].brand == null) l3Map[key].brand = r.ad_brand;
+    if (l3Map[key].sku_name == null) l3Map[key].sku_name = r.ad_product;
+  });
+  var l3 = Object.keys(l3Map).map(function(k){return l3Map[k];})
+    .sort(function(a,b){
+      if (a.keyword !== b.keyword) return a.keyword.localeCompare(b.keyword);
+      if (a.sku !== b.sku) return (a.sku||'').localeCompare(b.sku||'');
+      return (a.pincode||0) - (b.pincode||0);
+    });
+
+  // Level 2: aggregate l3 by (keyword × sku)
+  var l2Map = {};
+  l3.forEach(function(r){
+    var key = r.keyword + '||' + r.sku;
+    if (!l2Map[key]) {
+      l2Map[key] = {
+        keyword: r.keyword, sku: r.sku, sku_name: r.sku_name, brand: r.brand,
+        pincodes: 0, orgRanks: [], adRanks: [], orgWins: 0, adWins: 0
+      };
+    }
+    var s = l2Map[key];
+    s.pincodes++;
+    if (r.org_rank != null) {
+      s.orgRanks.push(+r.org_rank);
+      if (+r.org_rank === 1) s.orgWins++;
+    }
+    if (r.ad_rank != null) {
+      s.adRanks.push(+r.ad_rank);
+      if (+r.ad_rank === 1) s.adWins++;
+    }
+  });
+  var l2 = Object.keys(l2Map).map(function(k){
+    var s = l2Map[k];
+    var avgOrg = s.orgRanks.length ? s.orgRanks.reduce(function(a,b){return a+b;},0)/s.orgRanks.length : null;
+    var bestOrg = s.orgRanks.length ? Math.min.apply(null, s.orgRanks) : null;
+    var avgAd = s.adRanks.length ? s.adRanks.reduce(function(a,b){return a+b;},0)/s.adRanks.length : null;
+    var bestAd = s.adRanks.length ? Math.min.apply(null, s.adRanks) : null;
+    // Status flag
+    var status = '—';
+    if (s.adRanks.length && s.orgRanks.length) {
+      // Both org and paid present
+      if (avgOrg <= 3 && avgAd <= 3) status = '🥇 Dual #1';
+      else if (avgOrg <= 3 && avgAd > 3) status = '⚠️ Org strong, weak ad';
+      else if (avgOrg > 10 && avgAd <= 3) status = '💸 Paying for visibility';
+      else status = 'Mixed';
+    } else if (s.adRanks.length) {
+      status = '🎯 Ad only';
+    } else if (s.orgRanks.length) {
+      status = '🔍 Organic only';
+    }
+    return {
+      keyword: s.keyword, sku: s.sku, sku_name: s.sku_name, brand: s.brand,
+      pincodes: s.pincodes,
+      bestOrg: bestOrg, avgOrg: avgOrg, orgWinPct: s.pincodes ? 100*s.orgWins/s.pincodes : null,
+      bestAd: bestAd, avgAd: avgAd, adWinPct: s.pincodes ? 100*s.adWins/s.pincodes : null,
+      status: status,
+      _sortKey: (avgOrg != null ? avgOrg : 999) + (avgAd != null ? avgAd : 999)
+    };
+  }).sort(function(a,b){ return a._sortKey - b._sortKey; });
+
+  // Level 1: aggregate l2 by keyword
+  var l1Map = {};
+  l2.forEach(function(s){
+    if (!l1Map[s.keyword]) {
+      l1Map[s.keyword] = {
+        keyword: s.keyword, skus: 0, pincodes: 0,
+        orgRanks: [], adRanks: [], orgWins: 0, adWins: 0,
+        skuSet: {}, overlap: 0
+      };
+    }
+    var L = l1Map[s.keyword];
+    L.skus++;
+    L.pincodes += s.pincodes;
+    if (s.bestOrg != null) L.orgRanks.push(s.avgOrg);
+    if (s.bestAd != null) L.adRanks.push(s.avgAd);
+    L.orgWins += Math.round((s.orgWinPct || 0) / 100 * s.pincodes);
+    L.adWins += Math.round((s.adWinPct || 0) / 100 * s.pincodes);
+    L.skuSet[s.sku] = true;
+    if (s.bestOrg != null && s.bestAd != null) L.overlap++;
+  });
+  var l1 = Object.keys(l1Map).map(function(k){
+    var L = l1Map[k];
+    return {
+      keyword: L.keyword, skus: Object.keys(L.skuSet).length, pincodes: L.pincodes,
+      bestOrg: L.orgRanks.length ? Math.min.apply(null, L.orgRanks) : null,
+      avgOrg: L.orgRanks.length ? L.orgRanks.reduce(function(a,b){return a+b;},0)/L.orgRanks.length : null,
+      orgWins: L.orgWins,
+      bestAd: L.adRanks.length ? Math.min.apply(null, L.adRanks) : null,
+      avgAd: L.adRanks.length ? L.adRanks.reduce(function(a,b){return a+b;},0)/L.adRanks.length : null,
+      adWins: L.adWins,
+      overlap: L.overlap
+    };
+  }).sort(function(a,b){
+    // Sort by best combined rank
+    var ao = a.avgOrg != null ? a.avgOrg : 999;
+    var bo = b.avgOrg != null ? b.avgOrg : 999;
+    return ao - bo;
+  });
+
+  return { l1: l1, l2: l2, l3: l3 };
+}
+
+function fmtRank(v) { return v == null ? '—' : (typeof v === 'number' ? v.toFixed(1) : v); }
+
+function renderPcKwpos() {
+  if (!PC_VIEW) return;
+  var built = pcKwposBuild();
+  var l1 = built.l1, l2 = built.l2, l3 = built.l3;
+  window._PC_KWPOS_BUILT = built;  // for CSV export
+
+  // KPIs
+  var totalKws = l1.length;
+  var totalSkus = (function(){var s={}; l2.forEach(function(r){s[r.sku]=true;}); return Object.keys(s).length;})();
+  var totalPincodes = (function(){var s={}; l3.forEach(function(r){s[r.pincode]=true;}); return Object.keys(s).length;})();
+  var avgOrg = (function(){var arr=l3.filter(function(r){return r.org_rank!=null;}).map(function(r){return +r.org_rank;}); return arr.length?arr.reduce(function(a,b){return a+b;},0)/arr.length:null;})();
+  var avgAd = (function(){var arr=l3.filter(function(r){return r.ad_rank!=null;}).map(function(r){return +r.ad_rank;}); return arr.length?arr.reduce(function(a,b){return a+b;},0)/arr.length:null;})();
+  var dual = l3.filter(function(r){return r.org_rank!=null && r.ad_rank!=null;}).length;
+
+  var kpis = [
+    { label: 'Keywords', val: totalKws },
+    { label: 'SKUs', val: totalSkus },
+    { label: 'Pincodes', val: totalPincodes },
+    { label: 'Avg Org Rank', val: avgOrg==null?'—':avgOrg.toFixed(1) },
+    { label: 'Avg Ad Rank', val: avgAd==null?'—':avgAd.toFixed(1) },
+    { label: 'Org+Ad Overlap', val: dual }
+  ];
+  var kpiHtml = kpis.map(function(k){
+    return '<div class="stat-card"><div class="stat-label">'+k.label+'</div><div class="stat-value">'+k.val+'</div></div>';
+  }).join('');
+  document.getElementById('pc-kwpos-kpis').innerHTML = kpiHtml;
+
+  // Insights box — show 2-3 actionable items
+  var insightHtml = '';
+  // "Paying for visibility" — SKUs where avgOrg > 10 AND avgAd <= 3
+  var paying = l2.filter(function(r){return r.avgOrg!=null && r.avgOrg>10 && r.avgAd!=null && r.avgAd<=3;}).slice(0,5);
+  // "Org strong, weak ad"
+  var orgStrong = l2.filter(function(r){return r.avgOrg!=null && r.avgOrg<=3 && r.avgAd!=null && r.avgAd>3;}).slice(0,5);
+  // "Dual #1"
+  var dualWin = l2.filter(function(r){return r.bestOrg===1 && r.bestAd===1;}).slice(0,5);
+
+  insightHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">' +
+    '<div style="border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;background:rgba(239,68,68,.05)">' +
+      '<div style="font-weight:700;color:#ef4444;margin-bottom:6px;font-size:12px">💸 Paying for Visibility (' + paying.length + ')</div>' +
+      '<div style="font-size:11px;color:var(--text2);margin-bottom:6px">Weak organic (>10) + strong ad (≤3) — your ads are doing the work</div>' +
+      (paying.length ? paying.map(function(r){return '• <b>'+r.sku+'</b> · "'+r.keyword+'" · Org '+fmtRank(r.avgOrg)+' / Ad '+fmtRank(r.avgAd);}).join('<br>') : 'None.') +
+    '</div>' +
+    '<div style="border:1px solid rgba(245,165,36,.3);border-radius:8px;padding:12px;background:rgba(245,165,36,.05)">' +
+      '<div style="font-weight:700;color:#f5a524;margin-bottom:6px;font-size:12px">⚠️ Org Strong, Weak Ad (' + orgStrong.length + ')</div>' +
+      '<div style="font-size:11px;color:var(--text2);margin-bottom:6px">Avg org ≤3 but ad rank >3 — possible bid increase opportunity</div>' +
+      (orgStrong.length ? orgStrong.map(function(r){return '• <b>'+r.sku+'</b> · "'+r.keyword+'" · Org '+fmtRank(r.avgOrg)+' / Ad '+fmtRank(r.avgAd);}).join('<br>') : 'None.') +
+    '</div>' +
+    '<div style="border:1px solid rgba(16,185,129,.3);border-radius:8px;padding:12px;background:rgba(16,185,129,.05)">' +
+      '<div style="font-weight:700;color:#10b981;margin-bottom:6px;font-size:12px">🥇 Dual #1 Winners (' + dualWin.length + ')</div>' +
+      '<div style="font-size:11px;color:var(--text2);margin-bottom:6px">Winning both organic + ad in at least 1 pincode</div>' +
+      (dualWin.length ? dualWin.map(function(r){return '• <b>'+r.sku+'</b> · "'+r.keyword+'"';}).join('<br>') : 'None.') +
+    '</div>' +
+  '</div>';
+  document.getElementById('pc-kwpos-insights-body').innerHTML = insightHtml;
+  document.getElementById('pc-kwpos-insight-sub').textContent = 'Across ' + totalKws + ' keywords';
+
+  // Level 1 table
+  var l1Tbody = document.querySelector('#pc-kwpos-l1-table tbody');
+  l1Tbody.innerHTML = l1.map(function(r){
+    return '<tr>' +
+      '<td><b>'+r.keyword+'</b></td>' +
+      '<td class="num">'+r.skus+'</td>' +
+      '<td class="num">'+r.pincodes+'</td>' +
+      '<td class="num">'+fmtRank(r.bestOrg)+'</td>' +
+      '<td class="num">'+fmtRank(r.avgOrg)+'</td>' +
+      '<td class="num">'+r.orgWins+'</td>' +
+      '<td class="num">'+fmtRank(r.bestAd)+'</td>' +
+      '<td class="num">'+fmtRank(r.avgAd)+'</td>' +
+      '<td class="num">'+r.adWins+'</td>' +
+      '<td class="num">'+r.overlap+'</td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--text3)">No data for current filters</td></tr>';
+
+  // Level 2 table
+  var l2Tbody = document.querySelector('#pc-kwpos-l2-table tbody');
+  l2Tbody.innerHTML = l2.map(function(r){
+    var statusColor = r.status.indexOf('Dual') >= 0 ? '#10b981' :
+                      r.status.indexOf('💸') >= 0 ? '#ef4444' :
+                      r.status.indexOf('⚠️') >= 0 ? '#f5a524' : 'var(--text3)';
+    var fmtPct = function(v){return v==null?'—':v.toFixed(0)+'%';};
+    var skuHtml = '<b>'+r.sku+'</b><br><span style="font-size:11px;color:var(--text2)">'+(r.sku_name||'')+'</span>';
+    return '<tr>' +
+      '<td>'+r.keyword+'</td>' +
+      '<td>'+skuHtml+'</td>' +
+      '<td>'+(r.brand||'—')+'</td>' +
+      '<td class="num">'+r.pincodes+'</td>' +
+      '<td class="num">'+fmtRank(r.bestOrg)+'</td>' +
+      '<td class="num">'+fmtRank(r.avgOrg)+'</td>' +
+      '<td class="num">'+fmtPct(r.orgWinPct)+'</td>' +
+      '<td class="num">'+fmtRank(r.bestAd)+'</td>' +
+      '<td class="num">'+fmtRank(r.avgAd)+'</td>' +
+      '<td class="num">'+fmtPct(r.adWinPct)+'</td>' +
+      '<td><span style="color:'+statusColor+';font-size:11px;font-weight:600">'+r.status+'</span></td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--text3)">No data for current filters</td></tr>';
+
+  // Level 3 table (limit display to 500 rows for perf, csv has all)
+  var l3Tbody = document.querySelector('#pc-kwpos-l3-table tbody');
+  var l3Display = l3.slice(0, 500);
+  l3Tbody.innerHTML = l3Display.map(function(r){
+    var skuHtml = '<b>'+r.sku+'</b><br><span style="font-size:11px;color:var(--text2)">'+(r.sku_name||'')+'</span>';
+    var stockBadge = r.in_stock === true ? '<span style="color:#10b981">✓</span>' : r.in_stock === false ? '<span style="color:#ef4444">✗</span>' : '—';
+    return '<tr>' +
+      '<td>'+r.keyword+'</td>' +
+      '<td>'+skuHtml+'</td>' +
+      '<td>'+(r.brand||'—')+'</td>' +
+      '<td>'+r.pincode+'</td>' +
+      '<td>'+(r.city||'—')+'</td>' +
+      '<td class="num">'+fmtRank(r.org_rank)+'</td>' +
+      '<td class="num">'+fmtRank(r.ad_rank)+'</td>' +
+      '<td>'+stockBadge+'</td>' +
+      '<td class="num">'+(r.price!=null?'₹'+r.price:'—')+'</td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text3)">No data for current filters</td></tr>';
+  if (l3.length > 500) {
+    l3Tbody.innerHTML += '<tr><td colspan="9" style="text-align:center;color:var(--text3);font-size:11px">Showing first 500 of ' + l3.length + ' rows. Download CSV for full data.</td></tr>';
+  }
+
+  // Render trend chart for this tab too
+  try { renderPcTrend('kwpos'); } catch(e) {}
+}
+
+// CSV exports for Keyword Position
+function _csvEscape(v) {
+  if (v == null) return '';
+  var s = String(v);
+  if (s.indexOf(',') >= 0 || s.indexOf('"') >= 0 || s.indexOf('\n') >= 0) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+function _downloadCsv(filename, headers, rows) {
+  var csv = headers.map(_csvEscape).join(',') + '\n' +
+    rows.map(function(r){ return r.map(_csvEscape).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function exportPcKwposLevel1() {
+  var built = window._PC_KWPOS_BUILT || pcKwposBuild();
+  _downloadCsv('kwpos_level1_keyword_summary.csv',
+    ['Keyword','Our SKUs','Pincodes','Best Org','Avg Org','#1 Org Wins','Best Ad','Avg Ad','#1 Ad Wins','Org+Ad Overlap'],
+    built.l1.map(function(r){return [r.keyword,r.skus,r.pincodes,r.bestOrg,r.avgOrg==null?'':r.avgOrg.toFixed(1),r.orgWins,r.bestAd,r.avgAd==null?'':r.avgAd.toFixed(1),r.adWins,r.overlap];})
+  );
+}
+function exportPcKwposLevel2() {
+  var built = window._PC_KWPOS_BUILT || pcKwposBuild();
+  _downloadCsv('kwpos_level2_keyword_x_sku.csv',
+    ['Keyword','SKU','Product','Brand','Pincodes','Best Org','Avg Org','Org #1 %','Best Ad','Avg Ad','Ad #1 %','Status'],
+    built.l2.map(function(r){return [r.keyword,r.sku,r.sku_name,r.brand,r.pincodes,r.bestOrg,r.avgOrg==null?'':r.avgOrg.toFixed(1),r.orgWinPct==null?'':r.orgWinPct.toFixed(1),r.bestAd,r.avgAd==null?'':r.avgAd.toFixed(1),r.adWinPct==null?'':r.adWinPct.toFixed(1),r.status];})
+  );
+}
+function exportPcKwposLevel3() {
+  var built = window._PC_KWPOS_BUILT || pcKwposBuild();
+  _downloadCsv('kwpos_level3_keyword_x_sku_x_pincode.csv',
+    ['Keyword','SKU','Product','Brand','Pincode','City','Org Rank','Ad Rank','In Stock','Price'],
+    built.l3.map(function(r){return [r.keyword,r.sku,r.sku_name,r.brand,r.pincode,r.city,r.org_rank,r.ad_rank,r.in_stock,r.price];})
+  );
+}
+
+// Wire setPcFilter for kwpos brand buttons (existing setPcFilter only knows tabs it was built for;
+// we delegate to a local handler if tab === 'kwpos')
+(function(){
+  var origSetFilter = window.setPcFilter;
+  if (typeof origSetFilter !== 'function') return;
+  window.setPcFilter = function(tab, key, value, btn) {
+    if (tab === 'kwpos') {
+      PC_KWPOS_FILTERS[key] = value;
+      // Toggle .active on sibling buttons in the same group
+      if (btn && btn.parentNode) {
+        var siblings = btn.parentNode.querySelectorAll('.fbtn');
+        siblings.forEach(function(b){
+          // Only toggle siblings that are in the same key group — check onclick
+          if (b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'"+key+"'") >= 0) {
+            b.classList.remove('active');
+          }
+        });
+        btn.classList.add('active');
+      }
+      renderPcKwpos();
+      return;
+    }
+    return origSetFilter.apply(this, arguments);
+  };
+})();
+
+// Wire keyword/city dropdowns + search input
+(function(){
+  function bindKwposInputs() {
+    var kw = document.getElementById('pc-kwpos-keyword');
+    if (kw) kw.onchange = function(){ PC_KWPOS_FILTERS.keyword = this.value; renderPcKwpos(); };
+    var ci = document.getElementById('pc-kwpos-city');
+    if (ci) ci.onchange = function(){ PC_KWPOS_FILTERS.city = this.value; renderPcKwpos(); };
+    var sr = document.getElementById('pc-kwpos-search');
+    if (sr) sr.oninput = function(){ PC_KWPOS_FILTERS.search = this.value; renderPcKwpos(); };
+  }
+  // Try to bind after DOM is ready; if PC isn't loaded yet, retry later
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindKwposInputs);
+  } else {
+    bindKwposInputs();
+  }
+})();
+
+// Hook into existing bootstrap_pc flow: when PC loads, also build kwpos filters + render
+(function(){
+  var origBuildFilters = window.buildPcFilters;
+  if (typeof origBuildFilters === 'function') {
+    window.buildPcFilters = function() {
+      var r = origBuildFilters.apply(this, arguments);
+      try { buildPcKwposFilters(); } catch(e) { console.warn('buildPcKwposFilters failed:', e); }
+      try { renderPcKwpos(); } catch(e) { console.warn('renderPcKwpos failed:', e); }
+      return r;
+    };
+  }
+})();
 
 </script>
 </body>
