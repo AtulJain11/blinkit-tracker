@@ -10948,7 +10948,7 @@ function computeSnapshotDerived(snap) {
   // organic avg rank + top3 win %
   var org = snap.organic || [];
   if (org.length) {
-    var ranks = org.filter(function(r){return r.organic_rank != null;}).map(function(r){return +r.organic_rank;});
+    var ranks = org.filter(function(r){return (r.rank != null) || (r.organic_rank != null);}).map(function(r){return +(r.rank != null ? r.rank : r.organic_rank);});
     if (ranks.length) {
       d.__organic_avg_rank = ranks.reduce(function(a,b){return a+b;}, 0) / ranks.length;
       var top3 = ranks.filter(function(r){return r <= 3;}).length;
@@ -11140,30 +11140,37 @@ function pcKwposBuild() {
   // Build a per-pincode lookup: key = "kw||sku||pincode" → { org_rank, ad_rank, in_stock, price, ... }
   var l3Map = {};
   orgFiltered.forEach(function(r){
-    var key = r.keyword + '||' + r.sku + '||' + r.pincode;
+    var pin = String(r.pincode);
+    var skuName = r.product || r.sku_name;
+    var orgRank = (r.rank != null) ? r.rank : r.organic_rank;
+    var key = r.keyword + '||' + r.sku + '||' + pin;
     if (!l3Map[key]) {
       l3Map[key] = {
-        keyword: r.keyword, sku: r.sku, sku_name: r.sku_name, brand: r.brand,
-        pincode: r.pincode, city: r.city,
+        keyword: r.keyword, sku: r.sku, sku_name: skuName, brand: r.brand,
+        pincode: pin, city: r.city,
         org_rank: null, ad_rank: null, in_stock: null, price: null
       };
     }
-    l3Map[key].org_rank = r.organic_rank;
+    l3Map[key].org_rank = orgRank;
     if (r.in_stock != null) l3Map[key].in_stock = r.in_stock;
     if (r.price != null) l3Map[key].price = r.price;
   });
   adsFiltered.forEach(function(r){
-    var key = r.keyword + '||' + r.sku + '||' + r.pincode;
+    var pin = String(r.pincode);
+    var skuName = r.product || r.sku_name || r.ad_product;
+    var key = r.keyword + '||' + r.sku + '||' + pin;
     if (!l3Map[key]) {
       l3Map[key] = {
-        keyword: r.keyword, sku: r.sku, sku_name: r.sku_name || r.ad_product, brand: r.brand || r.ad_brand,
-        pincode: r.pincode, city: r.city,
+        keyword: r.keyword, sku: r.sku, sku_name: skuName, brand: r.brand || r.ad_brand,
+        pincode: pin, city: r.city,
         org_rank: null, ad_rank: null, in_stock: null, price: null
       };
     }
     l3Map[key].ad_rank = r.ad_rank;
     if (l3Map[key].brand == null) l3Map[key].brand = r.ad_brand;
-    if (l3Map[key].sku_name == null) l3Map[key].sku_name = r.ad_product;
+    if (l3Map[key].sku_name == null) l3Map[key].sku_name = skuName;
+    if (r.in_stock != null && l3Map[key].in_stock == null) l3Map[key].in_stock = r.in_stock;
+    if (r.price != null && l3Map[key].price == null) l3Map[key].price = r.price;
   });
   var l3 = Object.keys(l3Map).map(function(k){return l3Map[k];})
     .sort(function(a,b){
