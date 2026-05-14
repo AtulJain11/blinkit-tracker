@@ -2074,11 +2074,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <th class="num">Pincodes</th>
           <th class="num">Best Org</th>
           <th class="num">Avg Org</th>
+          <th class="num">Δ Org</th>
           <th class="num">#1 Org Wins</th>
           <th class="num">Best Ad</th>
           <th class="num">Avg Ad</th>
+          <th class="num">Δ Ad</th>
           <th class="num">#1 Ad Wins</th>
           <th class="num">Org+Ad Overlap</th>
+          <th>Snapshots (Org)</th>
+          <th>Snapshots (Ad)</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -2100,11 +2104,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
           <th class="num">Pincodes</th>
           <th class="num">Best Org</th>
           <th class="num">Avg Org</th>
+          <th class="num">Δ Org</th>
           <th class="num">Org #1 %</th>
           <th class="num">Best Ad</th>
           <th class="num">Avg Ad</th>
+          <th class="num">Δ Ad</th>
           <th class="num">Ad #1 %</th>
           <th>Status</th>
+          <th>Snapshots (Org)</th>
+          <th>Snapshots (Ad)</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -10281,7 +10289,7 @@ function buildPcDateSelectors() {
     if (!d.full_detail) label += ' (summary)';
     return '<option value="'+d.date+'">'+label+'</option>';
   }).join('');
-  ['pricing','organic','ads','avail'].forEach(function(tab){
+  ['pricing','organic','ads','avail','kwpos'].forEach(function(tab){
     var sel = document.getElementById('pc-'+tab+'-datesel');
     if (sel) {
       sel.innerHTML = html;
@@ -10319,7 +10327,7 @@ function setPcDate(tab, date) {
     // selecting an older summary-only snapshot — these are in history but not full detail
     alert('Detailed data for ' + date + ' is not loaded in this view. Only summary stats are available for older snapshots.');
     // revert all date selectors
-    ['pricing','organic','ads','avail'].forEach(function(t){
+    ['pricing','organic','ads','avail','kwpos'].forEach(function(t){
       var s = document.getElementById('pc-'+t+'-datesel');
       if (s && PC_VIEW) s.value = PC_VIEW.snapshot_date;
     });
@@ -10335,8 +10343,8 @@ function setPcDate(tab, date) {
     }
     if (idx >= 0 && idx + 1 < PC.snapshots.length) PC_PREV = PC.snapshots[idx + 1];
   }
-  // sync all 4 date selectors so they show the same active date
-  ['pricing','organic','ads','avail'].forEach(function(t){
+  // sync all 5 date selectors so they show the same active date
+  ['pricing','organic','ads','avail','kwpos'].forEach(function(t){
     var s = document.getElementById('pc-'+t+'-datesel');
     if (s) s.value = date;
   });
@@ -10344,7 +10352,7 @@ function setPcDate(tab, date) {
   buildPcKeywordBar('organic');
   buildPcKeywordBar('ads');
   // Update meta footers
-  ['pricing','organic','ads','avail'].forEach(function(t){
+  ['pricing','organic','ads','avail','kwpos'].forEach(function(t){
     var el = document.getElementById('pc-'+t+'-meta');
     if (el) el.textContent = snap.snapshot_date + ' · ' + (snap.day_type || '—') + ' day';
   });
@@ -10353,6 +10361,7 @@ function setPcDate(tab, date) {
   renderPcOrganic();
   renderPcAds();
   renderPcAvail();
+  try { renderPcKwpos(); } catch(e) { console.warn('renderPcKwpos failed:', e); }
 }
 
 // WoW badge helpers — used by render functions.
@@ -11111,11 +11120,143 @@ function buildPcKwposFilters() {
   }
 }
 
+
+// Build per-(keyword,sku) history across all snapshots.
+// Returns: { "keyword||sku": [{date, day_type, avgOrg, avgAd, orgWin, adWin, pincodes}, ...] }
+// Sorted chronologically (oldest → newest).
+function pcKwposBuildHistory() {
+  if (!PC || !PC.snapshots || !PC.snapshots.length) return {};
+  var hist = {};
+  // Process oldest → newest
+  var snaps = PC.snapshots.slice().reverse();
+  snaps.forEach(function(snap){
+    var date = snap.snapshot_date;
+    var day_type = snap.day_type;
+    var org = snap.organic || [];
+    var ads = snap.our_ads || [];
+    // Aggregate per (keyword, sku) in this snapshot
+    var bucket = {};
+    function key(r) { return (r.keyword||'') + '||' + (r.sku||''); }
+    org.forEach(function(r){
+      var k = key(r);
+      if (!bucket[k]) bucket[k] = { orgRanks: [], adRanks: [], orgWins: 0, adWins: 0, pincodes: {} };
+      var rank = (r.rank != null) ? +r.rank : (r.organic_rank != null ? +r.organic_rank : null);
+      if (rank != null) {
+        bucket[k].orgRanks.push(rank);
+        if (rank === 1) bucket[k].orgWins++;
+      }
+      bucket[k].pincodes[String(r.pincode)] = true;
+    });
+    ads.forEach(function(r){
+      var k = key(r);
+      if (!bucket[k]) bucket[k] = { orgRanks: [], adRanks: [], orgWins: 0, adWins: 0, pincodes: {} };
+      if (r.ad_rank != null) {
+        var ar = +r.ad_rank;
+        bucket[k].adRanks.push(ar);
+        if (ar === 1) bucket[k].adWins++;
+      }
+      bucket[k].pincodes[String(r.pincode)] = true;
+    });
+    // Push one entry per (keyword,sku) into the history map
+    Object.keys(bucket).forEach(function(k){
+      var b = bucket[k];
+      if (!hist[k]) hist[k] = [];
+      hist[k].push({
+        date: date, day_type: day_type,
+        avgOrg: b.orgRanks.length ? b.orgRanks.reduce(function(a,b){return a+b;},0)/b.orgRanks.length : null,
+        avgAd:  b.adRanks.length ? b.adRanks.reduce(function(a,b){return a+b;},0)/b.adRanks.length : null,
+        orgWins: b.orgWins, adWins: b.adWins,
+        pincodes: Object.keys(b.pincodes).length
+      });
+    });
+  });
+  return hist;
+}
+
+// Per-keyword history (aggregated across all our SKUs).
+function pcKwposBuildKeywordHistory() {
+  if (!PC || !PC.snapshots || !PC.snapshots.length) return {};
+  var hist = {};
+  var snaps = PC.snapshots.slice().reverse();
+  snaps.forEach(function(snap){
+    var date = snap.snapshot_date;
+    var day_type = snap.day_type;
+    var bucket = {};
+    (snap.organic || []).forEach(function(r){
+      var kw = r.keyword;
+      if (!kw) return;
+      if (!bucket[kw]) bucket[kw] = { orgRanks: [], adRanks: [], orgWins: 0, adWins: 0, pincodes: {}, skus: {} };
+      var rank = (r.rank != null) ? +r.rank : (r.organic_rank != null ? +r.organic_rank : null);
+      if (rank != null) {
+        bucket[kw].orgRanks.push(rank);
+        if (rank === 1) bucket[kw].orgWins++;
+      }
+      bucket[kw].pincodes[String(r.pincode)] = true;
+      if (r.sku) bucket[kw].skus[r.sku] = true;
+    });
+    (snap.our_ads || []).forEach(function(r){
+      var kw = r.keyword;
+      if (!kw) return;
+      if (!bucket[kw]) bucket[kw] = { orgRanks: [], adRanks: [], orgWins: 0, adWins: 0, pincodes: {}, skus: {} };
+      if (r.ad_rank != null) {
+        var ar = +r.ad_rank;
+        bucket[kw].adRanks.push(ar);
+        if (ar === 1) bucket[kw].adWins++;
+      }
+      bucket[kw].pincodes[String(r.pincode)] = true;
+      if (r.sku) bucket[kw].skus[r.sku] = true;
+    });
+    Object.keys(bucket).forEach(function(kw){
+      var b = bucket[kw];
+      if (!hist[kw]) hist[kw] = [];
+      hist[kw].push({
+        date: date, day_type: day_type,
+        avgOrg: b.orgRanks.length ? b.orgRanks.reduce(function(a,b){return a+b;},0)/b.orgRanks.length : null,
+        avgAd:  b.adRanks.length ? b.adRanks.reduce(function(a,b){return a+b;},0)/b.adRanks.length : null,
+        orgWins: b.orgWins, adWins: b.adWins,
+        pincodes: Object.keys(b.pincodes).length,
+        skus: Object.keys(b.skus).length
+      });
+    });
+  });
+  return hist;
+}
+
+// Format a history array as a compact arrow string: "1.8 → 11.7 → 12.3"
+function fmtHistorySeries(history, field) {
+  if (!history || !history.length) return '—';
+  var parts = history.map(function(h){
+    var v = h[field];
+    if (v == null) return '—';
+    return (typeof v === 'number') ? v.toFixed(1) : v;
+  });
+  return parts.join(' → ');
+}
+
+// Delta = latest - previous
+function historyDelta(history, field) {
+  if (!history || history.length < 2) return null;
+  var last = history[history.length-1][field];
+  var prev = history[history.length-2][field];
+  if (last == null || prev == null) return null;
+  return last - prev;
+}
+
+function fmtDelta(d, decimals) {
+  if (d == null) return '';
+  decimals = decimals == null ? 1 : decimals;
+  var sign = d > 0 ? '+' : '';
+  return sign + d.toFixed(decimals);
+}
+
 // Compute 3-level aggregations from PC_VIEW.organic + PC_VIEW.our_ads
 function pcKwposBuild() {
   if (!PC_VIEW) return { l1: [], l2: [], l3: [] };
   var organic = PC_VIEW.organic || [];
   var ourAds = PC_VIEW.our_ads || [];
+  // Pre-compute cross-snapshot history maps (for trend columns + deltas)
+  var skuHist = pcKwposBuildHistory();
+  var kwHist  = pcKwposBuildKeywordHistory();
 
   // Filters
   var fBrand = PC_KWPOS_FILTERS.brand;
@@ -11225,9 +11366,15 @@ function pcKwposBuild() {
       bestOrg: bestOrg, avgOrg: avgOrg, orgWinPct: s.pincodes ? 100*s.orgWins/s.pincodes : null,
       bestAd: bestAd, avgAd: avgAd, adWinPct: s.pincodes ? 100*s.adWins/s.pincodes : null,
       status: status,
+      history: skuHist[s.keyword + '||' + s.sku] || [],
       _sortKey: (avgOrg != null ? avgOrg : 999) + (avgAd != null ? avgAd : 999)
     };
   }).sort(function(a,b){ return a._sortKey - b._sortKey; });
+  // Compute deltas after history attached
+  l2.forEach(function(r){
+    r.deltaOrg = historyDelta(r.history, 'avgOrg');
+    r.deltaAd  = historyDelta(r.history, 'avgAd');
+  });
 
   // Level 1: aggregate l2 by keyword
   var l1Map = {};
@@ -11259,13 +11406,19 @@ function pcKwposBuild() {
       bestAd: L.adRanks.length ? Math.min.apply(null, L.adRanks) : null,
       avgAd: L.adRanks.length ? L.adRanks.reduce(function(a,b){return a+b;},0)/L.adRanks.length : null,
       adWins: L.adWins,
-      overlap: L.overlap
+      overlap: L.overlap,
+      history: kwHist[L.keyword] || []
     };
   }).sort(function(a,b){
     // Sort by best combined rank
     var ao = a.avgOrg != null ? a.avgOrg : 999;
     var bo = b.avgOrg != null ? b.avgOrg : 999;
     return ao - bo;
+  });
+  // Compute deltas for l1 rows
+  l1.forEach(function(r){
+    r.deltaOrg = historyDelta(r.history, 'avgOrg');
+    r.deltaAd  = historyDelta(r.history, 'avgAd');
   });
 
   return { l1: l1, l2: l2, l3: l3 };
@@ -11331,20 +11484,33 @@ function renderPcKwpos() {
 
   // Level 1 table
   var l1Tbody = document.querySelector('#pc-kwpos-l1-table tbody');
+  function _deltaCell(d, lowerIsBetter) {
+    if (d == null) return '<td class="num" style="color:var(--text3)">—</td>';
+    var goodWhen = lowerIsBetter; // true → lower rank is better; reductions are good
+    var isGood = (goodWhen ? d < 0 : d > 0);
+    var color = Math.abs(d) < 0.05 ? 'var(--text3)' : (isGood ? '#10b981' : '#ef4444');
+    return '<td class="num" style="color:'+color+';font-weight:600">'+fmtDelta(d)+'</td>';
+  }
   l1Tbody.innerHTML = l1.map(function(r){
+    var snapOrg = fmtHistorySeries(r.history, 'avgOrg');
+    var snapAd  = fmtHistorySeries(r.history, 'avgAd');
     return '<tr>' +
       '<td><b>'+r.keyword+'</b></td>' +
       '<td class="num">'+r.skus+'</td>' +
       '<td class="num">'+r.pincodes+'</td>' +
       '<td class="num">'+fmtRank(r.bestOrg)+'</td>' +
       '<td class="num">'+fmtRank(r.avgOrg)+'</td>' +
+      _deltaCell(r.deltaOrg, true) +
       '<td class="num">'+r.orgWins+'</td>' +
       '<td class="num">'+fmtRank(r.bestAd)+'</td>' +
       '<td class="num">'+fmtRank(r.avgAd)+'</td>' +
+      _deltaCell(r.deltaAd, true) +
       '<td class="num">'+r.adWins+'</td>' +
       '<td class="num">'+r.overlap+'</td>' +
+      '<td style="font-family:\'Courier New\',monospace;font-size:11px;color:var(--text2)">'+snapOrg+'</td>' +
+      '<td style="font-family:\'Courier New\',monospace;font-size:11px;color:var(--text2)">'+snapAd+'</td>' +
     '</tr>';
-  }).join('') || '<tr><td colspan="10" style="text-align:center;color:var(--text3)">No data for current filters</td></tr>';
+  }).join('') || '<tr><td colspan="14" style="text-align:center;color:var(--text3)">No data for current filters</td></tr>';
 
   // Level 2 table
   var l2Tbody = document.querySelector('#pc-kwpos-l2-table tbody');
@@ -11354,6 +11520,8 @@ function renderPcKwpos() {
                       r.status.indexOf('⚠️') >= 0 ? '#f5a524' : 'var(--text3)';
     var fmtPct = function(v){return v==null?'—':v.toFixed(0)+'%';};
     var skuHtml = '<b>'+r.sku+'</b><br><span style="font-size:11px;color:var(--text2)">'+(r.sku_name||'')+'</span>';
+    var snapOrg = fmtHistorySeries(r.history, 'avgOrg');
+    var snapAd  = fmtHistorySeries(r.history, 'avgAd');
     return '<tr>' +
       '<td>'+r.keyword+'</td>' +
       '<td>'+skuHtml+'</td>' +
@@ -11361,13 +11529,17 @@ function renderPcKwpos() {
       '<td class="num">'+r.pincodes+'</td>' +
       '<td class="num">'+fmtRank(r.bestOrg)+'</td>' +
       '<td class="num">'+fmtRank(r.avgOrg)+'</td>' +
+      _deltaCell(r.deltaOrg, true) +
       '<td class="num">'+fmtPct(r.orgWinPct)+'</td>' +
       '<td class="num">'+fmtRank(r.bestAd)+'</td>' +
       '<td class="num">'+fmtRank(r.avgAd)+'</td>' +
+      _deltaCell(r.deltaAd, true) +
       '<td class="num">'+fmtPct(r.adWinPct)+'</td>' +
       '<td><span style="color:'+statusColor+';font-size:11px;font-weight:600">'+r.status+'</span></td>' +
+      '<td style="font-family:\'Courier New\',monospace;font-size:11px;color:var(--text2)">'+snapOrg+'</td>' +
+      '<td style="font-family:\'Courier New\',monospace;font-size:11px;color:var(--text2)">'+snapAd+'</td>' +
     '</tr>';
-  }).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--text3)">No data for current filters</td></tr>';
+  }).join('') || '<tr><td colspan="15" style="text-align:center;color:var(--text3)">No data for current filters</td></tr>';
 
   // Level 3 table (limit display to 500 rows for perf, csv has all)
   var l3Tbody = document.querySelector('#pc-kwpos-l3-table tbody');
@@ -11418,15 +11590,31 @@ function _downloadCsv(filename, headers, rows) {
 function exportPcKwposLevel1() {
   var built = window._PC_KWPOS_BUILT || pcKwposBuild();
   _downloadCsv('kwpos_level1_keyword_summary.csv',
-    ['Keyword','Our SKUs','Pincodes','Best Org','Avg Org','#1 Org Wins','Best Ad','Avg Ad','#1 Ad Wins','Org+Ad Overlap'],
-    built.l1.map(function(r){return [r.keyword,r.skus,r.pincodes,r.bestOrg,r.avgOrg==null?'':r.avgOrg.toFixed(1),r.orgWins,r.bestAd,r.avgAd==null?'':r.avgAd.toFixed(1),r.adWins,r.overlap];})
+    ['Keyword','Our SKUs','Pincodes','Best Org','Avg Org','Delta Org','#1 Org Wins','Best Ad','Avg Ad','Delta Ad','#1 Ad Wins','Org+Ad Overlap','Snapshots (Org)','Snapshots (Ad)'],
+    built.l1.map(function(r){return [
+      r.keyword, r.skus, r.pincodes,
+      r.bestOrg, r.avgOrg==null?'':r.avgOrg.toFixed(1), r.deltaOrg==null?'':r.deltaOrg.toFixed(1), r.orgWins,
+      r.bestAd, r.avgAd==null?'':r.avgAd.toFixed(1), r.deltaAd==null?'':r.deltaAd.toFixed(1), r.adWins,
+      r.overlap,
+      fmtHistorySeries(r.history,'avgOrg'),
+      fmtHistorySeries(r.history,'avgAd')
+    ];})
   );
 }
 function exportPcKwposLevel2() {
   var built = window._PC_KWPOS_BUILT || pcKwposBuild();
   _downloadCsv('kwpos_level2_keyword_x_sku.csv',
-    ['Keyword','SKU','Product','Brand','Pincodes','Best Org','Avg Org','Org #1 %','Best Ad','Avg Ad','Ad #1 %','Status'],
-    built.l2.map(function(r){return [r.keyword,r.sku,r.sku_name,r.brand,r.pincodes,r.bestOrg,r.avgOrg==null?'':r.avgOrg.toFixed(1),r.orgWinPct==null?'':r.orgWinPct.toFixed(1),r.bestAd,r.avgAd==null?'':r.avgAd.toFixed(1),r.adWinPct==null?'':r.adWinPct.toFixed(1),r.status];})
+    ['Keyword','SKU','Product','Brand','Pincodes','Best Org','Avg Org','Delta Org','Org #1 %','Best Ad','Avg Ad','Delta Ad','Ad #1 %','Status','Snapshots (Org)','Snapshots (Ad)'],
+    built.l2.map(function(r){return [
+      r.keyword, r.sku, r.sku_name, r.brand, r.pincodes,
+      r.bestOrg, r.avgOrg==null?'':r.avgOrg.toFixed(1), r.deltaOrg==null?'':r.deltaOrg.toFixed(1),
+      r.orgWinPct==null?'':r.orgWinPct.toFixed(1),
+      r.bestAd, r.avgAd==null?'':r.avgAd.toFixed(1), r.deltaAd==null?'':r.deltaAd.toFixed(1),
+      r.adWinPct==null?'':r.adWinPct.toFixed(1),
+      r.status,
+      fmtHistorySeries(r.history,'avgOrg'),
+      fmtHistorySeries(r.history,'avgAd')
+    ];})
   );
 }
 function exportPcKwposLevel3() {
