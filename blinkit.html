@@ -11222,7 +11222,7 @@ function pcKwposBuildKeywordHistory() {
   return hist;
 }
 
-// Format a history array as a compact arrow string: "1.8 → 11.7 → 12.3"
+// Format a history array as a compact arrow string: "1.8 → 11.7 → 12.3" (display)
 function fmtHistorySeries(history, field) {
   if (!history || !history.length) return '—';
   var parts = history.map(function(h){
@@ -11231,6 +11231,17 @@ function fmtHistorySeries(history, field) {
     return (typeof v === 'number') ? v.toFixed(1) : v;
   });
   return parts.join(' → ');
+}
+
+// CSV variant — uses '|' separator and '-' for missing (Excel-friendly, no special chars)
+function fmtHistorySeriesCsv(history, field) {
+  if (!history || !history.length) return '-';
+  var parts = history.map(function(h){
+    var v = h[field];
+    if (v == null) return '-';
+    return (typeof v === 'number') ? v.toFixed(1) : v;
+  });
+  return parts.join(' | ');
 }
 
 // Delta = latest - previous
@@ -11288,13 +11299,20 @@ function pcKwposBuild() {
     if (!l3Map[key]) {
       l3Map[key] = {
         keyword: r.keyword, sku: r.sku, sku_name: skuName, brand: r.brand,
-        pincode: pin, city: r.city,
-        org_rank: null, ad_rank: null, in_stock: null, price: null
+        pincode: pin, city: r.city, state: r.state,
+        org_rank: null, ad_rank: null, in_stock: null,
+        price: null, mrp: null, disc: null,
+        top_comp_brand: '', top_comp_name: '',
+        priority: r.priority || ''
       };
     }
     l3Map[key].org_rank = orgRank;
     if (r.in_stock != null) l3Map[key].in_stock = r.in_stock;
-    if (r.price != null) l3Map[key].price = r.price;
+    if (r.price != null && l3Map[key].price == null) l3Map[key].price = r.price;
+    if (r.top_comp_brand) l3Map[key].top_comp_brand = r.top_comp_brand;
+    if (r.top_comp_name) l3Map[key].top_comp_name = r.top_comp_name;
+    if (r.state) l3Map[key].state = r.state;
+    if (r.priority) l3Map[key].priority = r.priority;
   });
   adsFiltered.forEach(function(r){
     var pin = String(r.pincode);
@@ -11303,8 +11321,11 @@ function pcKwposBuild() {
     if (!l3Map[key]) {
       l3Map[key] = {
         keyword: r.keyword, sku: r.sku, sku_name: skuName, brand: r.brand || r.ad_brand,
-        pincode: pin, city: r.city,
-        org_rank: null, ad_rank: null, in_stock: null, price: null
+        pincode: pin, city: r.city, state: r.state,
+        org_rank: null, ad_rank: null, in_stock: null,
+        price: null, mrp: null, disc: null,
+        top_comp_brand: '', top_comp_name: '',
+        priority: r.priority || ''
       };
     }
     l3Map[key].ad_rank = r.ad_rank;
@@ -11312,6 +11333,30 @@ function pcKwposBuild() {
     if (l3Map[key].sku_name == null) l3Map[key].sku_name = skuName;
     if (r.in_stock != null && l3Map[key].in_stock == null) l3Map[key].in_stock = r.in_stock;
     if (r.price != null && l3Map[key].price == null) l3Map[key].price = r.price;
+    if (r.mrp != null && l3Map[key].mrp == null) l3Map[key].mrp = r.mrp;
+    if (r.disc != null && l3Map[key].disc == null) l3Map[key].disc = r.disc;
+    if (r.state && !l3Map[key].state) l3Map[key].state = r.state;
+    if (r.priority && !l3Map[key].priority) l3Map[key].priority = r.priority;
+  });
+
+  // Also enrich from PC_VIEW.pricing (has mrp + actual_disc even when not in ads)
+  // pricing rows are per (sku, pincode), not per keyword — so we apply pricing data
+  // to ALL keyword entries for the same (sku, pincode)
+  var pricingMap = {};
+  (PC_VIEW.pricing || []).forEach(function(r){
+    if (!r.sku || !r.pincode) return;
+    var k = r.sku + '||' + String(r.pincode);
+    pricingMap[k] = r;
+  });
+  Object.keys(l3Map).forEach(function(key){
+    var row = l3Map[key];
+    var pk = row.sku + '||' + row.pincode;
+    var p = pricingMap[pk];
+    if (!p) return;
+    if (row.mrp == null && p.mrp != null) row.mrp = p.mrp;
+    if (row.disc == null && p.actual_disc != null) row.disc = p.actual_disc;
+    if (row.price == null && p.price != null) row.price = p.price;
+    if (!row.priority && p.priority) row.priority = p.priority;
   });
   var l3 = Object.keys(l3Map).map(function(k){return l3Map[k];})
     .sort(function(a,b){
@@ -11327,7 +11372,9 @@ function pcKwposBuild() {
     if (!l2Map[key]) {
       l2Map[key] = {
         keyword: r.keyword, sku: r.sku, sku_name: r.sku_name, brand: r.brand,
-        pincodes: 0, orgRanks: [], adRanks: [], orgWins: 0, adWins: 0
+        pincodes: 0, orgRanks: [], adRanks: [], orgWins: 0, adWins: 0,
+        prices: [], mrps: [], discs: [], inStockCount: 0, inStockTotal: 0,
+        compBrands: {}, compProducts: {}, priority: r.priority || ''
       };
     }
     var s = l2Map[key];
@@ -11340,7 +11387,24 @@ function pcKwposBuild() {
       s.adRanks.push(+r.ad_rank);
       if (+r.ad_rank === 1) s.adWins++;
     }
+    if (r.price != null) s.prices.push(+r.price);
+    if (r.mrp != null) s.mrps.push(+r.mrp);
+    if (r.disc != null) s.discs.push(+r.disc);
+    if (r.in_stock != null) {
+      s.inStockTotal++;
+      if (r.in_stock === true) s.inStockCount++;
+    }
+    if (r.top_comp_brand) s.compBrands[r.top_comp_brand] = (s.compBrands[r.top_comp_brand] || 0) + 1;
+    if (r.top_comp_name) s.compProducts[r.top_comp_name] = (s.compProducts[r.top_comp_name] || 0) + 1;
   });
+  function _mode(counts) {
+    var best = null, bestN = 0;
+    Object.keys(counts).forEach(function(k){
+      if (counts[k] > bestN) { bestN = counts[k]; best = k; }
+    });
+    return best;
+  }
+  function _avg(arr) { return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : null; }
   var l2 = Object.keys(l2Map).map(function(k){
     var s = l2Map[k];
     var avgOrg = s.orgRanks.length ? s.orgRanks.reduce(function(a,b){return a+b;},0)/s.orgRanks.length : null;
@@ -11366,6 +11430,10 @@ function pcKwposBuild() {
       bestOrg: bestOrg, avgOrg: avgOrg, orgWinPct: s.pincodes ? 100*s.orgWins/s.pincodes : null,
       bestAd: bestAd, avgAd: avgAd, adWinPct: s.pincodes ? 100*s.adWins/s.pincodes : null,
       status: status,
+      avgPrice: _avg(s.prices), avgMrp: _avg(s.mrps), avgDisc: _avg(s.discs),
+      inStockPct: s.inStockTotal > 0 ? 100*s.inStockCount/s.inStockTotal : null,
+      topCompBrand: _mode(s.compBrands) || '', topCompProduct: _mode(s.compProducts) || '',
+      priority: s.priority,
       history: skuHist[s.keyword + '||' + s.sku] || [],
       _sortKey: (avgOrg != null ? avgOrg : 999) + (avgAd != null ? avgAd : 999)
     };
@@ -11383,7 +11451,9 @@ function pcKwposBuild() {
       l1Map[s.keyword] = {
         keyword: s.keyword, skus: 0, pincodes: 0,
         orgRanks: [], adRanks: [], orgWins: 0, adWins: 0,
-        skuSet: {}, overlap: 0
+        skuSet: {}, overlap: 0,
+        prices: [], mrps: [], discs: [], inStockSum: 0, inStockN: 0,
+        compBrands: {}, compProducts: {}
       };
     }
     var L = l1Map[s.keyword];
@@ -11395,6 +11465,12 @@ function pcKwposBuild() {
     L.adWins += Math.round((s.adWinPct || 0) / 100 * s.pincodes);
     L.skuSet[s.sku] = true;
     if (s.bestOrg != null && s.bestAd != null) L.overlap++;
+    if (s.avgPrice != null) L.prices.push(s.avgPrice);
+    if (s.avgMrp != null) L.mrps.push(s.avgMrp);
+    if (s.avgDisc != null) L.discs.push(s.avgDisc);
+    if (s.inStockPct != null) { L.inStockSum += s.inStockPct; L.inStockN++; }
+    if (s.topCompBrand) L.compBrands[s.topCompBrand] = (L.compBrands[s.topCompBrand] || 0) + 1;
+    if (s.topCompProduct) L.compProducts[s.topCompProduct] = (L.compProducts[s.topCompProduct] || 0) + 1;
   });
   var l1 = Object.keys(l1Map).map(function(k){
     var L = l1Map[k];
@@ -11407,6 +11483,11 @@ function pcKwposBuild() {
       avgAd: L.adRanks.length ? L.adRanks.reduce(function(a,b){return a+b;},0)/L.adRanks.length : null,
       adWins: L.adWins,
       overlap: L.overlap,
+      avgPrice: L.prices.length ? L.prices.reduce(function(a,b){return a+b;},0)/L.prices.length : null,
+      avgMrp: L.mrps.length ? L.mrps.reduce(function(a,b){return a+b;},0)/L.mrps.length : null,
+      avgDisc: L.discs.length ? L.discs.reduce(function(a,b){return a+b;},0)/L.discs.length : null,
+      inStockPct: L.inStockN > 0 ? L.inStockSum/L.inStockN : null,
+      topCompBrand: _mode(L.compBrands) || '', topCompProduct: _mode(L.compProducts) || '',
       history: kwHist[L.keyword] || []
     };
   }).sort(function(a,b){
@@ -11579,7 +11660,9 @@ function _csvEscape(v) {
 function _downloadCsv(filename, headers, rows) {
   var csv = headers.map(_csvEscape).join(',') + '\n' +
     rows.map(function(r){ return r.map(_csvEscape).join(','); }).join('\n');
-  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  // UTF-8 BOM so Excel renders unicode (₹, ✓, etc.) correctly
+  var bom = '\uFEFF';
+  var blob = new Blob([bom + csv], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url; a.download = filename;
@@ -11590,38 +11673,72 @@ function _downloadCsv(filename, headers, rows) {
 function exportPcKwposLevel1() {
   var built = window._PC_KWPOS_BUILT || pcKwposBuild();
   _downloadCsv('kwpos_level1_keyword_summary.csv',
-    ['Keyword','Our SKUs','Pincodes','Best Org','Avg Org','Delta Org','#1 Org Wins','Best Ad','Avg Ad','Delta Ad','#1 Ad Wins','Org+Ad Overlap','Snapshots (Org)','Snapshots (Ad)'],
+    ['Keyword','Our SKUs','Pincodes',
+     'Best Org','Avg Org','Delta Org','#1 Org Wins',
+     'Best Ad','Avg Ad','Delta Ad','#1 Ad Wins',
+     'Org+Ad Overlap',
+     'Avg Price','Avg MRP','Avg Disc %','In-Stock %',
+     'Top Competitor Brand','Top Competitor Product',
+     'Snapshots Org','Snapshots Ad'],
     built.l1.map(function(r){return [
       r.keyword, r.skus, r.pincodes,
       r.bestOrg, r.avgOrg==null?'':r.avgOrg.toFixed(1), r.deltaOrg==null?'':r.deltaOrg.toFixed(1), r.orgWins,
       r.bestAd, r.avgAd==null?'':r.avgAd.toFixed(1), r.deltaAd==null?'':r.deltaAd.toFixed(1), r.adWins,
       r.overlap,
-      fmtHistorySeries(r.history,'avgOrg'),
-      fmtHistorySeries(r.history,'avgAd')
+      r.avgPrice==null?'':r.avgPrice.toFixed(2),
+      r.avgMrp==null?'':r.avgMrp.toFixed(2),
+      r.avgDisc==null?'':r.avgDisc.toFixed(1),
+      r.inStockPct==null?'':r.inStockPct.toFixed(1),
+      r.topCompBrand, r.topCompProduct,
+      fmtHistorySeriesCsv(r.history,'avgOrg'),
+      fmtHistorySeriesCsv(r.history,'avgAd')
     ];})
   );
 }
 function exportPcKwposLevel2() {
   var built = window._PC_KWPOS_BUILT || pcKwposBuild();
   _downloadCsv('kwpos_level2_keyword_x_sku.csv',
-    ['Keyword','SKU','Product','Brand','Pincodes','Best Org','Avg Org','Delta Org','Org #1 %','Best Ad','Avg Ad','Delta Ad','Ad #1 %','Status','Snapshots (Org)','Snapshots (Ad)'],
+    ['Keyword','SKU','Product','Brand','Priority','Pincodes',
+     'Best Org','Avg Org','Delta Org','Org #1 %',
+     'Best Ad','Avg Ad','Delta Ad','Ad #1 %',
+     'Status',
+     'Avg Price','Avg MRP','Avg Disc %','In-Stock %',
+     'Top Competitor Brand','Top Competitor Product',
+     'Snapshots Org','Snapshots Ad'],
     built.l2.map(function(r){return [
-      r.keyword, r.sku, r.sku_name, r.brand, r.pincodes,
+      r.keyword, r.sku, r.sku_name, r.brand, r.priority || '', r.pincodes,
       r.bestOrg, r.avgOrg==null?'':r.avgOrg.toFixed(1), r.deltaOrg==null?'':r.deltaOrg.toFixed(1),
       r.orgWinPct==null?'':r.orgWinPct.toFixed(1),
       r.bestAd, r.avgAd==null?'':r.avgAd.toFixed(1), r.deltaAd==null?'':r.deltaAd.toFixed(1),
       r.adWinPct==null?'':r.adWinPct.toFixed(1),
       r.status,
-      fmtHistorySeries(r.history,'avgOrg'),
-      fmtHistorySeries(r.history,'avgAd')
+      r.avgPrice==null?'':r.avgPrice.toFixed(2),
+      r.avgMrp==null?'':r.avgMrp.toFixed(2),
+      r.avgDisc==null?'':r.avgDisc.toFixed(1),
+      r.inStockPct==null?'':r.inStockPct.toFixed(1),
+      r.topCompBrand, r.topCompProduct,
+      fmtHistorySeriesCsv(r.history,'avgOrg'),
+      fmtHistorySeriesCsv(r.history,'avgAd')
     ];})
   );
 }
 function exportPcKwposLevel3() {
   var built = window._PC_KWPOS_BUILT || pcKwposBuild();
   _downloadCsv('kwpos_level3_keyword_x_sku_x_pincode.csv',
-    ['Keyword','SKU','Product','Brand','Pincode','City','Org Rank','Ad Rank','In Stock','Price'],
-    built.l3.map(function(r){return [r.keyword,r.sku,r.sku_name,r.brand,r.pincode,r.city,r.org_rank,r.ad_rank,r.in_stock,r.price];})
+    ['Keyword','SKU','Product','Brand','Priority','Pincode','City','State',
+     'Org Rank','Ad Rank','In Stock',
+     'Price','MRP','Disc %',
+     'Top Competitor Brand','Top Competitor Product'],
+    built.l3.map(function(r){return [
+      r.keyword, r.sku, r.sku_name, r.brand, r.priority || '', r.pincode, r.city, r.state || '',
+      r.org_rank == null ? '' : r.org_rank,
+      r.ad_rank == null ? '' : r.ad_rank,
+      r.in_stock == null ? '' : (r.in_stock ? 'Yes' : 'No'),
+      r.price == null ? '' : r.price,
+      r.mrp == null ? '' : r.mrp,
+      r.disc == null ? '' : (typeof r.disc === 'number' ? r.disc.toFixed(1) : r.disc),
+      r.top_comp_brand || '', r.top_comp_name || ''
+    ];})
   );
 }
 
